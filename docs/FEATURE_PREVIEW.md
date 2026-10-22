@@ -21,10 +21,16 @@ Branch: `feature/source-linked-damage-model`. Production remains visual release 
 | Multiple distinct context results | Advanced calculation context cards | Each explains its own unsupported profile; no generic Boss/Guild score |
 | Skill, artifact, buff and cadence completeness | Spec and official dated follow-up | Historical coefficient leads and October state-dependent rules recorded; no unsupported weighting or duplicate passive totals |
 | Henesys snapshot hypothesis | Spec controlled-observation protocol | No guarantee all buffs disappear; no player measurement collected |
-| Reproducible checks | `npm test`, `npm run check`, `npm run build`, GitHub workflow | 57 tests before OCR evaluation additions; syntax/local-reference/color checks pass |
-| OCR gate and privacy | Separate local evaluation work | Pinned Tesseract.js/core7 and English data1 installed for evaluation with lifecycle scripts disabled; no OCR in application yet |
+| Reproducible checks | `npm test`, `npm run check`, `npm run build`, GitHub workflow | 81 tests including independent precision and OCR-session regressions; syntax/local-reference/color checks pass |
+| OCR gate and privacy | Separate loopback evaluation harness and pure session contract | Pinned local resources; correction/stale-run tests and exercised resource-denial/recovery. One example has merged numeric columns: OCR not adopted. See `OCR_EVALUATION.md` and `OCR_QA.md` |
 
 The Chief of Staff audit, source register, spec and QA were revisited before integration and preview review. Official publication confidence is separate from synthetic implementation checks and unperformed game prediction validation. See `DAMAGE_MODEL_QA.md` for independent findings and fixes.
+
+## Preview verification and delivery
+
+Core checkpoint `68cad63` was pushed to this branch: GitHub verification and Vercel deployment both reported success. Its [Vercel deployment dashboard](https://vercel.com/erics-trade-binder/msidlecalc/FqfFsSJxww7NxFXocJLHA7spBcRg) requires owner login in the available browser; a public feature URL has not been independently verified. Production remains `b827d72`.
+
+The integration owner rechecked the current local application at375×812: confirmed independent20%→40% Final Damage sources produce the isolated+16.6667% result, with separate unavailable encounter cards. Changing Hidden Street to BasilMarket preserved inputs, expanded disclosures, result text and scroll1870; no horizontal overflow occurred. This is viewport simulation, not physical-device testing. Local preview: `npm run dev`, then `http://127.0.0.1:4173`. Current tests/check/build pass; OCR harness runtime evidence and remaining adoption gates are separately documented.
 
 ## Official notice reconciliation
 

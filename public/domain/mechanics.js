@@ -1,7 +1,7 @@
 // Published-rule primitives, not a complete damage/DPS calculator.
 // Callers must establish the stat family, exact attack/context and source units.
 export const EVIDENCE = Object.freeze({
-  version: 'published-rules-2026-10-15-v1',
+  version: 'published-rules-2026-10-15-v2',
   source: 'https://maplestoryidle.nexon.com/en/guide',
   inspectedOn: '2026-10-22',
   sourceUpdatedOn: '2026-10-15',
@@ -24,20 +24,28 @@ function list(values, name) {
 // Input percentages must explicitly name their scale; no implicit 1000/100 mix.
 export function normalizeRate(value, unit) {
   finite(value, 'Rate');
-  if (unit === 'displayPercent') return value / 100;
-  if (unit === 'internalPermille') return value / 1000;
   if (unit === 'fraction') return value;
-  throw new TypeError('Rate unit must be displayPercent, internalPermille, or fraction.');
+  if (!['displayPercent', 'internalPermille'].includes(unit)) throw new TypeError('Rate unit must be displayPercent, internalPermille, or fraction.');
+  const normalized = value / (unit === 'displayPercent' ? 100 : 1000);
+  if (value > 0 && normalized === 0) throw new RangeError('Rate normalization underflow.');
+  return normalized;
 }
 
-// Additive-bonus rates are fractions. Do not pass complete multipliers here.
+// Only verified same-type ADDITIVE groups belong in these rate arrays. This is
+// not a rule that unrelated percentage sources add. Use source-stage-aware
+// reaggregation for equipment replacement. Rates are fractions, not factors.
 export function orderedAttribute({ flatSources, bonusRates, skillBonusRates, skillFlatSources }) {
   for (const [name, values] of Object.entries({ flatSources, bonusRates, skillBonusRates, skillFlatSources })) {
     list(values, name);
     values.forEach((value) => finite(value, name));
   }
   const sum = (values) => values.reduce((total, value) => total + value, 0);
-  return finite(sum(flatSources) * (1 + sum(bonusRates)) * (1 + sum(skillBonusRates)) + sum(skillFlatSources), 'Aggregated attribute');
+  const factor = rates => {
+    const bonus = finite(sum(rates), 'Additive bonus sum');
+    if (bonus > 0 && 1 + bonus === 1) throw new RangeError('Additive bonus below supported factor precision.');
+    return 1 + bonus;
+  };
+  return finite(sum(flatSources) * factor(bonusRates) * factor(skillBonusRates) + sum(skillFlatSources), 'Aggregated attribute');
 }
 
 // Source and cap use absolute fractional-rate units, not proportions of the cap:
@@ -47,12 +55,17 @@ export function orderedAttribute({ flatSources, bonusRates, skillBonusRates, ski
 export function remainingCapAggregate(sourceRates, cap) {
   list(sourceRates, 'Source rates');
   finite(cap, 'Cap', { min: Number.MIN_VALUE });
-  let remaining = 1;
+  sourceRates.forEach(rate => finite(rate, 'Source rate', { max: cap }));
+  if (sourceRates.includes(cap)) return cap;
+  let logRemaining = 0;
   for (const rate of sourceRates) {
-    finite(rate, 'Source rate', { max: cap });
-    remaining *= 1 - rate / cap;
+    const fraction = rate / cap;
+    if (rate > 0 && fraction === 0) throw new RangeError('Source normalization underflow.');
+    logRemaining += Math.log1p(-fraction);
   }
-  return finite(cap * (1 - remaining), 'Remaining-cap aggregate');
+  const result = finite(cap * -Math.expm1(logRemaining), 'Remaining-cap aggregate');
+  if (sourceRates.some(rate => rate > 0) && result === 0) throw new RangeError('Remaining-cap underflow.');
+  return result === 0 ? 0 : result;
 }
 
 // Explicit source list ensures item replacement is reaggregation, not T+delta.
@@ -64,7 +77,11 @@ export function replaceRemainingCapSource(unchangedSources, newSource, cap) {
 // Final Damage source bonuses multiply as (1+rate). A 20% bonus is 0.20 here.
 export function finalDamageMultiplier(sourceBonusRates) {
   list(sourceBonusRates, 'Final Damage source rates');
-  return finite(sourceBonusRates.reduce((product, rate) => product * (1 + finite(rate, 'Final Damage bonus')), 1), 'Final Damage multiplier');
+  return finite(sourceBonusRates.reduce((product, rate) => {
+    finite(rate, 'Final Damage bonus');
+    if (rate > 0 && 1 + rate === 1) throw new RangeError('Final Damage bonus below supported factor precision.');
+    return finite(product * (1 + rate), 'Final Damage product');
+  }, 1), 'Final Damage multiplier');
 }
 
 // These are exact confirmed multipliers at the same source stage. Rounded UI
@@ -73,6 +90,9 @@ export function replaceFinalDamageSource(totalMultiplier, oldBonusRate, newBonus
   finite(totalMultiplier, 'Total Final Damage multiplier', { min: 1 });
   finite(oldBonusRate, 'Old Final Damage bonus');
   finite(newBonusRate, 'New Final Damage bonus');
+  for (const rate of [oldBonusRate, newBonusRate]) {
+    if (rate > 0 && 1 + rate === 1) throw new RangeError('Final Damage bonus below supported factor precision.');
+  }
   const unchanged = totalMultiplier / (1 + oldBonusRate);
   if (unchanged < 1) throw new RangeError('Old source exceeds the confirmed Final Damage total.');
   return finite(unchanged * (1 + newBonusRate), 'Replaced Final Damage multiplier');
@@ -98,7 +118,9 @@ export function expectedTransformedDamage({ outcomes, exponent, skillCoefficient
     finite(outcome.probability, 'Outcome probability', { max: 1 });
     finite(outcome.preTransformDamage, 'Pre-transform damage');
     mass += outcome.probability;
-    expectation += outcome.probability * outcome.preTransformDamage ** exponent * skillCoefficient;
+    const term = finite(outcome.probability * outcome.preTransformDamage ** exponent * skillCoefficient, 'Weighted outcome');
+    if (outcome.probability > 0 && outcome.preTransformDamage > 0 && skillCoefficient > 0 && term === 0) throw new RangeError('Weighted outcome underflow.');
+    expectation = finite(expectation + term, 'Expected transformed damage');
   }
   if (Math.abs(mass - 1) > 1e-10) throw new RangeError('Outcome probabilities must sum to 1.');
   return finite(expectation, 'Expected transformed damage');
@@ -110,6 +132,7 @@ export function relativeImpact(current, candidate) {
   finite(candidate, 'Candidate modeled amount');
   if (current === 0) return { ratio: null, percentChange: null, reason: 'zero-baseline' };
   const ratio = finite(candidate / current, 'Relative ratio');
+  if (candidate > 0 && ratio === 0) throw new RangeError('Relative ratio underflow.');
   const percentChange = finite((ratio - 1) * 100, 'Relative percentage change', { min: -100 });
   return { ratio, percentChange, reason: null };
 }

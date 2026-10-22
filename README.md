@@ -20,11 +20,13 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Current phase
 
-A screenshot-first application now provides local screenshot reference, dynamic manual item lines, repeated/unknown/unmatched line retention, exact raw differences, and instant System / BasilMarket / Hidden Street skins. Damage recommendations and OCR are not implemented. Contact/report delivery and support payments are unavailable. See [visual release verification](docs/VISUAL_RELEASE.md) and [independent QA](docs/VISUAL_RELEASE_QA.md). A deployed scaffold, visual release, encoded formula and live-game validation are separate milestones.
+Production visual release `b827d72` provides local screenshot reference, dynamic manual item lines, repeated/unknown/unmatched line retention, exact raw differences, and instant System / BasilMarket / Hidden Street skins. Contact/report delivery and support payments are unavailable. See [visual release verification](docs/VISUAL_RELEASE.md).
+
+The `feature/source-linked-damage-model` branch adds pure source-linked aggregation and ordinary pre-content stages, plus an optional UI explaining isolated independent Final Damage source changes. Complete battle-context recommendations and DPS remain unavailable. A separate loopback OCR evaluation exposes merged numeric columns on the approved example, so OCR is not integrated into the application. See [feature scope and verification](docs/FEATURE_PREVIEW.md), [model QA](docs/DAMAGE_MODEL_QA.md), and [OCR evaluation](docs/OCR_EVALUATION.md). No controlled live-game validation has been performed.
 
 ## Run locally
 
-Use Node.js 22 or later. No third-party packages or installation step are required.
+Use Node.js 22 or later. Running the application requires no third-party packages or installation step. The optional OCR evaluation requires the pinned development packages installed with `npm ci --ignore-scripts`.
 
 ```sh
 npm run dev
@@ -37,7 +39,9 @@ Open the printed local URL (`http://127.0.0.1:4173`). Item data is kept in memor
 - `public/index.html` and `public/styles.css`: one semantic page with shared geometry and two theme palettes.
 - `public/theme.js`: pre-paint appearance selection and optional preference persistence.
 - `public/app.js`: form, screenshot reference, validation, and result presentation.
-- `public/domain/item-lines.js`: lossless dynamic manual lines and exact occurrence-based raw differences; no aggregation or equipment winner. Legacy `comparison.js` and isolated `mechanics.js` retain regression coverage; neither is an integrated damage model.
+- `public/domain/item-lines.js`: lossless dynamic manual lines and exact occurrence-based raw differences; no equipment winner.
+- `public/domain/mechanics-data.js`, `reaggregation.js`, `damage-model.js`: versioned claims, source replacement and partial ordinary stages; see the feature scope before using their output.
+- `public/domain/ocr-session.js` and `scripts/serve-ocr-evaluation.mjs`: pure ephemeral text/correction state and separate local evaluation harness; no application OCR imports.
 - `public/config.js`: single unavailable future support destination.
 - `tests/comparison.test.mjs`: missing values, invalid inputs, differences, and no unsupported damage verdicts.
 
@@ -49,4 +53,4 @@ The existing Vercel connection and `msidlecalc.com` domain were configured by th
 
 ## Verification
 
-When verification is requested, use `npm test`, `node scripts/check-colors.mjs`, and the local browser preview. See `docs/INITIAL_PREVIEW_REVIEW.md` for the checks performed and limits of this initial release.
+Use `npm test`, `npm run check`, `npm run build`, and the local browser preview. The current feature checkpoint passes 81 synthetic tests. See the current feature and QA documents above for exercised browser behavior and the limits of those checks; arithmetic agreement is not live-game validation.

@@ -32,6 +32,8 @@ Immediate operating changes: maintain the source→requirement→implementation�
 
 **Phase 2 review:** independent QA exposed four numerical precision failures (underflow and subprecision source handling); regression fixes precede preview. Later official notices supply state-dependent Guild mechanics and a Guild War stage-scaling correction, so the guide date alone is insufficient to claim current encounter completeness. A published overlapping PvP level range is handled by abstaining on ambiguous transitions, not choosing a low-confidence numeric convention. After the credit interruption, two new uncommitted files were empty; owners restored their full content, checked byte counts/imports and reran the suite. Checkpoint verified work in commits and verify post-interruption file integrity before trusting prior successful write reports.
 
+**OCR evaluation review:** identical repeated OCR text can still be wrong: the approved example merged adjacent candidate values. Preserve raw observations and require representative ground truth before adoption. An unblurred correction was lost by a change-only handler; commit edits on input and test retention through failure/recovery. A resource-denial gate establishes only the resources it actually blocks; main-page instrumentation does not cover worker globals. Keep those limits explicit in evidence and product claims.
+
 Specialist briefing record: every dispatch must include this audit, current user corrections, relevant full source materials, exact write ownership and explicit output/verification boundary. Orchestrator owns integration, lessons and requirement reconciliation.
 
 - **Date / milestone:** 2026-10-22 — GitHub connection and planning transfer.

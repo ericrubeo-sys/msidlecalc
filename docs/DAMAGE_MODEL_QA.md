@@ -38,7 +38,7 @@ One QA assertion initially required every claim URL to be the guide; the subsequ
 
 ## Final verification and permitted scope
 
-Latest `node --test tests/*.test.mjs`: **57 passed, 0 failed**, including **22 independent QA invariant tests** in `tests/damage-invariants.test.mjs`. These exercise ordered replacement, source identity/stage rejection, multiplicative FD, nonunit caps, saturated/rounded/impossible inverses, explicit full factors and outcome distributions, zero-defense mitigation, nonlinear expectation/coefficient ordering, equal/swapped states, zero baselines, unsupported effects/contexts, missing candidate state, provenance/version metadata, numerical failure handling and the isolated PvP defender-level stage reviewed below.
+At the PvP review checkpoint, `node --test tests/*.test.mjs`: **57 passed, 0 failed**, including **22 independent QA invariant tests** in `tests/damage-invariants.test.mjs`. These exercise ordered replacement, source identity/stage rejection, multiplicative FD, nonunit caps, saturated/rounded/impossible inverses, explicit full factors and outcome distributions, zero-defense mitigation, nonlinear expectation/coefficient ordering, equal/swapped states, zero baselines, unsupported effects/contexts, missing candidate state, provenance/version metadata, numerical failure handling and the isolated PvP defender-level stage reviewed below.
 
 No unresolved blocking defect found in the reviewed new pure modules after the corrections. The isolated ordinary pre-content stage and source-reaggregation results remain partial explanations. Named Chapter, Boss, Guild and Arena contexts never gain numerical recommendations; complete-effects confirmation cannot override that scope. Missing Main Stat conversion, skill/cadence/trigger effects and unknown consequences do not receive arbitrary weights. Player HP/Defense/Evasion/CP are not accepted offensive factor IDs; `defense` specifically means the outgoing target-mitigation factor.
 
@@ -62,3 +62,19 @@ No additional numerical or scope blocker was found for this isolated helper. Its
 ## Interruption recovery verification
 
 During the resumed review, `mechanics-data.js` and `DAMAGE_MODEL_SPEC.md` were observed at zero bytes after an interrupted edit. Their owners independently detected and restored them before testing. This was an interruption-recovery incident, not a persisting model regression. Final pre-test byte checks confirmed `damage-model.js` 9,278 bytes, `mechanics-data.js` 7,826 bytes, `reaggregation.js` 7,370 bytes and the complete specification 21,095 bytes. The restored registry exports resolve, the complete specification was read, and the full suite passed afterward. A successful write call alone should not substitute for post-write size/content/import checks and a checkpoint after interruption recovery.
+
+## Final direct-primitive precision follow-up
+
+Root aligned the older exported helpers in `mechanics.js` with the newer numerical guards, evidence revision `published-rules-2026-10-15-v2`. Independent review found the same two adjacent precision classes still present in direct rate normalization and ordered additive-bonus stages; root also corrected them. No source equation, permitted context or model claim was broadened.
+
+New owned `tests/mechanics-precision.test.mjs`: **7 passed, 0 failed**. Focused assertions establish:
+
+- Positive displayed/internal rates that normalize to zero reject; true zero and explicit fractional units retain their correct identities.
+- Positive ordinary/skill additive-bonus sums that disappear in `1+bonus` reject, consistent with FD bonus precision guards. The existing ordered-stage example remains valid.
+- Tiny remaining-cap source rates survive cancellation; nonunit caps retain absolute rate units; the neutral identity is positive zero. Every source is validated before returning an early saturated cap, and normalization underflow rejects.
+- Direct FD aggregation and exact-source replacement reject subprecision bonuses and arithmetic overflow consistently while retaining the 1.56→1.82 synthetic replacement.
+- Positive weighted outcomes that underflow and nonfinite weighted results reject. True zero-probability/zero-damage/zero-coefficient outcomes remain permitted, avoiding false failures for actual zeros.
+- Positive-candidate ratio underflow rejects. Actual zero candidate is a valid -100% partial ratio; a zero baseline has no percentage. Equal/swapped ratios retain their existing identities.
+- Evidence remains isolated-primitives scope, unknown build and no empirical validation.
+
+Latest complete suite, including the separately reviewed OCR session tests: **81 passed, 0 failed** (`node --test --test-reporter=dot tests/*.test.mjs`, exit 0). No unresolved direct-helper blocker found in this bounded review. This does not assert exact real arithmetic, disclosed game rounding or new numerical accuracy outside the explicit finite IEEE-754 policy.
