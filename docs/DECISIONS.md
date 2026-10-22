@@ -32,3 +32,9 @@ For new choices, record the date, decision, alternatives considered, evidence, a
 ## 2026-10-22 — Repository reconciliation
 
 Inspected the existing `main` branch and initial commit. Preserve that history and `.gitignore`, expand the initial README with the local guide, and add the planning documents. The user authorized transferring these materials to `ericrubeo-sys/msidlecalc`; deployment and access to other projects are outside this authorization.
+
+## 2026-10-22 — Initial Vercel-ready page
+
+The user requested an initial page and GitHub push to verify Vercel go-live. Repository inspection found planning files and no application stack to retain. Use dependency-free static HTML/CSS/native JavaScript modules for this first browser-only preview, with `public/` as the explicitly configured Vercel output. A framework can be adopted if application complexity warrants it; none is required for the current flow.
+
+Implement a manual raw-stat comparison, optional local screenshot reference, and both planned skins now. Keep comparison logic separate from UI and future OCR. Because the source register has no validated formulas, return no damage winner or damage percentage and show Low confidence plus the limitations. Do not guess numerical mechanics merely to make the first page appear complete. Full deployment, domain configuration, and final visual approval remain review steps.

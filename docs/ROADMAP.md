@@ -16,7 +16,7 @@
 
 ## Phase 2 — Manual comparison experience
 
-- [ ] Inspect the repository and select or retain its existing stack based on evidence.
+- [x] Inspect the repository and select or retain its existing stack based on evidence. Initial preview uses buildless HTML/CSS/native JavaScript modules.
 - [ ] Build a responsive one-page flow with manual input for the two items and relevant character/activity context.
 - [ ] Present the verdict, confidence, key factors, and assumptions.
 - [ ] Add golden and boundary fixtures for the pure calculator before trusting numeric recommendations.
@@ -39,6 +39,8 @@
 - [ ] Evaluate library/version changes against a labeled local fixture set and record field-level results.
 
 ## Phase 5 — Review and preview deployment
+
+Initial page implemented for Vercel review on 2026-10-22. It provides raw stat differences, not a damage model. See `INITIAL_PREVIEW_REVIEW.md` for checked behavior and remaining review work.
 
 - [ ] Conduct product, mechanics, privacy, security, and mobile reviews.
 - [ ] Review the preview with the user before production deployment.

@@ -20,4 +20,32 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Current phase
 
-Project setup and evidence gathering. Do not present damage calculations as definitive until relevant game mechanics are supported by sources and assumptions are visible to users.
+An initial responsive web preview is implemented: manual item entry, activity context, local screenshot reference, raw stat differences, and instant System / Light / Dark appearance. Damage recommendations and OCR are not implemented. Do not present damage calculations as definitive until relevant game mechanics are supported by sources and assumptions are visible to users.
+
+## Run locally
+
+Use Node.js 22 or later. No third-party packages or installation step are required.
+
+```sh
+npm run dev
+```
+
+Open the printed local URL (`http://127.0.0.1:4173`). Item data is kept in memory; only the appearance preference is saved locally.
+
+## Implementation layout
+
+- `public/index.html` and `public/styles.css`: one semantic page with shared geometry and two theme palettes.
+- `public/theme.js`: pre-paint appearance selection and optional preference persistence.
+- `public/app.js`: form, screenshot reference, validation, and result presentation.
+- `public/domain/comparison.js`: pure stat-difference logic, stat registry, and explicit unavailable damage-model status. Future sourced formulas belong in this layer; OCR should remain a separate input adapter.
+- `tests/comparison.test.mjs`: missing values, invalid inputs, differences, and no unsupported damage verdicts.
+
+## Vercel deployment
+
+Import only `ericrubeo-sys/msidlecalc`, branch `main`, into the separate `msidlecalc` project. Keep Root Directory at `./` and Framework Preset at **Other**. The tracked `vercel.json` specifies no build command and `public` as the output directory. No environment variables are needed. Only `public/` is served; planning documents are not part of the website output.
+
+Review the resulting `.vercel.app` deployment before connecting the Namecheap domain `msidlecalc.com`. This commit does not configure Vercel, deploy through a hosting tool, or change DNS.
+
+## Verification
+
+When verification is requested, use `npm test`, `node scripts/check-colors.mjs`, and the local browser preview. See `docs/INITIAL_PREVIEW_REVIEW.md` for the checks performed and limits of this initial release.
