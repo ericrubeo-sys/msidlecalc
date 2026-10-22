@@ -1,5 +1,19 @@
 # Decisions and open questions
 
+## Current execution authority — 2026-10-22
+
+The user approves the latest revised screenshot-first direction and explicitly authorizes its push to production `main` through the existing GitHub → Vercel connection. Preserve project/domain settings. This supersedes older pending visual/production approval gates for this specified release. Later calculation/OCR release still requires separate approval.
+
+Use distinct Designer, UX, Damage Mathematician, Data & Tooling and independent QA roles; orchestrator owns integration. Chief of Staff audit precedes implementation/research and briefs all assignments. See `LESSONS.md` and `VISUAL_RELEASE.md`.
+
+Appearance options are System / **BasilMarket** / **Hidden Street**, as verified from first-party site indexed content. Names identify visual inspiration; no affiliation claim. System exposes its resolved skin accessibly and in the control title. Header typography contracts slightly on narrow screens to fit the longer names without another header row.
+
+The user explicitly authorizes publishing the **exact mockup screenshot** as the landing example in a reply this execution. That overrides its earlier local-only status for this one image; other real fixtures remain private. Leaf remains the selected GMS/83 item 4001126 runtime image.
+
+Manual path now uses dynamic ordered lines, explicit units and raw comparisons; no fixed six-field limit. It never implies raw gains establish damage. OCR, numerical recommendations, report/contact delivery and payment integration remain unavailable. Support has one null destination configuration and a compact yellow disabled placeholder.
+
+Multiple separate supported battle-context recommendations after Calculate supersede the historical one-primary-context presentation. Do not require equipping an unavailable candidate; investigate source reaggregation and ask only for mathematically necessary missing inputs. Reconsider temporary/skill/artifact effects for advanced accuracy; confirmed passive totals must not be double-counted. No unmodeled tie-breakers.
+
 ## Confirmed
 
 | Decision | Current choice | Reason / boundary |

@@ -1,5 +1,11 @@
 # Coordinated build requirements — 2026-10-22
 
+## Current execution checkpoint
+
+Latest user instructions authorize the visual production release and exact example screenshot publication. The old approval gates, generic Light/Dark labels, one-primary-context presentation and candidate-post-equip fallback below are historical and superseded where they conflict. Current source→requirement→implementation→verification checklist: **[VISUAL_RELEASE.md](VISUAL_RELEASE.md)**. Revisited during implementation and pre-release review.
+
+Phase 2 must maintain that traceability for every encoded rule and field: source claim, variables/units, stacking/cap/order/rounding/context, unresolved dependencies, pure implementation, independent fixtures and separate empirical validation. Dynamic manual path is implemented; OCR remains gated on a reviewed numerical core and permitted evaluation fixtures. Light-input Critical Rate/Accuracy sufficiency is a hypothesis, not specification. Separate supported context recommendations, correct source replacement and minimum available measurements are required; do not require equipping an unavailable item.
+
 Branch: `feature/planned-calculator-build`. Production baseline: `423a060`. Current stage: evidence reconciliation and visual checkpoint; full visual implementation requires user approval. Application UI entrypoints and live deployment are unchanged. Isolated domain primitives were added on this feature branch without UI imports or a numerical verdict.
 
 ## Authority and recovered evidence

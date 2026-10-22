@@ -3,70 +3,43 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A fan-made MapleStory Idle equipment comparison tool. Explore item stat differences in a private, browser-based early preview.">
+  <meta name="description" content="A free hobby project for the MapleStory Idle community. Compare equipment lines manually while damage modeling and local screenshot reading are developed.">
   <meta name="color-scheme" content="light dark">
-  <title>msIdleCalc — A clearer look at your next upgrade</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <title>msIdleCalc — MapleStory Idle Equipment Comparison</title>
+  <link rel="icon" href="data:,">
   <script src="/theme.js"></script>
   <link rel="stylesheet" href="/styles.css">
   <script type="module" src="/app.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to comparison</a>
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="#" aria-label="msIdleCalc home"><img src="/favicon.svg" width="36" height="36" alt=""><span>msIdle<span class="brand-accent">Calc</span></span></a>
-      <span class="preview-tag">Early preview</span>
-      <div class="appearance"><label for="theme">Appearance</label><select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
-    </div>
-  </header>
-  <div class="nav-band"><nav class="container" aria-label="Main navigation"><a href="#compare" aria-current="page">Equipment compare</a><a href="#method">How it works</a><a href="#about">About</a></nav></div>
-  <main id="main" class="container">
-    <section class="hero" aria-labelledby="page-title">
-      <div class="hero-copy"><p class="eyebrow">A little clarity for your next adventure</p><h1 id="page-title">A clearer look at<br>your next upgrade.</h1><p class="hero-description">Two items. One equipment decision. Bring your stats together, see what changes, and keep the unknowns in view.</p><div class="hero-notes"><span><i aria-hidden="true">◇</i> Made for MapleStory Idle</span><span><i aria-hidden="true">⌁</i> Item inputs stay in this tab</span></div></div>
-      <div class="world" aria-hidden="true">
-        <svg viewBox="0 0 400 220" role="presentation">
-          <circle class="world-sun" cx="300" cy="56" r="27"/>
-          <path class="world-cloud" d="M44 60h59m-42 10h83m112 31h72" fill="none" stroke-width="6" stroke-linecap="round"/>
-          <path class="world-far" d="m0 180 76-85 56 48 49-67 96 102 53-59 70 64v37H0Z"/>
-          <path class="world-near" d="m0 201 91-51 61 36 100-43 148 63v14H0Z"/>
-          <ellipse class="world-ground" cx="211" cy="202" rx="93" ry="11"/>
-          <path class="world-pedestal" d="m152 180 55-18 55 18v15l-55 18-55-18Z"/>
-          <path class="world-top" d="m152 180 55-18 55 18-55 18Z"/>
-          <path class="world-gem" d="m207 64 31 41-31 49-31-49Z"/>
-          <path class="world-facet" d="m207 64 0 90-31-49Z"/>
-          <path class="world-shine" d="m207 78 16 26-16 32-16-32Z" fill="none" stroke-width="2"/>
-          <path class="world-spark" d="M154 93v16m-8-8h16m111 30v12m-6-6h12M260 57v12m-6-6h12" fill="none" stroke-width="2"/>
-        </svg>
-        <span class="world-caption">A small tool for the journey ahead</span>
+  <div class="site">
+    <header class="masthead">
+      <h1 class="brand"><img class="brand-mark" src="https://maplestory.io/api/GMS/83/item/4001126/icon" width="32" height="32" alt=""><span>MapleStory Idle<br>Equipment Comparison</span></h1>
+      <label class="appearance" for="theme">Appearance<select id="theme" aria-describedby="theme-status"><option value="system">System</option><option value="light">BasilMarket</option><option value="dark">Hidden Street</option></select><span id="theme-status" class="visually-hidden">System</span></label>
+    </header>
+    <main id="main" class="workarea">
+      <div class="intake">
+        <div class="guide-frame"><img class="sample-image" src="/assets/comparison-example.jpg" width="1280" height="590" alt="Example full game screenshot with the currently equipped panel outlined in gold and candidate panel in cyan"><span class="mark current" aria-hidden="true"></span><span class="mark candidate" aria-hidden="true"></span></div>
+        <div class="legend"><span><i class="swatch" aria-hidden="true"></i>Currently equipped</span><span><i class="swatch candidate" aria-hidden="true"></i>Candidate</span></div>
+        <label class="upload" for="screenshot">Choose screenshot</label><input class="visually-hidden" id="screenshot" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="availability screenshot-status">
+        <p class="availability" id="availability">Automatic reading and damage recommendations are in development. Enter item details manually below.</p>
+        <p id="screenshot-status" role="status"></p>
+        <div id="image-reference" hidden><img id="screenshot-preview" alt="Your selected screenshot reference"><button type="button" id="remove-image">Remove screenshot</button></div>
+        <details id="manual"><summary>Enter item details manually</summary>
+          <form id="comparison-form" novalidate>
+            <p>Copy every visible line in order, including repeated or unknown stats. Blank values stay unknown. Enter 0 only for an explicit zero. No need to equip the candidate.</p>
+            <div class="items-grid" id="item-fields"></div>
+            <button class="primary" type="submit">Compare entered lines</button>
+            <p class="form-error" id="form-error" role="alert" hidden></p>
+          </form>
+          <section id="results" tabindex="-1" aria-labelledby="result-title" hidden><h2 id="result-title">Entered line comparison</h2><p id="stale-result" hidden>Entries changed. Compare again to update this result.</p><p>Raw differences only. Repeated lines are shown separately in occurrence order; matching does not establish the same mechanical source.</p><div id="result-rows"></div><p><strong>Damage recommendation: unavailable. Confidence: Low.</strong> These differences do not establish an equipment winner. Unknown effects, stacking, baseline totals, skills and battle rules need a supported model.</p></section>
+        </details>
+        <noscript><p>Enable JavaScript for local image selection and manual line comparison. No screenshot is sent to a processing service.</p></noscript>
       </div>
-    </section>
-
-    <div class="preview-notice"><span class="notice-mark" aria-hidden="true">i</span><p><strong>The workbench is open.</strong> Compare raw stats today. Damage recommendations and screenshot recognition are still being developed.</p><a href="#method">What’s available <span aria-hidden="true">↗</span></a></div>
-
-    <section id="compare" class="workbench" aria-labelledby="compare-title">
-      <div class="section-heading"><div><p class="eyebrow">01 / Your equipment</p><h2 id="compare-title">Put your items side by side.</h2></div><button type="button" class="button secondary" id="demo">Try sample values <span aria-hidden="true">↗</span></button></div>
-      <p class="section-intro">Copy the stat lines from each item. Leave unknown values blank; enter 0 only when you know a stat is absent. Use the same units for both items.</p>
-
-      <details class="screenshot-panel"><summary>Use a screenshot as a reference <span class="quiet">Optional · local preview only</span></summary><div class="screenshot-content"><p id="screenshot-help">Choose a PNG, JPEG, or WebP image up to 10 MB. It stays in this tab. Automatic text recognition is not available yet; enter its values below.</p><label class="file-label" for="screenshot">Choose screenshot</label><input id="screenshot" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="screenshot-help screenshot-status"><p id="screenshot-status" role="status"></p><div id="image-reference" hidden><img id="screenshot-preview" alt="Your selected equipment comparison reference"><button type="button" class="button secondary" id="remove-image">Remove screenshot</button></div></div></details>
-
-      <form id="comparison-form" novalidate>
-        <p id="demo-note" class="sample-note" hidden>Sample values loaded. These are invented practice items, not sourced game data. Editing them keeps this a sample comparison until you clear it.</p>
-        <div class="items-grid" id="item-fields"></div>
-        <noscript><p class="preview-notice">Enable JavaScript to enter items and compare stat differences. This page runs the comparison in your browser.</p></noscript>
-        <div class="context-row"><div class="context-field"><label for="activity">Activity context</label><select id="activity" name="activity"><option value="boss">Boss</option><option value="chapter">Chapter Breakthrough</option></select></div><p>Included with your comparison. Activity-specific damage mechanics are still under research.</p></div>
-        <div class="form-actions"><div><button class="button primary" type="submit">Compare stat changes <span aria-hidden="true">→</span></button><button class="button text-button" type="reset">Clear items</button></div><p>No account. No item data saved.</p></div>
-        <p class="form-error" id="form-error" role="alert" hidden></p>
-      </form>
-    </section>
-
-    <section id="results" class="results-panel" aria-labelledby="results-title" tabindex="-1">
-      <div class="result-empty" id="result-empty"><span class="empty-symbol" aria-hidden="true">⇄</span><div><p class="eyebrow">02 / The comparison</p><h2 id="results-title">Every upgrade starts with a closer look.</h2><p>Enter a matching stat for both items to see the difference here.</p></div><span class="outline-tag">Awaiting your items</span></div>
-      <div id="result-content" hidden><div class="result-heading"><div><p class="eyebrow">02 / The comparison</p><h2>Here’s what changes.</h2><p id="result-context"></p></div><span id="sample-result" class="outline-tag" hidden>Sample comparison</span></div><p id="stale-result" class="sample-note" hidden>Your inputs have changed. Compare again to update these results.</p><div class="table-wrap"><table><caption id="result-caption"></caption><thead><tr><th scope="col">Stat</th><th scope="col" id="current-column">Equipped</th><th scope="col" id="candidate-column">Candidate</th><th scope="col">Change</th></tr></thead><tbody id="result-rows"></tbody></table></div><div class="verdict-note"><span class="notice-mark" aria-hidden="true">i</span><div><h3>Damage verdict: not available yet</h3><p><strong>Confidence: Low.</strong> Stat differences alone cannot establish which item deals more damage. Scaling, caps, accuracy, skill effects, and activity modifiers still need verified evidence.</p><a href="#method">Read the current assumptions →</a></div></div></div>
-    </section>
-
-    <section id="method" class="method-section" aria-labelledby="method-title"><div class="section-heading"><div><p class="eyebrow">Built with the unknowns in view</p><h2 id="method-title">A comparison you can follow.</h2></div><span class="outline-tag">Preview v0.1</span></div><div class="method-grid"><article><span class="method-number">01</span><h3>Your items, your corrections</h3><p>Start with manual entry. Screenshot recognition will come later, with every extracted value editable before comparison.</p></article><article><span class="method-number">02</span><h3>Stats first. Evidence next.</h3><p>Today’s result is candidate minus equipped, in matching units. Percentage stats use percentage-point changes. Blank values stay unknown.</p></article><article><span class="method-number">03</span><h3>A verdict when it’s supported</h3><p>Future recommendations will include High / Medium / Low confidence, key factors, and source-linked assumptions. CP is not used as a damage verdict.</p></article></div><details class="evidence-details"><summary>Sources &amp; current limitations</summary><p>No damage formula has been validated for this preview. No Attack, Main Stat, Critical Rate, Critical Damage, Accuracy, or skill-level scaling is assumed. Activity is recorded as context and does not change raw differences.</p><p>This first form covers six stat lines, not every possible item effect. A higher number in the table is not an equip recommendation.</p><a href="https://github.com/ericrubeo-sys/msidlecalc/blob/main/research/SOURCES.md" target="_blank" rel="noopener noreferrer">View the mechanics research register ↗</a></details></section>
-  </main>
-  <footer id="about" class="site-footer"><div class="container"><div class="footer-top"><a class="brand" href="#">msIdle<span class="brand-accent">Calc</span></a><p>An independent, fan-made tool for MapleStory Idle.<br>Not affiliated with or endorsed by Nexon.</p><a href="https://github.com/ericrubeo-sys/msidlecalc" target="_blank" rel="noopener noreferrer">Project on GitHub ↗</a></div><details><summary>Privacy &amp; local data</summary><p>Item inputs and your optional screenshot stay in the current page session. This app sends neither to a processing service and does not save them across reloads. Only your appearance preference is saved in this browser. There are no accounts or app analytics. Hosting providers may process routine request information to serve the site.</p></details><p class="footer-bottom">Made for thoughtful equipment decisions. One item at a time.</p></div></footer>
+    </main>
+    <footer class="footer"><p class="legal">This site is a free hobby project for the MapleStory Idle community. MapleStory and its assets belong to Nexon; this project is not affiliated with Nexon.</p><div class="footlinks"><a href="#methodology" data-panel="methodology">Methodology</a><a href="#report-bug" data-panel="report-bug">Report a Bug</a><a href="#contact-us" data-panel="contact-us">Contact Us</a><span class="support"><button class="coffee" type="button" disabled aria-describedby="support-status">Support the project<small id="support-status">Coming soon</small></button></span></div></footer>
+  </div>
+  <dialog id="information" aria-labelledby="information-title"><h2 id="information-title"></h2><div id="information-body"></div><form method="dialog"><button>Close</button></form></dialog>
 </body>
 </html>

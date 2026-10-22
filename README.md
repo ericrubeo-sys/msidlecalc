@@ -20,7 +20,7 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Current phase
 
-An initial responsive web preview is implemented: manual item entry, activity context, local screenshot reference, raw stat differences, and instant System / Light / Dark appearance. Damage recommendations and OCR are not implemented. Do not present damage calculations as definitive until relevant game mechanics are supported by sources and assumptions are visible to users.
+A screenshot-first application now provides local screenshot reference, dynamic manual item lines, repeated/unknown/unmatched line retention, exact raw differences, and instant System / BasilMarket / Hidden Street skins. Damage recommendations and OCR are not implemented. Contact/report delivery and support payments are unavailable. See [visual release verification](docs/VISUAL_RELEASE.md) and [independent QA](docs/VISUAL_RELEASE_QA.md). A deployed scaffold, visual release, encoded formula and live-game validation are separate milestones.
 
 ## Run locally
 
@@ -37,14 +37,15 @@ Open the printed local URL (`http://127.0.0.1:4173`). Item data is kept in memor
 - `public/index.html` and `public/styles.css`: one semantic page with shared geometry and two theme palettes.
 - `public/theme.js`: pre-paint appearance selection and optional preference persistence.
 - `public/app.js`: form, screenshot reference, validation, and result presentation.
-- `public/domain/comparison.js`: pure stat-difference logic, stat registry, and explicit unavailable damage-model status. Future sourced formulas belong in this layer; OCR should remain a separate input adapter.
+- `public/domain/item-lines.js`: lossless dynamic manual lines and exact occurrence-based raw differences; no aggregation or equipment winner. Legacy `comparison.js` and isolated `mechanics.js` retain regression coverage; neither is an integrated damage model.
+- `public/config.js`: single unavailable future support destination.
 - `tests/comparison.test.mjs`: missing values, invalid inputs, differences, and no unsupported damage verdicts.
 
 ## Vercel deployment
 
 Import only `ericrubeo-sys/msidlecalc`, branch `main`, into the separate `msidlecalc` project. Keep Root Directory at `./` and Framework Preset at **Other**. The tracked `vercel.json` specifies no build command and `public` as the output directory. No environment variables are needed. Only `public/` is served; planning documents are not part of the website output.
 
-Review the resulting `.vercel.app` deployment before connecting the Namecheap domain `msidlecalc.com`. This commit does not configure Vercel, deploy through a hosting tool, or change DNS.
+The existing Vercel connection and `msidlecalc.com` domain were configured by the user. Preserve them. The user authorized this specified visual release to `main`; later calculation/OCR production release requires separate approval.
 
 ## Verification
 

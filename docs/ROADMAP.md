@@ -1,5 +1,18 @@
 # Roadmap
 
+## Active execution revision — 2026-10-22
+
+- [x] Bounded Chief of Staff audit recorded; distinct specialists briefed before work.
+- [x] User approves compact revised visual composition and specified production release.
+- [x] Translate checkpoint into real local image/manual application; preserve exact disclaimer, real leaf and authorized full screenshot.
+- [x] Dynamic unequal/repeated/unknown item lines, exact raw deltas, honest unavailable model/OCR/contact/payment.
+- [x] Named skins, 16 viewport/theme checks, independent code/domain review, tests, contrast and exercised privacy checks.
+- [ ] Push reviewed visual release to existing production branch; verify deployed commit, successful deployment and public behavior.
+- [ ] Then continue numerical work on a feature branch: source claim register, minimum-field/cancellation audit, valid replacement, exact context profiles and independent model tests.
+- [ ] Controlled game measurements and validation; local OCR only after manual numerical core, then reviewable feature preview and separate production approval.
+
+Older pending visual gates and one-primary-context notes below are superseded by the latest user execution request. Multiple separate supported context results are the current target. See `VISUAL_RELEASE.md` for the active checklist.
+
 ## Current build — 2026-10-22
 
 - [x] Start isolated feature branch `feature/planned-calculator-build`.
