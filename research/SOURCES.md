@@ -8,7 +8,7 @@ This register now links recovered prior planning and the 2026-10-22 primary-sour
 - Record date, game version/region if known, exact claim supported, source type, and any limitations.
 - Separate confirmed evidence, community reports, and our own inference.
 - Note conflicts rather than silently choosing one account.
-- When a mechanic remains unknown, use a conservative estimate, expose the assumption, or lower confidence.
+- When a mechanic remains unknown, preserve the gap and limit or abstain from dependent output. Lower confidence does not license an invented estimate or formula.
 
 ## Source register
 
@@ -24,8 +24,18 @@ This register now links recovered prior planning and the 2026-10-22 primary-sour
 | Chapter Breakthrough modifiers | [Nexon guide](https://maplestoryidle.nexon.com/en/guide) | Inspected 2026-10-22 | Current audit does not establish a complete profile | Unresolved | A missing table entry does not establish the identity transform |
 | Current damage formula | [Nexon guide, Battle §1.3](https://maplestoryidle.nexon.com/en/guide) | Same scope | Core sequence includes defense mitigation and separate damage, critical/range, mode and skill stages | Official published formula | Exceptions, distribution, rounding and required inputs prevent an unrestricted DPS claim |
 | Trigger timing | [Nexon Q&A](https://maplestoryidle.nexon.com/en/qna) | Inspected 2026-10-22 | Skill-use trigger checks differ from per-hit checks | Official developer explanation | Does not provide a full rotation/uptime model |
+| Pink Bean phases and Chapter boosters | [October15 patch](https://forum.nexon.com/maplestoryidle/board_view?board=6675&thread=3563772) | Rendered by integration owner2026-10-22; published2026-10-15; build unspecified | Timed statue buffs, HP-dependent Pink Bean received damage, temporary AFK Chapter offensive boosters; CP changes remain distinct from damage | Official published patch, rendered | No numeric phase formula or guaranteed buff-clearing procedure encoded |
+| Guild War target stage correction | [October15 live patch](https://forum.nexon.com/maplestoryidle/board_view?board=6653&thread=3564301) | Rendered by integration owner2026-10-22; publishedOct15 04:25; livepatch12:15UTC allservers | Corrects Guild War boss stats not increasing by stage; point/rank reset, restart required | Official published correction, rendered | Post-guide scope evidence; stage coefficients and controlled empirical confirmation absent |
 
 ## Formula ledger
+
+Phase2 implementation now has a versioned [encoded-rule and input dependency record](ENCODED_RULES.md), with canonical claim IDs in `public/domain/mechanics-data.js`. The fresh rendered-guide verification was performed by Damage Mathematician; Data & Tooling reconciled the complete technical handoff, existing audit and QA. These records separate official publication, synthetic implementation checks and absent live-game validation. Source replacement is implemented in `public/domain/reaggregation.js`; it can reconstruct candidate values from verified source decomposition without requiring the candidate equipped. Named encounter profiles, ordinary hit/range distributions and sustained DPS remain separate unresolved gates.
+
+Canonical IDs: **MSI-G15-UNITS**, **MSI-G15-ATTRIBUTE-ORDER**, **MSI-G15-FINAL-DAMAGE**, **MSI-G15-REMAINING-CAP**, **MSI-G15-DEFENSE**, **MSI-G15-DAMAGE-ORDER**, **MSI-G15-CRITICAL**, **MSI-G15-CONTEXT**, **MSI-G15-PVP-LEVEL**, **MSI-Q22-TRIGGERS**. Each machine record names variables, units, stacking, caps, order, rounding gaps, contexts and exceptions. Percentage-stage grouping is not generalized from source labels; new replacement APIs require already-aggregated factors where grouping is unresolved. The isolated PvP defender-level factor rejects paths crossing99→100 in either direction because published100+ overlaps the preceding band; it does not enable a full Arena result.
+
+Additional bounded official-source follow-up and exact forum links are recorded in [ENCODED_RULES.md](ENCODED_RULES.md#bounded-primary-source-follow-up): historical job-skill coefficient/passive tables are available for further dataset work, but full level progression/current balance was not established; numerical Main Stat conversion remains unresolved. October15 Pink Bean phases and temporary Chapter boosters limit generic profiles, while the identified October16 update is a login fix. Slot-level enhancement/Potential language supports architecture without proving every same-slot transfer invariant. No community or other-game formula was adopted. Claim-reference closure is executable in `tests/reaggregation.test.mjs`.
+
+Subsequent rendered notice verification found the October15 Guild War stage-scaling correction above. The integration owner inspected the latest English notice board6653, showing October16 app update then October15 live patch and older entries. This is scoped English-list verification, not exhaustive global coverage or empirical game validation.
 
 Prior formula research has been recovered under `docs/recovered/`. Current published-rule verification and replacement/expectation caveats are in `MECHANICS_AUDIT_2026-10-22.md`; independent acceptance cases are in `docs/MODEL_QA_AUDIT.md`. No full executable damage model or controlled in-game validation is complete. For every implemented formula, add:
 

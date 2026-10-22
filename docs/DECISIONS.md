@@ -2,6 +2,8 @@
 
 ## Current execution authority — 2026-10-22
 
+Phase 1 is deployed and verified at `b827d72`. Phase 2 now runs on `feature/source-linked-damage-model`; see `FEATURE_PREVIEW.md`, `DAMAGE_MODEL_SPEC.md` and independent QA. Numerical application scope is a conditional isolated Final Damage source effect, with all named-context recommendations unavailable. The ordinary stage/reaggregation/PvP level helpers are source-linked pure APIs, not a validated complete damage engine. Ambiguous level-100 transitions reject rather than selecting a preferred interpretation. OCR is a separate local evaluation, not adopted in the app.
+
 The user approves the latest revised screenshot-first direction and explicitly authorizes its push to production `main` through the existing GitHub → Vercel connection. Preserve project/domain settings. This supersedes older pending visual/production approval gates for this specified release. Later calculation/OCR release still requires separate approval.
 
 Use distinct Designer, UX, Damage Mathematician, Data & Tooling and independent QA roles; orchestrator owns integration. Chief of Staff audit precedes implementation/research and briefs all assignments. See `LESSONS.md` and `VISUAL_RELEASE.md`.

@@ -7,8 +7,9 @@
 - [x] Translate checkpoint into real local image/manual application; preserve exact disclaimer, real leaf and authorized full screenshot.
 - [x] Dynamic unequal/repeated/unknown item lines, exact raw deltas, honest unavailable model/OCR/contact/payment.
 - [x] Named skins, 16 viewport/theme checks, independent code/domain review, tests, contrast and exercised privacy checks.
-- [ ] Push reviewed visual release to existing production branch; verify deployed commit, successful deployment and public behavior.
-- [ ] Then continue numerical work on a feature branch: source claim register, minimum-field/cancellation audit, valid replacement, exact context profiles and independent model tests.
+- [x] Push reviewed visual release to existing production branch; verify deployed commit, successful deployment and public behavior (`b827d72`, Vercel success, public smoke check).
+- [x] Continue numerical work on a feature branch: source claim register, minimum-field/cancellation audit, valid replacement and independent model tests. Ordinary stage and partial FD UI implemented; full context profiles remain unsupported.
+- [ ] Finish local OCR evaluation and correction/stale-run session tests; do not adopt from one screenshot or claim broad accuracy.
 - [ ] Controlled game measurements and validation; local OCR only after manual numerical core, then reviewable feature preview and separate production approval.
 
 Older pending visual gates and one-primary-context notes below are superseded by the latest user execution request. Multiple separate supported context results are the current target. See `VISUAL_RELEASE.md` for the active checklist.

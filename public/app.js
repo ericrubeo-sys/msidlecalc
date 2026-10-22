@@ -1,5 +1,8 @@
 import { parseItemLines, compareItemLines } from './domain/item-lines.js';
 import { SUPPORT_DESTINATION } from './config.js';
+import { compareSupportedFactors } from './domain/damage-model.js';
+import { replaceFinalDamageSources } from './domain/reaggregation.js';
+import { getClaim } from './domain/mechanics-data.js';
 
 const $ = (selector) => document.querySelector(selector);
 let nextId = 0;
@@ -19,6 +22,7 @@ function element(tag, text, className) {
 function markStale() {
   revision++;
   if (!$('#results').hidden) $('#stale-result').hidden = false;
+  if (!$('#model-results').hidden) $('#model-stale').hidden = false;
 }
 function addLine(side) {
   const record = { id: `${side}-${nextId++}`, rawLabel: '', rawValue: '', unit: 'unknown', provenance: { kind: 'manual' }, confirmed: true };
@@ -97,6 +101,54 @@ $('#comparison-form').addEventListener('submit', (event) => {
   $('#stale-result').hidden = true; $('#results').hidden = false; $('#results').focus();
 });
 
+$('#independent-final').addEventListener('change', markStale);
+$('#calculate').addEventListener('click', () => {
+  const body = $('#model-effect'); body.replaceChildren();
+  const trace = $('#model-trace'); trace.replaceChildren();
+  const contexts = $('#context-results'); contexts.replaceChildren();
+  const current = parseItemLines(records.current);
+  const candidate = parseItemLines(records.candidate);
+  const fd = lines => lines.filter(line => line.statId === 'finalDamage');
+  const a = fd(current), b = fd(candidate);
+  const valid = lines => lines.length > 0 && lines.every(line => line.state === 'confirmed' && line.unit === 'displayPercent' && line.value >= 0);
+  let result = null;
+  if (!$('#independent-final').checked) body.append(element('p', 'No numerical effect calculated. Confirm the independent-source semantics before calculating.'));
+  else if (!valid(a) || !valid(b)) body.append(element('p', 'No numerical effect calculated. Both items need confirmed Final Damage source lines with % units. Missing or unreadable values remain unknown.'));
+  else {
+    try {
+      const source = line => ({ id: line.id, value: Number(line.effectiveValue.decimal) / 100 });
+      const replacement = replaceFinalDamageSources({ sources: a.map(source), oldSourceIds: a.map(line => line.id), candidateSources: b.map(source) });
+      const other = [...current, ...candidate].filter(line => line.statId !== 'finalDamage' && line.effectiveLabel.trim()).map(line => line.id);
+      result = compareSupportedFactors({ inputRevision: revision, factors: [{id:'finalDamage',current:replacement.before,candidate:replacement.after}],unsupportedEffects:other });
+      if (result.status !== 'partial' || !result.combinedFactor) throw new RangeError('Unsupported arithmetic');
+      const pct = result.combinedFactor.percentChange;
+      body.append(element('h3', 'Isolated Final Damage source effect'));
+      body.append(element('p', `${pct > 0 ? '+' : ''}${new Intl.NumberFormat(undefined,{maximumSignificantDigits:6}).format(pct)}% ordinary pre-content factor change. Confidence: Low.`));
+      body.append(element('p', 'This holds every other factor equal and assumes independent sources at the same stage. It is not an equipment recommendation, sustained DPS, or a result for any named battle.'));
+      body.append(element('p', 'The unchanged Final Damage sources cancel algebraically, so their total and Critical Rate are not required for this isolated factor. That cancellation does not establish the effects of your other item lines.'));
+      trace.append(element('p', `Model: ${result.modelVersion}. Source reaggregation: ${replacement.versions.model}. Dataset: ${replacement.versions.data}. Input revision: ${result.inputRevision}.`));
+      for (const id of result.combinedFactor.claimIds) {
+        const claim = getClaim(id); const p = element('p'); const link = element('a', `${id} · ${claim.source.section}`); link.href = claim.source.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; p.append(link); trace.append(p,element('p',claim.exactSupportedClaim));
+      }
+      trace.append(element('p', 'Source publication is official; implementation has synthetic fixtures only. No controlled live-game validation. Values are treated as entered; display rounding and hidden effects may limit predictions.'));
+      trace.append(element('p', `Other item lines retained but not evaluated: ${other.length}.`));
+    } catch (error) {
+      if (!(error instanceof TypeError || error instanceof RangeError)) throw error;
+      body.append(element('p', 'No numerical effect calculated. Values are outside the supported numerical range or source contract. Your entries are kept.'));
+    }
+  }
+  for (const [title,reason] of [
+    ['Chapter Breakthrough','A complete verified profile and encounter dependencies are not yet established.'],
+    ['Zakum / Horntail Boss Raids','The official guide describes a square-root-based adjustment; its prose does not establish a complete executable encounter profile.'],
+    ['Guild content','Guild Raid and Guild Training have distinct rules. Root-based descriptions and incomplete target/skill data do not support a general Guild recommendation.'],
+    ['Arena','PvP adjustment, opponent defenses, exceptions and skill interactions require a dedicated supported profile.'],
+  ]) {
+    const card = element('article',undefined,'context-result'); card.append(element('h3',title),element('p','Recommendation unavailable. Confidence: Low.'),element('p',reason)); contexts.append(card);
+  }
+  $('#model-results').hidden = false; $('#model-results').dataset.inputRevision = String(revision);
+  $('#model-stale').hidden = true; $('#model-results').focus();
+});
+
 function removeImage() {
   imageRevision++;
   if (imageUrl) URL.revokeObjectURL(imageUrl);
@@ -131,7 +183,7 @@ window.addEventListener('pagehide', (event) => { if (!event.persisted) removeIma
 
 const panels = {
   methodology: ['Methodology', [
-    'This release compares manually entered item lines. It does not read screenshots automatically or recommend equipment yet. Matching labels and units permits raw numerical subtraction only; repeated lines are never summed.',
+    'This preview compares manually entered item lines and can explain a conditional independent Final Damage source effect. It does not read screenshots automatically or recommend equipment yet. Matching labels and units permits raw numerical subtraction only; repeated lines are never summed.',
     'A damage model needs supported replacement and stacking rules, baseline character information and separate battle profiles. Combat Power is not DPS. Unsupported effects and missing values will not be scored with invented weights.',
     'Selected screenshots and item entries stay in this page session. Only the appearance preference is saved locally. The header loads a fixed leaf image from MapleStory.io; screenshots are not sent there. Hosting providers receive normal page requests.',
     'BasilMarket and Hidden Street are visual inspiration for the light and dark skins. This project is not affiliated with either site.'

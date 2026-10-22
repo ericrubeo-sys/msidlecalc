@@ -1,6 +1,6 @@
 # Visual release — 2026-10-22
 
-Status: implementation and local verification complete; production push/deployment verification pending at this record's creation. This is a functioning manual raw-line comparison application in the approved screenshot-first composition, not an OCR/damage calculator.
+Status: released and publicly verified. Production commit `b827d72e9e9f7cbc82229b6172c5dbdfbea7198f`; GitHub commit status `Vercel: success`, description “Deployment has completed”. Existing deployment: `https://vercel.com/erics-trade-binder/msidlecalc/8fV3UtPzXb55PwzsutvhTYVj8twz`. Public `https://msidlecalc.com` redirects to `https://www.msidlecalc.com/` and serves the approved composition. No project or domain settings changed. This is a functioning manual raw-line comparison application, not an OCR/damage calculator.
 
 ## Source → requirement → implementation → verification
 
@@ -26,5 +26,7 @@ Privacy harness: `node scripts/serve-privacy-check.mjs` serves instrumented copi
 The named styles retain original application structure and paint rather than fan-site branding. Source-site direct opens had access errors; Designer verified capitalization from first-party indexed titles/content. Third-party runtime leaf access is not a rights grant; the user explicitly selected and authorized this asset/release. The full example is the explicit public-image exception, not an OCR evaluation dataset.
 
 ## Phase 2 boundary
+
+Production browser smoke check at 375×812 confirmed leaf/example loaded, no horizontal overflow, synthetic Attack 100→110 yields raw +10 with unavailable damage verdict, theme preserves result, Contact Us explicitly unavailable, and no warning/error logs. Production capture: ignored `.review/production-light-375.png`. Local 16-case viewport review and runtime privacy checks are described above; no claim every local check was repeated on production. Source revision is linked by successful Vercel commit status and matching public behavior.
 
 After production is verified, branch calculation work separately. Build on the existing mechanics audit and independent acceptance cases; examine minimum inputs, source replacement and per-context eligibility before enabling numerical equipment recommendations. Keep unsupported effects visible and abstain where needed. Do not automatically promote the developing numerical engine or OCR to production.

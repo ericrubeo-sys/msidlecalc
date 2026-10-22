@@ -33,6 +33,15 @@
             <button class="primary" type="submit">Compare entered lines</button>
             <p class="form-error" id="form-error" role="alert" hidden></p>
           </form>
+          <details id="advanced"><summary>Advanced calculation · supported source effects</summary>
+            <p>This preview can isolate independent Final Damage sources from your entered lines. It cannot yet recommend equipment for a battle context. Other changed effects remain unmodeled.</p>
+            <p>Enter every compared item’s Final Damage source separately, with % units and known values on both items. An absent line is unknown; enter an explicit zero only when you have confirmed the effect is absent. No candidate equipment measurement is required.</p>
+            <label class="confirmation"><input type="checkbox" id="independent-final"> I have confirmed these are independent Final Damage bonuses, rather than an already combined total.</label>
+            <p>This assumption must match the source semantics. Item labels alone do not prove independence.</p>
+            <button type="button" id="calculate">Calculate</button>
+            <p id="model-error" role="alert" hidden></p>
+            <section id="model-results" aria-labelledby="model-title" tabindex="-1" hidden><h2 id="model-title">Calculation scope</h2><p id="model-stale" hidden>Entries changed. Calculate again to update this result.</p><div id="model-effect"></div><div id="context-results"></div><details><summary>Sources, assumptions and model version</summary><div id="model-trace"></div></details></section>
+          </details>
           <section id="results" tabindex="-1" aria-labelledby="result-title" hidden><h2 id="result-title">Entered line comparison</h2><p id="stale-result" hidden>Entries changed. Compare again to update this result.</p><p>Raw differences only. Repeated lines are shown separately in occurrence order; matching does not establish the same mechanical source.</p><div id="result-rows"></div><p><strong>Damage recommendation: unavailable. Confidence: Low.</strong> These differences do not establish an equipment winner. Unknown effects, stacking, baseline totals, skills and battle rules need a supported model.</p></section>
         </details>
         <noscript><p>Enable JavaScript for local image selection and manual line comparison. No screenshot is sent to a processing service.</p></noscript>

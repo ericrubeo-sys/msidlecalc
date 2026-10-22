@@ -2,6 +2,8 @@
 
 ## Current execution checkpoint
 
+Phase 1 verified production `b827d72`; Phase 2 source→requirement→implementation→verification checklist is now **[FEATURE_PREVIEW.md](FEATURE_PREVIEW.md)**. Full matrix of field consumers, cancellation, missing-data consequences and extraction limits is in `DAMAGE_MODEL_SPEC.md` and `research/ENCODED_RULES.md`. These are reviewed again during integration and preview QA. No named-context/DPS equipment verdict is enabled; official rule publication and passing arithmetic fixtures are separate from game validation.
+
 Latest user instructions authorize the visual production release and exact example screenshot publication. The old approval gates, generic Light/Dark labels, one-primary-context presentation and candidate-post-equip fallback below are historical and superseded where they conflict. Current source→requirement→implementation→verification checklist: **[VISUAL_RELEASE.md](VISUAL_RELEASE.md)**. Revisited during implementation and pre-release review.
 
 Phase 2 must maintain that traceability for every encoded rule and field: source claim, variables/units, stacking/cap/order/rounding/context, unresolved dependencies, pure implementation, independent fixtures and separate empirical validation. Dynamic manual path is implemented; OCR remains gated on a reviewed numerical core and permitted evaluation fixtures. Light-input Critical Rate/Accuracy sufficiency is a hypothesis, not specification. Separate supported context recommendations, correct source replacement and minimum available measurements are required; do not require equipping an unavailable item.
