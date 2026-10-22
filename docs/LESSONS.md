@@ -17,3 +17,9 @@ Record only durable lessons from user corrections, reproducible failures, daily 
 - **Impact:** Asking for existing setup information delayed actionable work.
 - **Change to try:** Inspect the msIdleCalc workspace and available repository access before requesting paths or setup details. Do not read or write ericstradebinder or eric-ai-toolkit files without explicit user authorization.
 - **Review point:** Next implementation or repository task.
+
+- **Date / milestone:** 2026-10-22 — Real build kickoff after deployment scaffold.
+- **Observation:** The initial page used generic diamond/hero visuals and missed the user's earlier screenshot-first composition. Earlier msIdleCalc calculations and actual mockups existed in a separate visualization folder, discoverable from the relevant chat, despite the checked-in source ledger being blank.
+- **Impact:** Treating the incomplete repository as the complete planning record caused incorrect statements about missing prior work and unnecessary repeated questions.
+- **Change to try:** Reconcile relevant msIdleCalc chat/artifacts with repository plans first; track requirements by source, preserve explicit user copy and asset choices, and show a concrete visual checkpoint before implementation. Keep Designer and UX distinct. Do not equate a working deployment or correct arithmetic with approved design or validated mechanics.
+- **Review point:** User visual approval and independent formula review before the next implementation milestone.

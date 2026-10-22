@@ -147,3 +147,7 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Local design review may contain user-supplied screenshots. Never publish it.
+.review/
+.private-fixtures/

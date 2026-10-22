@@ -17,6 +17,8 @@
 
 ## Open
 
+Current 2026-10-22 kickoff and recovered decisions below supersede conflicting older scope notes. The current live scaffold is not approved visual design.
+
 - What exact formulas and stat effects are verified for the current game version?
 - Which target / enemy details are needed to model accuracy and hit reliability?
 - How do skill-level lines affect the character's equipped skills and expected damage?
@@ -38,3 +40,15 @@ Inspected the existing `main` branch and initial commit. Preserve that history a
 The user requested an initial page and GitHub push to verify Vercel go-live. Repository inspection found planning files and no application stack to retain. Use dependency-free static HTML/CSS/native JavaScript modules for this first browser-only preview, with `public/` as the explicitly configured Vercel output. A framework can be adopted if application complexity warrants it; none is required for the current flow.
 
 Implement a manual raw-stat comparison, optional local screenshot reference, and both planned skins now. Keep comparison logic separate from UI and future OCR. Because the source register has no validated formulas, return no damage winner or damage percentage and show Low confidence plus the limitations. Do not guess numerical mechanics merely to make the first page appear complete. Full deployment, domain configuration, and final visual approval remain review steps.
+
+## 2026-10-22 — Coordinated build and recovery
+
+- User authorizes distinct specialist agents with orchestrator-selected models/effort and necessary verification. Keep Designer and UX separate.
+- Work on `feature/planned-calculator-build`; no production branch push, deployment, domain change, or protected-project access without explicit authorization.
+- Recovered msIdleCalc-only planning and actual approved visual mockups from the earlier chat's visualization folder. The repository's empty source register did not mean no research existed. Historical planning is retained under `docs/recovered/`, with current corrections in the mechanics audit. Raw screenshot imagery stays in ignored local review only.
+- The default objective is scenario-specific offensive output, assuming sufficient hit reliability and survival. HP/Defense/Evasion/surplus Accuracy and CP do not receive hidden offensive weights. Context follows item confirmation; one scenario drives each result. MVP output is modeled offensive impact until cadence supports sustained DPS. No clear-probability claim.
+- A generic raw item delta cannot universally update aggregate totals. Require verified replacement semantics or confirmed post-equip totals, especially for flat/percent ordering, Final Damage, and capped-fill families.
+- Use the actual previously selected GMS/83 item 4001126 leaf from MapleStory.io. This supersedes the original abstract-mark preference; access is not a third-party rights grant. No substitute drawing.
+- User now authorizes a disabled, configurable Buy Me a Coffee placeholder, superseding the earlier no-donation-link preference. No payment or invented destination. Recovered mockups already establish footer support placement; show it in the required visual checkpoint.
+- Preserve exact community disclaimer and separate matching Methodology / Report a Bug / Contact Us links recovered from user feedback. Contact/bug delivery is not configured.
+- User requires a concrete mobile/desktop, both-theme visual checkpoint before full visual implementation. Prior typography/geometry proposals still require this review. Full build is not complete at the audit/checkpoint stage.

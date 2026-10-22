@@ -1,5 +1,17 @@
 # Roadmap
 
+## Current build — 2026-10-22
+
+- [x] Start isolated feature branch `feature/planned-calculator-build`.
+- [x] Recover prior model plan, stat audit, methodology, and actual screenshot-first visual mockups from the msIdleCalc chat.
+- [x] Run distinct Design/UX and mechanics evidence audits; maintain `BUILD_REQUIREMENTS.md`.
+- [x] Complete initial independent model QA and proposed canonical data contract. Ten existing/primitives tests pass; no full damage model or empirical calibration yet.
+- [ ] Obtain user approval of the local visual checkpoint before full visual implementation.
+- [ ] Agree model-supported baseline acquisition and finish manual modeled comparison before OCR.
+- [ ] Complete application verification, feature-branch preview, and user production approval.
+
+Vercel deployment and domain connection were completed by the user after the initial scaffold; preserve them. The current site is not approved final visual design. The user now authorizes a disabled coffee placeholder; prior no-donation guardrails apply to active payment/destination integrations, not this explicitly requested placeholder.
+
 ## Phase 0 — Workspace and repository readiness
 
 - [x] Capture the project brief, constraints, decisions, roadmap, and role charter locally.
@@ -44,8 +56,8 @@ Initial page implemented for Vercel review on 2026-10-22. It provides raw stat d
 
 - [ ] Conduct product, mechanics, privacy, security, and mobile reviews.
 - [ ] Review the preview with the user before production deployment.
-- [ ] Create a separate Vercel project and preserve the existing Eric's Trade Binder project.
-- [ ] Connect `msidlecalc.com` DNS only after the deployment is ready and reviewed.
+- [x] Create a separate Vercel project and preserve the existing Eric's Trade Binder project. User completed setup.
+- [x] Connect `msidlecalc.com` DNS only after the deployment is ready and reviewed. User completed DNS connection; do not alter it during this build.
 
 ## Continuous project operations
 
