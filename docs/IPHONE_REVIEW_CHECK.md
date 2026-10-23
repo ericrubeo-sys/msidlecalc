@@ -19,3 +19,11 @@ Build/check and212 tests pass, including8 independent iPhone follow-up groups. L
 The authorized example's adjusted reread displayed one coverage advisory. The editor also had no horizontal overflow at320×568 and812×375; Next/Back/Cancel remained reachable through ordinary browser clicks. No captured browser warnings/errors. This tests advisory integration, not whether every true clipping case is detected. The original newly supplied player captures remain outside public output.
 
 Current automatic localization and recognition still have failures. Keeping a name outside the selected pixel region prevents that crop from supplying it, regardless of downstream parsing. The fix improves starting geometry and provides conservative warnings, not a universal recognition guarantee. User iPhone feedback is the remaining physical-device check.
+
+## Production verification
+
+Released commit `0b2764b953c93fa21c66ff3067846ef001e8ef10` by fast-forwarding and pushing main; no force push or domain/connection changes. [Production Vercel status](https://vercel.com/erics-trade-binder/msidlecalc/AdwUr3mcTuPhwP1F6epfonzic5qn) reports success; [main verification](https://github.com/ericrubeo-sys/msidlecalc/actions/runs/40032107564/job/120682610449) passed.
+
+Public www release.js returned200 with Cache-Control:no-store and hosted build `3af52c63637f`; Methodology showed the same identity. The local identity was `dd56adbab6fd`. These build environments produced different identities; cross-environment identity equivalence is not established. A separate comparison of all tracked public text sources, normalizing CRLF, found no differences from the reviewed local release. The identifier is useful for identifying the loaded hosted build, not proof of cross-environment reproducibility.
+
+Public browser upload of the already-authorized example showed the quiet reading screen and honest detection fallback. Editor labels showed Equipped item · left / Potential new equip · right; Next seeded x601 from first x307,width294. Crop buttons computed touch-action:manipulation; role-selector count0 and no horizontal overflow at1280×720. Local phone-size checks are described above. A private proof screenshot is `.review/iphone-production-crop.png`. Physical iPhone press/hold, zoom behavior and recognition accuracy still require user feedback.

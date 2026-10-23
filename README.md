@@ -20,7 +20,9 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Current phase
 
-**Latest production:** approved release `197640b` adds fixed equipped-left/candidate-right interpretation, base-only previews and reviewed visible-line gains/losses. CI/Vercel and public behavior checks passed. See [item review verification](docs/ITEM_REVIEW_CHECK.md).
+**Latest production:** approved release `0b2764b` adds optional press-and-hold crop arrows, a second starting box beside the reviewed first, clipping advisories, Potential new equip wording and a hosted build identifier. CI/Vercel and public screenshot/crop behavior checks passed; physical iPhone behavior and recognition accuracy remain open. See [iPhone follow-up verification](docs/IPHONE_REVIEW_CHECK.md).
+
+Release `197640b` added fixed equipped-left/candidate-right interpretation, base-only previews and reviewed visible-line gains/losses. See [item review verification](docs/ITEM_REVIEW_CHECK.md).
 
 **Latest production release:** user-approved `3f83ca9` adds an enlarged tap-controlled mobile read-area editor, a quiet reading screen with no example after upload, and bounded word/alternate-segmentation detection. Production CI/Vercel and public smoke checks passed. See [mobile verification](docs/MOBILE_REVIEW_CHECK.md).
 
@@ -62,4 +64,4 @@ The existing Vercel connection and `msidlecalc.com` domain were configured by th
 
 ## Verification
 
-Run `npm run build`, `npm run check`, `npm test`, and the local browser preview. The current feature checkpoint passes 147 synthetic tests. See the current feature and QA documents above for exercised browser behavior and the limits of those checks; arithmetic agreement is not live-game validation.
+Run `npm run build`, `npm run check`, `npm test`, and the local browser preview. The current feature checkpoint passes 212 tests. See the current feature and QA documents above for exercised browser behavior and the limits of those checks; arithmetic agreement is not live-game validation.
