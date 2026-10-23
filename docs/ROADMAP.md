@@ -3,7 +3,8 @@
 ## Active execution revision — 2026-10-22
 
 - [x] Respond to real-phone screenshot feedback with distinct UX and independent QA: enlarged tap-only crop editor, simpler reading state and bounded detection improvements on feature branch.
-- [ ] User physical-phone review and separate production approval of that mobile iteration; OCR accuracy remains a separate open gate.
+- [x] User approved mobile iteration release `3f83ca9`; production CI/Vercel and public smoke checks passed.
+- [ ] User physical-phone review of that mobile iteration; OCR accuracy remains a separate open gate.
 
 - [x] Bounded Chief of Staff audit recorded; distinct specialists briefed before work.
 - [x] User approves compact revised visual composition and specified production release.

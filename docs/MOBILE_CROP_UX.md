@@ -63,4 +63,3 @@ Both rectangles are a transactional draft. Cancel—including Escape—restores 
 - Validate the supplied new screenshot as development evidence. Report actual area coverage separately from OCR text accuracy and disclose reused fixtures. A final physical-phone usability check remains the user's meaningful follow-up; local viewport checks can establish layout and interaction logic only.
 
 No additional user preference is needed before implementing this bounded fallback. More complex gestures, freehand handles, rotation and a general image-editing toolbar are unnecessary for this increment.
-

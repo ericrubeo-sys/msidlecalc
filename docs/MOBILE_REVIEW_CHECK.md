@@ -1,6 +1,8 @@
 # Mobile screenshot follow-up — 2026-10-23
 
-Feature checkpoint after production `71544b3`; not a production release. User's new phone test is the source of this change. The existing one-image publication permission does not extend to either newly attached image. They remain private development evidence. No additional user input was required to build this increment.
+Released to production as `3f83ca9c047d2c2dc90bdd720675b5b988ea2462` after the user's explicit approval to test this iteration live. User's new phone test is the source of this change. The existing one-image publication permission does not extend to either newly attached image. They remain private development evidence. No additional user input was required to build this increment.
+
+Production verification: fetched and inspected current branches and clean changes, fast-forwarded `main` without force-pushing, and preserved hosting/domain configuration. [Production CI passed](https://github.com/ericrubeo-sys/msidlecalc/actions/runs/40011375883/job/120612314411); [Vercel reported deployment complete](https://vercel.com/erics-trade-binder/msidlecalc/L8cuhYCAP2rKy7V4YUuodi5aQpGj) for that SHA. Public `https://www.msidlecalc.com/` showed the new reading/editor elements and no old example toggle. Uploading the authorized example hid it during reading, then showed an honest missing-area fallback. Opening the enlarged editor and tapping Move/edge controls changed original-pixel bounds; no captured browser warnings/errors. Cancel closed the dialog. No physical-phone usability or general OCR-accuracy claim is established by this smoke check.
 
 ## Source → requirement → implementation → verification
 

@@ -2,7 +2,7 @@
 
 Branch: `feature/source-linked-damage-model`. The user subsequently approved release `71544b3` to production for screenshot-flow testing; production CI/Vercel and public smoke checks passed. See `SCREENSHOT_RELEASE_CHECK.md`. Further changes require a separate release approval. Earlier checkpoint delivery notes below are historical.
 
-The next mobile iteration follows the user's real-phone feedback: enlarged tap-controlled crop adjustment, example-free quiet reading state and bounded merged-heading/alternate-segmentation detection. Its current traceability and167-test/browser evidence are in `MOBILE_REVIEW_CHECK.md`; it remains a feature preview.
+The mobile iteration follows the user's real-phone feedback: enlarged tap-controlled crop adjustment, example-free quiet reading state and bounded merged-heading/alternate-segmentation detection. Its traceability and167-test/browser evidence are in `MOBILE_REVIEW_CHECK.md`. The user subsequently approved production release `3f83ca9`; CI/Vercel and public smoke checks passed. Further changes remain subject to separate approval.
 
 ## Implemented numerical scope
 

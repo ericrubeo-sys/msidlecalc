@@ -20,7 +20,7 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Current phase
 
-**Feature follow-up:** the latest branch adds an enlarged tap-controlled mobile read-area editor, a quiet reading screen with no example after upload, and bounded word/alternate-segmentation detection. This iteration is not yet on production. See [mobile verification](docs/MOBILE_REVIEW_CHECK.md).
+**Latest production release:** user-approved `3f83ca9` adds an enlarged tap-controlled mobile read-area editor, a quiet reading screen with no example after upload, and bounded word/alternate-segmentation detection. Production CI/Vercel and public smoke checks passed. See [mobile verification](docs/MOBILE_REVIEW_CHECK.md).
 
 **Production update — 2026-10-23:** user-approved release `71544b3` is live at [msIdleCalc](https://www.msidlecalc.com/). It includes experimental local screenshot drafts and editable review. Production CI/Vercel and public OCR/fallback behavior were checked; see [release verification](docs/SCREENSHOT_RELEASE_CHECK.md). Historical phase notes below describe the earlier visual baseline.
 

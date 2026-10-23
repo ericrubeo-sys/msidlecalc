@@ -2,6 +2,8 @@
 
 ## Current execution authority — 2026-10-22
 
+**Latest production — 2026-10-23:** user explicitly approved publishing the mobile iteration. Production `main` is now `3f83ca9`, with successful CI/Vercel status and public upload/loading/fallback/tap-editor smoke checks. This supersedes the feature-only status of that iteration below. Further product changes still require their own release approval.
+
 **Mobile follow-up — 2026-10-23:** user reports failed area detection and near-impossible finger drawing, and requests UX improvement plus a quiet reading state. The example and Show example action now disappear after selection; loading hides intake/results while retaining entries. UX specifies an enlarged one-area-at-a-time dialog, native target selection and large tap controls, transactional Back/Cancel and one-pixel fine adjustment. Deterministic detection now considers word-backed merged headings and one bounded alternative segmentation; all areas/lines still require review. Changes remain on the feature branch pending later production approval. See `MOBILE_CROP_UX.md`, `MOBILE_CROP_QA.md`, `PANEL_DETECTION_IMPROVEMENTS.md` and `MOBILE_REVIEW_CHECK.md`.
 
 **2026-10-23 release update:** the user approved pushing the screenshot review checkpoint live for site testing. Production is now `71544b3`, with successful production CI/Vercel status and public OCR/fallback smoke check. This supersedes the historical production/feature-only status below for that checkpoint; subsequent evolving changes retain a separate approval gate. See `SCREENSHOT_RELEASE_CHECK.md`.
