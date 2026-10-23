@@ -1,5 +1,6 @@
 import { detectComparisonPanels, PANEL_DETECTION_VERSION } from './domain/panel-detection.js';
-export const OCR_READER_VERSION = 'browser-reader-2';
+import { assessCropCoverage, CROP_COVERAGE_VERSION } from './domain/crop-coverage.js';
+export const OCR_READER_VERSION = 'browser-reader-3';
 let libraryPromise = null;
 function loadLocalLibrary() {
   if (!libraryPromise) libraryPromise = new Promise((resolve, reject) => {
@@ -83,7 +84,8 @@ export function createComparisonReader({ loadTesseract = loadLocalLibrary, creat
         const structuredLines = (blocks ?? []).flatMap(block => (block.paragraphs ?? []).flatMap(paragraph => paragraph.lines ?? []));
         const lines = text.split(/\r\n|\r|\n/).map((rawText, ordinal) => ({ id: `${proposal.id}:line-${ordinal}`, ordinal, rawText, label: null, value: null, unit: null, statId: null, confirmed: false,
           provenance: { kind: 'ocr', inputRevision, panelId: proposal.id, region: structuredClone(region), scale, segmentationIdentity: JSON.stringify({ region, scale, psm: 6, detectionPsm: reviewed ? null : detectionPsm, detectionVersion: PANEL_DETECTION_VERSION, version: OCR_READER_VERSION }) } }));
-        proposedPanels.push({ ...structuredClone(proposal), role: null, requiresReview: true, rawText: text, blocks, structuredLines, lines, confidence: Number.isFinite(result.data.confidence) ? result.data.confidence : null });
+        const coverageIssues = assessCropCoverage({ blocks: raw.blocks, width, height, scale, region });
+        proposedPanels.push({ ...structuredClone(proposal), role: null, requiresReview: true, coverageIssues, coverageProvenance: { version: CROP_COVERAGE_VERSION, observation: 'initialWholeImage', psm: raw.psm, scale, region: structuredClone(region), advisoryOnly: true }, rawText: text, blocks, structuredLines, lines, confidence: Number.isFinite(result.data.confidence) ? result.data.confidence : null });
       }
       check();
       return { version: OCR_READER_VERSION, inputRevision, raw, detectionObservations, proposedPanels, issues: reviewed ? ['reviewedRegionsStillRequireRoleAndLineConfirmation'] : detection.issues,

@@ -2,6 +2,9 @@
 
 ## Active execution revision — 2026-10-22
 
+- [x] Address iPhone follow-up with cancellable hold controls, scoped touch handling, reviewed-first second seed and clipping advisories; independent212-test checkpoint.
+- [ ] Verify follow-up production release and user physical-iPhone retest; automatic localization/recognition remains an open accuracy gate.
+
 - [x] Implement user-corrected fixed equipped-left/candidate-right flow, base/delta separation and explicit reviewed visible-line losses/gains; independent QA and feature verification.
 - [x] User approved item-interpretation release `197640b`; production CI/Vercel and public behavior checked.
 - [ ] Improve automatic localization and recognition against private original-image fixtures.

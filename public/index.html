@@ -20,8 +20,8 @@
     </header>
     <main id="main" class="workarea">
       <div class="intake">
-        <div class="guide-frame"><img class="sample-image" src="/assets/comparison-example.jpg" width="1280" height="590" alt="Example full game screenshot with the currently equipped panel outlined in gold and candidate panel in cyan"><span class="mark current" aria-hidden="true"></span><span class="mark candidate" aria-hidden="true"></span></div>
-        <div class="legend"><span><i class="swatch" aria-hidden="true"></i>Currently equipped</span><span><i class="swatch candidate" aria-hidden="true"></i>Candidate</span></div>
+        <div class="guide-frame"><img class="sample-image" src="/assets/comparison-example.jpg" width="1280" height="590" alt="Example full game screenshot with the currently equipped panel outlined in gold and potential new equip panel in cyan"><span class="mark current" aria-hidden="true"></span><span class="mark candidate" aria-hidden="true"></span></div>
+        <div class="legend"><span><i class="swatch" aria-hidden="true"></i>Currently equipped</span><span><i class="swatch candidate" aria-hidden="true"></i>Potential new equip</span></div>
         <label class="upload" for="screenshot">Choose screenshot</label><input class="visually-hidden" id="screenshot" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="availability screenshot-status">
         <p class="availability" id="availability">Experimental screenshot reading stays on this device. Review every extracted line. Equipment recommendations are not available yet.</p>
         <p id="screenshot-status" role="status"></p>
@@ -41,7 +41,7 @@
         </div>
         <details id="manual"><summary>Item details and corrections</summary>
           <form id="comparison-form" novalidate>
-            <p>Copy every visible line in order, including repeated or unknown stats. Blank values stay unknown. Enter 0 only for an explicit zero. No need to equip the candidate.</p>
+            <p>Copy every visible line in order, including repeated or unknown stats. Blank values stay unknown. Enter 0 only for an explicit zero. You don’t need to equip the new item.</p>
             <p id="review-count" role="status"></p><button type="button" id="restore-entries" hidden>Restore previous entries</button><div class="items-grid" id="item-fields"></div>
             <label class="confirmation"><input type="checkbox" id="visible-lines-complete"> I included and checked every visible stat line on both items.</label>
             <button class="primary" type="submit">Compare entered lines</button>
@@ -49,7 +49,7 @@
           </form>
           <details id="advanced"><summary>Advanced calculation · supported source effects</summary>
             <p>This preview can isolate independent Final Damage sources from your entered lines. It cannot yet recommend equipment for a battle context. Other changed effects remain unmodeled.</p>
-            <p>Enter every compared item’s Final Damage source separately, with % units and known values on both items. An absent line is unknown; enter an explicit zero only when you have confirmed the effect is absent. No candidate equipment measurement is required.</p>
+            <p>Enter every compared item’s Final Damage source separately, with % units and known values on both items. An absent line is unknown; enter an explicit zero only when you have confirmed the effect is absent. No post-equip measurement of the new item is required.</p>
             <label class="confirmation"><input type="checkbox" id="independent-final"> I have confirmed these are independent Final Damage bonuses, rather than an already combined total.</label>
             <p>This assumption must match the source semantics. Item labels alone do not prove independence.</p>
             <button type="button" id="calculate">Calculate</button>

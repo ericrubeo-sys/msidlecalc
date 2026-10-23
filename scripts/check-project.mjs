@@ -5,6 +5,8 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 const root=fileURLToPath(new URL('../public/',import.meta.url));
+const releaseCheck=spawnSync(process.execPath,[fileURLToPath(new URL('./write-release.mjs',import.meta.url)),'--verify'],{encoding:'utf8'});
+if(releaseCheck.status!==0)throw Error('Application build metadata failed. Run npm run build.');
 const vendorCheck=spawnSync(process.execPath,[fileURLToPath(new URL('./vendor-ocr.mjs',import.meta.url)),'--verify'],{encoding:'utf8'});
 if(vendorCheck.status!==0)throw Error('Pinned OCR vendor integrity failed. Run npm run build.');
 let files=[];

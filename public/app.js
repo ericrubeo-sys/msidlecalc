@@ -7,6 +7,7 @@ import { readComparison } from './ocr-reader.js';
 import { openCropEditor } from './crop-editor.js';
 import { assignComparisonLayout } from './domain/comparison-layout.js';
 import { proposePanelRows } from './domain/ocr-item-rows.js';
+import { RELEASE_ID } from './release.js';
 import { importScreenshotProposals, editScreenshotRecord, confirmScreenshotRecord, recordsForImage } from './domain/screenshot-review.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -78,7 +79,7 @@ function addLine(side, initial = null) {
     label.append(input); row.append(label);
   }
   const remove = element('button', 'Remove line', 'remove');
-  remove.type = 'button'; remove.setAttribute('aria-label', `Remove ${side === 'current' ? 'currently equipped' : 'candidate'} line`);
+  remove.type = 'button'; remove.setAttribute('aria-label', `Remove ${side === 'current' ? 'currently equipped' : 'potential new equip'} line`);
   remove.addEventListener('click', () => {
     records[side].splice(records[side].indexOf(record), 1); row.remove(); markStale(); updateReviewCount();
     $(`#${side}-add`).focus();
@@ -109,7 +110,7 @@ function addLine(side, initial = null) {
 }
 for (const side of ['current', 'candidate']) {
   const card = element('section', undefined, 'item-card');
-  card.append(element('h2', side === 'current' ? 'Currently equipped' : 'Candidate'));
+  card.append(element('h2', side === 'current' ? 'Currently equipped' : 'Potential new equip'));
   const name = element('label', 'Item name (optional)'); name.htmlFor = `${side}-name`;
   const input = element('input', undefined, 'item-name'); input.id = `${side}-name`; input.maxLength = 100; input.autocomplete = 'off'; input.addEventListener('input', markStale);
   const lines = element('div'); lines.id = `${side}-lines`;
@@ -149,7 +150,7 @@ $('#comparison-form').addEventListener('submit', (event) => {
     const show = (line) => !line ? 'No matched line' : line.effectiveValue ? `${line.effectiveValue.decimal}${line.unit === 'displayPercent' ? '%' : ` (${units.find(u => u[0] === line.unit)?.[1] || line.unit})`}` : 'Unknown';
     const before = row.presenceChange === 'added' ? 'Absent from reviewed list' : show(row.current);
     const after = row.presenceChange === 'removed' ? 'Absent from reviewed list' : show(row.candidate);
-    entry.append(element('p', `Currently equipped: ${before} · Candidate: ${after}`));
+    entry.append(element('p', `Currently equipped: ${before} · Potential new equip: ${after}`));
     if (row.presenceChange) entry.append(element('p', row.presenceChange === 'removed' ? 'This visible item line is lost on replacement.' : 'This visible item line is added on replacement.'));
     entry.append(element('p', row.differenceDecimal === null ? 'Change: unknown' : `Raw change: ${row.difference > 0 ? '+' : ''}${row.differenceDecimal}${row.unit === 'displayPercent' ? ' percentage points' : ''}`));
     if (row.unit === 'unknown') entry.append(element('p', 'Unit and effect meaning are unconfirmed. This is only a raw numerical difference.'));
@@ -271,15 +272,19 @@ function showReading(reading) {
   drawImageReference();
   $('#panel-previews').replaceChildren();
   $('#whole-reading').textContent = reading.raw.text;
-  $('#draft-description').textContent = 'Left: currently equipped. Right: candidate. Check the item values next.';
+  $('#draft-description').textContent = 'Left: currently equipped. Right: potential new equip. Check the item values next.';
   panels.forEach((panel, index) => {
     const card = element('article', undefined, 'item-card panel-preview');
-    const role = layout.status === 'assigned' ? (panel.id === layout.assignment.current ? 'Currently equipped · left' : 'Candidate · right') : `Area ${index + 1}`;
+    const role = layout.status === 'assigned' ? (panel.id === layout.assignment.current ? 'Currently equipped · left' : 'Potential new equip · right') : `Area ${index + 1}`;
     card.append(element('h3', role));
     const crop = document.createElement('canvas'); crop.width = panel.region.width; crop.height = panel.region.height;
     crop.getContext('2d').drawImage(sourceCanvas, panel.region.x, panel.region.y, panel.region.width, panel.region.height, 0, 0, crop.width, crop.height);
     const image = element('img'); image.alt = `${role}; proposed read area`; image.src = crop.toDataURL('image/png'); card.append(image);
     crop.width = 0; crop.height = 0;
+    if (panel.coverageIssues?.length) {
+      const labels = panel.coverageIssues.some(issue=>issue.code === 'possibleClippedLabels');
+      card.append(element('p',labels ? 'Some stat names may be outside this area. Adjust it to include each name and number.' : 'Some values may be outside this area. Check the right edge before using these drafts.','coverage-warning'));
+    }
     const summary = element('div',undefined,'base-value-preview');
     for (const row of proposePanelRows(panel).rows) {
       const fields = row.proposedFields;
@@ -388,7 +393,8 @@ const panels = {
     'This preview reads screenshots locally into unconfirmed drafts and can explain a conditional independent Final Damage source effect after your review. Recognition is experimental and can be wrong. It does not recommend equipment yet. Matching labels and units permits raw numerical subtraction only; repeated lines are never summed.',
     'A damage model needs supported replacement and stacking rules, baseline character information and separate battle profiles. Combat Power is not DPS. Unsupported effects and missing values will not be scored with invented weights.',
     'Selected screenshots and item entries stay in this page session. Only the appearance preference is saved locally. The header loads a fixed leaf image from MapleStory.io; screenshots are not sent there. Hosting providers receive normal page requests.',
-    'BasilMarket and Hidden Street are visual inspiration for the light and dark skins. This project is not affiliated with either site.'
+    'BasilMarket and Hidden Street are visual inspiration for the light and dark skins. This project is not affiliated with either site.',
+    `App build: ${RELEASE_ID}. Include this when reporting an issue.`
   ]],
   'report-bug': ['Report a Bug', ['Bug delivery is not configured yet. This page cannot send a report. Please do not enter private information here.']],
   'contact-us': ['Contact Us', ['Contact delivery is not configured yet. There is no working contact form or sending service in this release.']]

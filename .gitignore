@@ -154,3 +154,4 @@ vite.config.ts.timestamp-*
 
 # Reproducible pinned OCR resources, generated locally and on preview builds.
 public/vendor/
+public/release.js
