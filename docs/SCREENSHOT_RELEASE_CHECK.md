@@ -1,0 +1,31 @@
+# Experimental screenshot review checkpoint — 2026-10-23
+
+Feature branch only. Production remains visual release `b827d72`. This is an application upload/read/review implementation, not reliable automatic equipment extraction, a completed damage calculator, or live-game validation. The user supplied four private images and requested ordinary screenshot intake; no additional images or product decision were needed for this increment.
+
+## Source → requirement → implementation → verification
+
+| Source / requirement | Implementation | Evidence and limit |
+| --- | --- | --- |
+| User screenshot flow, UX review, original compact composition | Existing intake starts local reader on selection; full image replaces example, example remains available | Actual private development image1 produced two proposals without supplied coordinates. The authorized public example did not identify both automatically and honestly offered marking/manual continuation. No new recognition-accuracy claim. |
+| Data contract: occurrences/raw/unknowns/provenance | `screenshot-review.js`, dynamic editor, original text disclosures and correction overlays | Unequal, repeated, blank, malformed and unknown lines in independent tests. Labels and values remain editable; names are optional manual entries, not extracted names. |
+| Item attribution is not color/position inference | Two unassigned panel selectors, explicit assignment check; same panel forbidden | Browser selected roles then explicitly applied drafts. Every imported line remained unconfirmed. Role swapping is through selectors, not a dedicated Swap button. |
+| Corrections survive rereads and image changes | Rereads stage separately; explicit replacement saves one undo snapshot; image revision gates both consumers | Browser correction/confirmation/theme/cancel/edit/remove checks passed. Explicit replacement followed by Restore recovered the edited label. Source and independent tests verify stale async rejection and both raw/partial-factor consumers. |
+| Bad detection must remain correctable | Proposed regions plus pointer/keyboard marking and manual editor | Browser exercised arrows, Shift resize, Enter finish and two-region reread. Marked bounds are user input, not automatic detection evidence. |
+| No unknown→zero or automatic numerical confirmation | Typed validation plus explicit per-line checkbox and current-image association | Browser editing cleared confirmation; removal retained text with previous-image status. Independent shared-consumer fixtures reject malformed confirmed text and preserve explicit zero vs missing. |
+| Privacy/no services | Fixed same-origin Tesseract7/core7/eng1 resources, disabled cache, CSP, no screenshot upload route | Runtime checks below plus code review. Dependencies are copied at build; no per-image service/account/database/analytics. |
+| Responsive shared skins/state | Existing DOM/theme handling and compact additional review controls | Five actual CSS width/height pairs × two skins: 320×568, 375×812, 812×375, 768×1024, 1440×900. No `.site` horizontal overflow or offscreen visible input/select/button bounds. Phone screenshot inspected with editable unconfirmed values. This is viewport simulation, not physical-device/accessibility certification. |
+| Independent QA and reproducible build | 15 independent screenshot tests; full147 suite; vendor hash check; clean CI order | `npm run build`, `npm run check`, `npm test` passed. Twenty first-party public files checked;23 fixed vendor resources/notices and manifest validated. CI now builds before the vendor integrity check. |
+
+## Runtime privacy evidence
+
+Loopback-only `scripts/serve-privacy-check.mjs` injects nonpublic instrumentation before application scripts, serves the same CSP/MIME types, records request-method counts without bodies/URLs, and refuses non-GET/HEAD requests. Exercised authorized public-image selection, automatic reading failure-to-detect, keyboard region correction, successful marked-region reading, explicit import, a sentinel text correction and theme switching.
+
+Observed main-page counters: fetch0, XHR0, beacon0, WebSocket0, IndexedDB opens0, console calls0. Storage contained only `msidlecalc-theme`; no sentinel in storage or resource URLs; session storage empty. Server observed23 GET requests and0 other methods. Main-page resource list contains fixed local modules/worker plus the preexisting fixed MapleStory.io leaf. Development image1 recognition also produced no captured console errors/warnings. No private fixture text/image appears in this record or public output.
+
+Limits: page counters do not instrument worker-global APIs; Tesseract uses same-origin worker fetches for its core and language. Fixed worker/core/language paths, `cacheMethod:none`, and inherited CSP restrict that path, but this is not a full packet capture or every-browser worker storage audit. No service-worker, resource-denial or cross-browser integration run was added in this checkpoint. Earlier harness failure tests do not automatically certify this new UI. The diagnostic aside's long resource URLs can overflow; application `.site` bounds were checked independently. Only the theme preference is intentionally persistent; reload clears screenshot entries.
+
+## Remaining scope
+
+OCR can merge digits, lose labels, include interface text and miss panel bounds. The current app uses a whole-image heading proposal plus region reading; prior reviewed-region benchmark scores are not scores for this pipeline. Users must inspect image areas and correct each line. No all-lines acceptance shortcut. Current item names are not inferred. Preview performance has not been benchmarked; cold OCR resource loading can be noticeable. Reusing any previously inspected last-two fixture is reused validation, not a fresh held-out test.
+
+Named encounter recommendations, complete source decomposition, skill/cadence dependencies and empirical game validation remain separate outstanding work. The isolated conditional Final Damage explanation is unchanged. Later production release still requires user approval. Local review server is `http://127.0.0.1:4177/`; `npm run dev` builds and serves the same application on the printed port.

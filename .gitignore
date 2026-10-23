@@ -151,3 +151,6 @@ vite.config.ts.timestamp-*
 # Local design review may contain user-supplied screenshots. Never publish it.
 .review/
 .private-fixtures/
+
+# Reproducible pinned OCR resources, generated locally and on preview builds.
+public/vendor/

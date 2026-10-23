@@ -12,6 +12,8 @@ Record only durable lessons from user corrections, reproducible failures, daily 
 
 ## Lessons
 
+**Screenshot integration — 2026-10-23:** the real upload flow recognized one panel heading as a one-character variant, leaving only one proposal. A bounded heading-only tolerance recovered a second proposed region while retaining original text and unconfirmed roles. Do not extend this to numeric lookalikes or stat-label repair. Independent tests cover the boundary. Experimental editable drafts can be useful before reliable automatic extraction, but the product must say which stage it supports. Clean-checkout CI also needs asset generation before integrity verification; an existing local vendor directory can hide incorrect build order. Browser `getScreenshot` returned a reduced surface capture; use the documented tab `screenshot` method and verify actual viewport dimensions before presenting proof.
+
 ## Chief of Staff performance audit — 2026-10-22 execution restart
 
 Bounded audit completed before implementation, deployment or new mechanics research. Evidence: inspected clean branch `feature/planned-calculator-build` at `a54695a`, commits `423a060`, `49c8e34`, `a54695a`, existing plans/recovered drafts, mechanics and independent QA findings, local `.review/prototype.html`, and relevant user/assistant turns in **Build equipment damage comparison**. Latest user execution instructions supersede historical approval gates and single-context scope.

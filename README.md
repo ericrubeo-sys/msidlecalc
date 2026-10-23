@@ -22,13 +22,14 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 Production visual release `b827d72` provides local screenshot reference, dynamic manual item lines, repeated/unknown/unmatched line retention, exact raw differences, and instant System / BasilMarket / Hidden Street skins. Contact/report delivery and support payments are unavailable. See [visual release verification](docs/VISUAL_RELEASE.md).
 
-The `feature/source-linked-damage-model` branch adds pure source-linked aggregation and ordinary pre-content stages, plus an optional UI explaining isolated independent Final Damage source changes. Complete battle-context recommendations and DPS remain unavailable. A separate loopback OCR evaluation exposes merged numeric columns on the approved example, so OCR is not integrated into the application. See [feature scope and verification](docs/FEATURE_PREVIEW.md), [model QA](docs/DAMAGE_MODEL_QA.md), and [OCR evaluation](docs/OCR_EVALUATION.md). No controlled live-game validation has been performed.
+The `feature/source-linked-damage-model` branch adds pure source-linked aggregation, ordinary pre-content stages, an isolated independent Final Damage explanation, and experimental screenshot upload → local OCR → editable review. Every extracted line starts unconfirmed. Recognition still makes errors; complete battle-context recommendations and DPS remain unavailable. See [screenshot flow verification](docs/SCREENSHOT_RELEASE_CHECK.md), [feature scope](docs/FEATURE_PREVIEW.md), and [model QA](docs/DAMAGE_MODEL_QA.md). No controlled live-game validation has been performed.
 
 ## Run locally
 
-Use Node.js 22 or later. Running the application requires no third-party packages or installation step. The optional OCR evaluation requires the pinned development packages installed with `npm ci --ignore-scripts`.
+Use Node.js 22 or later. Install the pinned OCR build dependencies once; the build copies their fixed resources into ignored `public/vendor/`. The application fetches those same-origin assets, with no per-image external service.
 
 ```sh
+npm ci --ignore-scripts
 npm run dev
 ```
 
@@ -41,16 +42,18 @@ Open the printed local URL (`http://127.0.0.1:4173`). Item data is kept in memor
 - `public/app.js`: form, screenshot reference, validation, and result presentation.
 - `public/domain/item-lines.js`: lossless dynamic manual lines and exact occurrence-based raw differences; no equipment winner.
 - `public/domain/mechanics-data.js`, `reaggregation.js`, `damage-model.js`: versioned claims, source replacement and partial ordinary stages; see the feature scope before using their output.
-- `public/domain/ocr-session.js` and `scripts/serve-ocr-evaluation.mjs`: pure ephemeral text/correction state and separate local evaluation harness; no application OCR imports.
+- `public/ocr-reader.js`, `public/domain/panel-detection.js`, `screenshot-review.js`: bounded local reading, proposed regions, raw evidence, correction overlays and explicit image-specific review.
+- `public/domain/ocr-session.js` and `scripts/serve-ocr-evaluation.mjs`: separate evaluation/session tools; benchmark results are not automatic acceptance criteria.
+- `scripts/vendor-ocr.mjs`: pinned local assets, notices and byte-integrity manifest; no fixture copying.
 - `public/config.js`: single unavailable future support destination.
 - `tests/comparison.test.mjs`: missing values, invalid inputs, differences, and no unsupported damage verdicts.
 
 ## Vercel deployment
 
-Import only `ericrubeo-sys/msidlecalc`, branch `main`, into the separate `msidlecalc` project. Keep Root Directory at `./` and Framework Preset at **Other**. The tracked `vercel.json` specifies no build command and `public` as the output directory. No environment variables are needed. Only `public/` is served; planning documents are not part of the website output.
+Preserve the existing `msidlecalc` project, Root Directory `./`, Framework Preset **Other**, and production branch `main`. This feature's tracked `vercel.json` installs pinned dependencies without install scripts, runs `npm run build`, and serves only `public/`. No environment variables are needed. Planning documents and private fixtures are outside public output.
 
 The existing Vercel connection and `msidlecalc.com` domain were configured by the user. Preserve them. The user authorized this specified visual release to `main`; later calculation/OCR production release requires separate approval.
 
 ## Verification
 
-Use `npm test`, `npm run check`, `npm run build`, and the local browser preview. The current feature checkpoint passes 124 synthetic tests. See the current feature and QA documents above for exercised browser behavior and the limits of those checks; arithmetic agreement is not live-game validation.
+Run `npm run build`, `npm run check`, `npm test`, and the local browser preview. The current feature checkpoint passes 147 synthetic tests. See the current feature and QA documents above for exercised browser behavior and the limits of those checks; arithmetic agreement is not live-game validation.

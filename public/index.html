@@ -23,13 +23,31 @@
         <div class="guide-frame"><img class="sample-image" src="/assets/comparison-example.jpg" width="1280" height="590" alt="Example full game screenshot with the currently equipped panel outlined in gold and candidate panel in cyan"><span class="mark current" aria-hidden="true"></span><span class="mark candidate" aria-hidden="true"></span></div>
         <div class="legend"><span><i class="swatch" aria-hidden="true"></i>Currently equipped</span><span><i class="swatch candidate" aria-hidden="true"></i>Candidate</span></div>
         <label class="upload" for="screenshot">Choose screenshot</label><input class="visually-hidden" id="screenshot" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="availability screenshot-status">
-        <p class="availability" id="availability">Automatic reading and damage recommendations are in development. Enter item details manually below.</p>
+        <p class="availability" id="availability">Experimental screenshot reading stays on this device. Review every extracted line. Equipment recommendations are not available yet.</p>
         <p id="screenshot-status" role="status"></p>
-        <div id="image-reference" hidden><img id="screenshot-preview" alt="Your selected screenshot reference"><button type="button" id="remove-image">Remove screenshot</button></div>
-        <details id="manual"><summary>Enter item details manually</summary>
+        <button type="button" class="quiet" id="show-example" hidden>Show example comparison</button>
+        <div id="image-reference" hidden>
+          <img id="screenshot-preview" alt="Your selected screenshot reference" hidden>
+          <canvas id="screenshot-canvas" tabindex="0" aria-label="Selected screenshot and proposed panel areas" aria-describedby="mark-instructions"></canvas>
+          <div class="image-actions"><button type="button" id="read-image">Read again</button><button type="button" id="cancel-reading" hidden>Cancel reading</button><button type="button" id="remove-image">Remove screenshot</button></div>
+          <details id="region-review"><summary>Adjust item panel areas</summary>
+            <p id="mark-instructions">Choose an area below, then drag around its stat lines. With a keyboard, use arrows to move, Shift + arrows to resize, Alt for fine adjustment, and Enter to finish. Escape cancels.</p>
+            <div class="image-actions"><button type="button" id="mark-first">Mark area 1</button><button type="button" id="mark-second">Mark area 2</button><button type="button" id="read-regions" disabled>Read marked areas</button><button type="button" id="clear-regions">Clear markings</button></div>
+          </details>
+          <section id="screenshot-drafts" aria-labelledby="draft-title" hidden>
+            <h2 id="draft-title">Review screenshot reading</h2>
+            <p id="draft-description"></p><div id="panel-previews" class="items-grid"></div>
+            <div class="items-grid assignment-fields"><label>Currently equipped panel<select id="current-panel"><option value="">Choose a panel</option></select></label><label>Candidate panel<select id="candidate-panel"><option value="">Choose a panel</option></select></label></div>
+            <label class="confirmation"><input type="checkbox" id="panel-assignment-confirmed"> I checked the areas and which item is currently equipped.</label>
+            <p>Applying drafts replaces entered lines only when you choose the button below. Every imported line still needs your review. Missing values stay unknown.</p>
+            <button type="button" id="apply-drafts" disabled>Use these item drafts</button>
+            <details><summary>Original screenshot reading</summary><pre id="whole-reading"></pre></details>
+          </section>
+        </div>
+        <details id="manual"><summary>Item details and corrections</summary>
           <form id="comparison-form" novalidate>
             <p>Copy every visible line in order, including repeated or unknown stats. Blank values stay unknown. Enter 0 only for an explicit zero. No need to equip the candidate.</p>
-            <div class="items-grid" id="item-fields"></div>
+            <p id="review-count" role="status"></p><button type="button" id="restore-entries" hidden>Restore previous entries</button><div class="items-grid" id="item-fields"></div>
             <button class="primary" type="submit">Compare entered lines</button>
             <p class="form-error" id="form-error" role="alert" hidden></p>
           </form>

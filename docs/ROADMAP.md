@@ -11,7 +11,7 @@
 - [x] Continue numerical work on a feature branch: source claim register, minimum-field/cancellation audit, valid replacement and independent model tests. Ordinary stage and partial FD UI implemented; full context profiles remain unsupported.
 - [x] Complete bounded local OCR evaluation and correction/stale-run session tests; resource-denial/recovery and unblurred correction regression exercised. One example exposes merged columns, so adoption remains blocked.
 - [x] Research Korean/English guide dependencies, encode scoped level100 interpretation with source/region caveats, build spatial proposals and explicit optional neutral-text preprocessing. Fixed scorer retains missing/extra rows and separates development from held-out evidence.
-- [ ] Evaluate representative permitted held-out screenshots, parser accuracy and browser lifecycle variation before application OCR integration.
+- [x] Evaluate permitted private screenshots and integrate an explicitly experimental editable OCR draft flow after specialist agreement. Automatic numerical adoption remains blocked by recognition errors; see `SCREENSHOT_RELEASE_CHECK.md`.
 - [x] Evaluate four newly permissioned private images with a predeclared2/2 split; build low-resolution raster experiments and independent invariants. Original-color resampling improves development labels/units, but numeric extraction remains unsafe. Broader adoption gate stays open.
 - [ ] Controlled game measurements and validation; local OCR only after manual numerical core, then reviewable feature preview and separate production approval.
 

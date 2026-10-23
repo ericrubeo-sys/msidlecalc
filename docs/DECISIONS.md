@@ -2,7 +2,7 @@
 
 ## Current execution authority — 2026-10-22
 
-Phase 1 is deployed and verified at `b827d72`. Phase 2 now runs on `feature/source-linked-damage-model`; see `FEATURE_PREVIEW.md`, `DAMAGE_MODEL_SPEC.md` and independent QA. Numerical application scope is a conditional isolated Final Damage source effect, with all named-context recommendations unavailable. The ordinary stage/reaggregation/PvP level helpers are source-linked pure APIs, not a validated complete damage engine. Modelv4 interprets the level100 transition using inclusive English ranges and same-date Korean after100 wording; regional/build applicability remains unestablished. OCR is a separate local evaluation, not adopted in the app.
+Phase 1 is deployed and verified at `b827d72`. Phase 2 now runs on `feature/source-linked-damage-model`; see `FEATURE_PREVIEW.md`, `DAMAGE_MODEL_SPEC.md` and independent QA. Numerical application scope is a conditional isolated Final Damage source effect, with all named-context recommendations unavailable. The ordinary stage/reaggregation/PvP level helpers are source-linked pure APIs, not a validated complete damage engine. Modelv4 interprets the level100 transition using inclusive English ranges and same-date Korean after100 wording; regional/build applicability remains unestablished. Experimental local OCR drafts are now integrated, with explicit role and individual line review; automatic extraction reliability is not established.
 
 The latest user authorizes further dependency research and deterministic extraction implementation. Build source-supported slices on the feature branch; preserve the later production approval gate. Spatial proposal extraction and optional neutral-text masking are evaluation-only, default mask off, with raw originals retained and all values unconfirmed. Arbitrary reviewed regions replace reliance on a single hardcoded layout. No numeric substitution or best-of-truth selection is allowed. Representative held-out imagery and reviewed manual integration remain adoption gates.
 
@@ -14,7 +14,13 @@ Appearance options are System / **BasilMarket** / **Hidden Street**, as verified
 
 The user explicitly authorizes publishing the **exact mockup screenshot** as the landing example in a reply this execution. That overrides its earlier local-only status for this one image; other real fixtures remain private. Leaf remains the selected GMS/83 item 4001126 runtime image.
 
-Manual path now uses dynamic ordered lines, explicit units and raw comparisons; no fixed six-field limit. It never implies raw gains establish damage. OCR, numerical recommendations, report/contact delivery and payment integration remain unavailable. Support has one null destination configuration and a compact yellow disabled placeholder.
+Manual path now uses dynamic ordered lines, explicit units and raw comparisons; no fixed six-field limit. It never implies raw gains establish damage. Numerical recommendations, report/contact delivery and payment integration remain unavailable. Support has one null destination configuration and a compact yellow disabled placeholder.
+
+## 2026-10-23 — Experimental screenshot review integration
+
+User requests actual screenshot intake rather than a developer evaluator and authorizes building after specialist agreement. UX, extraction engineering and independent QA support an unconfirmed-draft flow despite poor current numeric recognition. Preserve raw observations, unknowns and each occurrence. Require distinct role assignment and per-line review, stage rereads, make populated-editor replacement explicit with undo, and invalidate old-image confirmation without deleting corrections. A one-character heading-only proposal tolerance never repairs stat text or numbers. Visual region marking has keyboard move/resize/cancel; it does not establish equipment roles. No bulk OCR acceptance or full equipment recommendation is enabled.
+
+Vendor fixed pinned local OCR resources at build time, disable language caching, and restrict worker/connect destinations to same origin. Generated libraries/notices are separate from private fixtures. Tests and runtime privacy checks are recorded in `SCREENSHOT_RELEASE_CHECK.md`; page instrumentation does not inspect every worker global. Production remains unchanged pending the later release approval.
 
 Multiple separate supported battle-context recommendations after Calculate supersede the historical one-primary-context presentation. Do not require equipping an unavailable candidate; investigate source reaggregation and ask only for mathematically necessary missing inputs. Reconsider temporary/skill/artifact effects for advanced accuracy; confirmed passive totals must not be double-counted. No unmodeled tie-breakers.
 

@@ -5,8 +5,10 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 const root=fileURLToPath(new URL('../public/',import.meta.url));
+const vendorCheck=spawnSync(process.execPath,[fileURLToPath(new URL('./vendor-ocr.mjs',import.meta.url)),'--verify'],{encoding:'utf8'});
+if(vendorCheck.status!==0)throw Error('Pinned OCR vendor integrity failed. Run npm run build.');
 let files=[];
-async function walk(folder){for(const entry of await readdir(folder,{withFileTypes:true})){const target=path.join(folder,entry.name);if(entry.isDirectory())await walk(target);else files.push(target)}}
+async function walk(folder){for(const entry of await readdir(folder,{withFileTypes:true})){const target=path.join(folder,entry.name);if(target===path.join(root,'vendor'))continue;if(entry.isDirectory())await walk(target);else files.push(target)}}
 await walk(root);
 for(const file of files){
  const relative=path.relative(root,file);

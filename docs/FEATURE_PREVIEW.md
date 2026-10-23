@@ -21,8 +21,8 @@ Branch: `feature/source-linked-damage-model`. Production remains visual release 
 | Multiple distinct context results | Advanced calculation context cards | Each explains its own unsupported profile; no generic Boss/Guild score |
 | Skill, artifact, buff and cadence completeness | Spec and official dated follow-up | Historical coefficient leads and October state-dependent rules recorded; no unsupported weighting or duplicate passive totals |
 | Henesys snapshot hypothesis | Spec controlled-observation protocol | No guarantee all buffs disappear; no player measurement collected |
-| Reproducible checks | `npm test`, `npm run check`, `npm run build`, GitHub workflow | 124 tests including independent raster/spatial/mask/precision/session regressions; synthetic evidence remains distinct from game validation |
-| OCR gate and privacy | Separate loopback evaluation harness, spatial proposals and sessionv2 | Reviewed crops/columns, optional explicit color assumption, count-only fixed scoring, correction review after segmentation changes. Development trial improves but still has errors; OCR not adopted. See `EXTRACTION_BENCHMARK.md` and `EXTRACTION_QA.md` |
+| Reproducible checks | `npm run build`, `npm run check`, `npm test`, GitHub workflow | 147 tests including independent screenshot-review, raster/spatial/mask/precision/session regressions; synthetic evidence remains distinct from game validation |
+| OCR gate and privacy | Experimental application reader and explicit review adapter; separate benchmark harness retained | No automatic confirmation. Local upload/read/edit/cancel/remove and privacy checks documented in `SCREENSHOT_RELEASE_CHECK.md`. Recognition reliability and full equipment extraction remain unestablished. |
 
 The Chief of Staff audit, source register, spec and QA were revisited before integration and preview review. Official publication confidence is separate from synthetic implementation checks and unperformed game prediction validation. See `DAMAGE_MODEL_QA.md` for independent findings and fixes.
 
@@ -38,4 +38,4 @@ The integration owner rendered the October15 patch and subsequent English notice
 
 ## Still unavailable
 
-Complete equipment recommendations for the requested encounters; sustained/absolute DPS and clear probability; ordinary critical overflow/range/hit laws and rounding; complete current skill/passive/rotation/resource/trigger data; controlled game validation; adopted screenshot OCR. Low confidence never supplies missing formulas. The narrow implemented factors are useful, reproducible explanations with explicit limits, not completion of the product goal.
+Complete equipment recommendations for the requested encounters; sustained/absolute DPS and clear probability; ordinary critical overflow/range/hit laws and rounding; complete current skill/passive/rotation/resource/trigger data; controlled game validation; reliable automatic item extraction. Experimental editable screenshot drafts are now implemented. Low confidence never supplies missing formulas. The narrow implemented factors are useful, reproducible explanations with explicit limits, not completion of the product goal.
