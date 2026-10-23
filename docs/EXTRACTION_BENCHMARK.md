@@ -38,3 +38,17 @@ These are two configurations on the same development image, not a controlled att
 A post-update same-worker masked repeat took751ms with identical raw text and full structured proposals. Vendor-resource loads were denied during that repeat; blocked-resource count stayed0. The earlier masked trial took797ms; performance is a local observation only. Main-page audit counters/storage/database/named-cache counts stayed0 in the exercised clean origin; worker globals are not instrumented. Switching mask off retained an unblurred correction and changed its status to changedObservation despite the untouched full-panel text. Reset removed the image/text from the session. No automatic field confirmation, application import or equipment recommendation occurred.
 
 Next useful fixture collection: two additional ordinary equipment-comparison images at original resolution, one usable for development and the other kept held out until settings are frozen. Keep permission, exact reviewed regions, all visible ordered lines and unreadable fields in private manifests. More varied quality/layouts and browser checks are still needed beyond those first two; two images alone cannot establish representative adoption.
+
+## Four newly supplied private screenshots
+
+The user supplied four screenshots for local extraction evaluation. All four originals, truth annotations and observations were copied into ignored private fixtures; none is authorized for publication. First two are development; last two were assigned heldOut before recognition. Algorithm checkpoint b946022, spatialv2, maskv1, scale3 and reviewed label/value column settings were fixed before the first batch. Regions were manually selected for each image's stat body; this tests recognition with reviewed regions, not automatic whole-image detection. The supplied files decode to640×295,640×295,640×288 and640×295; no resizing of the originals was performed.
+
+| Fixed trial | Labels exact | Values exact | Visible unit tokens exact | Expected / omitted / extra rows |
+| --- | --- | --- | --- | --- |
+| Masked, first two development images |2/22 |6/22 |0/6 |22/0/0 |
+| Masked, last two held-out images |2/20 |2/20 |0/6 |20/0/0 |
+| Unmasked diagnostic, first two only |11/22 |8/22 |5/6 |22/0/0 |
+
+All four masked runs completed in730–841ms locally. The frozen configuration retained every expected row, including unequal line counts and repeated labels, but misrecognized most text. The unmasked diagnostic retained the same development regions/settings apart from disabling the mask. It improved these counts but still does not support automatic numerical adoption. No substitution, comma/decimal normalization, label rematching or omission exclusion was applied in scoring. Human annotation remains a transcription rather than independently verified game data. Unit/value fields are coupled, not independent samples.
+
+The last two were not rerun or used to tune the unmasked diagnostic. Their first-pass results remain a held-out check of the frozen masked configuration, not evidence for a later improved configuration. Any later reuse after examining these results must be disclosed as reused validation data. The tiny sample does not estimate general accuracy. Future work should address low-resolution glyph recognition and variable row boundaries while preserving raw evidence and requiring correction; disabling the mask alone is insufficient. No application integration or production change was made for this batch.

@@ -38,6 +38,8 @@ Immediate operating changes: maintain the source→requirement→implementation�
 
 Specialist briefing record: every dispatch must include this audit, current user corrections, relevant full source materials, exact write ownership and explicit output/verification boundary. Orchestrator owns integration, lessons and requirement reconciliation.
 
+**Private fixture expansion:** the four newly supplied640-pixel-wide images retained all42 stat rows under reviewed regions, yet the frozen optional mask recognized only8/42 literal value strings. Row-count success is not field accuracy. An unmasked development-only diagnostic improved some counts but remained unsafe; do not generalize the earlier1280-pixel example's mask improvement to smaller ordinary screenshots. Preserve the declared held-out split and report reused validation data honestly after results have been inspected.
+
 - **Date / milestone:** 2026-10-22 — GitHub connection and planning transfer.
 - **Observation:** The user clarified that the msIdleCalc workspace and planning materials were already available locally.
 - **Impact:** Asking for existing setup information delayed actionable work.
