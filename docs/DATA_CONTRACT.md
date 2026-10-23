@@ -1,5 +1,7 @@
 # Comparison data contract and local OCR validation plan
 
+Current implementation addendum2026-10-22: the visual release and dynamic manual path are implemented; the user approved that production release. Source-linked partial numerical modules have independent synthetic QA, while full game validation remains absent. Pinned Tesseract7 is selected for separate local evaluation, not application adoption. Spatial proposals retain original text/boxes and null confirmed values. Sessionv2 records segmentation identity in observations/corrections and requires renewed review after crop, mask or extraction-version changes. See `FEATURE_PREVIEW.md`, `EXTRACTION_RESEARCH.md`, `EXTRACTION_BENCHMARK.md` and `EXTRACTION_QA.md`. The older proposed-contract status and approval/dependency-selection statements below describe its original checkpoint; the invariants still apply. A reviewed typed proposal-to-manual adapter is not yet implemented.
+
 Status: proposed implementation contract, 2026-10-22. This document defines boundaries; it does not implement or validate a numerical damage model, select an OCR dependency, or approve the visual design. Build the manual path and review the calculation core before adding OCR. Obtain the user's visual checkpoint approval before full visual implementation.
 
 ## Sources and present implementation

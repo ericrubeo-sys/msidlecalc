@@ -1,6 +1,6 @@
 # Source-linked damage model specification
 
-2026-10-22. Model `ordinary-stage-2026-10-22-v3`. The implemented scope is an ordinary pre-content arithmetic stage, partial-factor explanations and an isolated relative defender-level adjustment. It is not a named-content equipment recommendation, sustained DPS, absolute DPS or clear probability. Calculation/OCR production release needs separate user approval.
+2026-10-22. Model `ordinary-stage-2026-10-22-v4`. The implemented scope is an ordinary pre-content arithmetic stage, partial-factor explanations and an isolated relative defender-level adjustment. It is not a named-content equipment recommendation, sustained DPS, absolute DPS or clear probability. Calculation/OCR production release needs separate user approval.
 
 ## Evidence reconciliation and traceability
 
@@ -18,7 +18,7 @@ The Damage Mathematician inspected the rendered Battle System and Stat Dictionar
 | MSI-G15-DAMAGE-ORDER,1.3 | Applicable buckets, critical/range/status, FD, content, coefficient | Pre-content amount; final coefficient deliberately absent | Pure staged arithmetic, no encounter verdict |
 | MSI-G15-CRITICAL,Dictionary/1.3 | Critical Damage is full multiplier on critical outcomes | Explicit joint outcomes | No ordinary crit overflow cap/range distribution guessed |
 | MSI-G15-CONTEXT,2.1/4.2 | Content rules differ; attacks have exceptions | Separate unsupported profiles | Broad Boss/Guild/Chapter labels never enable formula |
-| MSI-G15-PVP-LEVEL,4.2 | Relative receiver-level reductions in named bands | pvpDefenderLevelRatio | Ambiguous99→100 rejects; no full PvP verdict |
+| MSI-G15-PVP-LEVEL,4.2 | Relative receiver-level reductions in named bands | pvpDefenderLevelRatio | Korean corroboration resolves100; no full PvP verdict |
 | MSI-Q22-TRIGGERS,Q&A | Attack trigger once/cast, strike trigger once/hit, with exclusions | Not encoded as cadence/uptime | No tier-level CP weight used as damage |
 
 Claim records and dataset version live in `public/domain/mechanics-data.js`. Model results contain formula/data versions, consumed claim IDs, input revision and empirical status. Source publication is not proof of implementation or prediction accuracy. Parser/schema versions belong to their owning layers; UI must invalidate results after any relevant input/data/model change.
@@ -97,7 +97,7 @@ Its constants are Arena7206000000, Colosseum4323600000, WorldArena5764800000. Th
 
 The PvP reduction specifically caps critical weighting at100%, uses CriticalDamage average and min/max average, using max if minimum exceeds max. These are **reduction-stage rules**, not ordinary overflow/range laws. CriticalResistance's effective-rate role and the exact normalization of every abbreviated factor remain unresolved for a complete implementation. No universal subtraction/clamp was added.
 
-`pvpDefenderLevelRatio({mode,fromLevel,toLevel})` returns only the relative damage taken from receiver level. Allowed modes: arena/world-arena/colosseum; safe integer levels>=30. Gained levels31–60 use.995. Arena/WorldArena unambiguous61–99 use.987; above100 use.985. Colosseum61–70 use.987,71–99 use.985,above100 use.975. Reverse paths reciprocate. No below31 absolute anchor or attacker-level difference is inferred. The source's preceding closed range ends100 and next says100+; **any path crossing99→100 in either direction rejects**. Same-level identity100→100 and100→101 require no assumed boundary rate. v3 removes the former provisional convention: uncertainty blocks the dependent number. Numeric overflow/underflow rejects. This helper does not enable full Arena support.
+`pvpDefenderLevelRatio({mode,fromLevel,toLevel})` returns only the relative damage taken from receiver level. Allowed modes: arena/world-arena/colosseum; safe integer levels>=30. Gained levels31–60 use.995. Arena/WorldArena61–100 use.987; above100 use.985. Colosseum61–70 use.987,71–100 use.985,above100 use.975. Reverse paths reciprocate. No below31 absolute anchor or attacker-level difference is inferred. The English source ends its closed band at100 and next says100+. Fresh rendered same-date Korean§4.2 says after level100, resolving this translation overlap: gained100 uses the preceding band; gained101 uses the next. v4 removes the prior conservative rejection using this new primary evidence; see research/DEPENDENCY_RESEARCH_2026-10-22.md. Shared regional/build applicability and live-game agreement remain unverified. Numeric overflow/underflow rejects. This helper does not enable full Arena support.
 
 Further primary sources accessed2026-10-22:
 

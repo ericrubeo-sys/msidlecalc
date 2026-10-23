@@ -6,7 +6,7 @@
 
 [Official English guide](https://maplestoryidle.nexon.com/en/guide), rendered Battle System and Dictionary tabs, displays 2026-10-15 update; game build and server applicability remain unidentified. Damage Mathematician freshly inspected the tabs and supplied the local-only technical handoff; Data & Tooling read it completely and reconciled it against the existing mechanics audit and independent QA. Data & Tooling independently opened the official landing page, but its specialist browser had no rendered-tab surface. This document does not mislabel that limitation as independent rendered verification. [Developer Q&A](https://maplestoryidle.nexon.com/en/qna) separately supports trigger definitions. Historical translated drafts remain planning, not primary rules.
 
-Versioned machine-readable records: `public/domain/mechanics-data.js`, `MECHANICS_DATA_VERSION=msi-en-guide-2026-10-15-claims-3`. Every record includes source/date/build, supported claim, variables, units, stacking, order, caps, rounding, contexts, exceptions, unresolved details and distinct publication/implementation/empirical/prediction confidence. Build is null rather than guessed. Claim IDs are stable lookup keys, not evidence that a complete game model exists.
+Versioned machine-readable records: `public/domain/mechanics-data.js`, `MECHANICS_DATA_VERSION=msi-guide-2026-10-15-claims-4`. Every record includes source/date/build, supported claim, variables, units, stacking, order, caps, rounding, contexts, exceptions, unresolved details and distinct publication/implementation/empirical/prediction confidence. Build is null rather than guessed. Claim IDs are stable lookup keys, not evidence that a complete game model exists.
 
 | Claim | Publication / supported operation | Implementation / verification |
 | --- | --- | --- |
@@ -18,7 +18,7 @@ Versioned machine-readable records: `public/domain/mechanics-data.js`, `MECHANIC
 | MSI-G15-DAMAGE-ORDER | Battle §1.3; separate factors before context adjustment, Skill coefficient afterward | Damage Mathematician owns scoped damage implementation; this data module does not enable a context |
 | MSI-G15-CRITICAL | Dictionary/Battle; critical-hit multiplier, chance semantics; PvP weighting limit scoped | Only explicit joint-outcome arithmetic; no inferred overflow, resistance or range distribution |
 | MSI-G15-CONTEXT | Battle §2.1; named root-based mode descriptions | Named profiles remain unavailable; prose does not supply complete formulas/parameters |
-| MSI-G15-PVP-LEVEL | Battle §4.2; per-defender-level relative received-damage reductions by mode/band | Isolated relative level factor; multiply transitions, not percentage-point subtraction. Published100+ overlaps preceding closed band; paths crossing99→100 reject in either direction. No absolute<=30 anchor or full Arena winner |
+| MSI-G15-PVP-LEVEL | Battle §4.2; per-defender-level relative received-damage reductions by mode/band; same-date Korean wording corroborates inclusive100/after100 | Isolated relative level factor; multiply transitions, not percentage-point subtraction. Level100 uses preceding band;101 begins next. Cross-language interpretation does not establish regional/build parity. No absolute<=30 anchor or full Arena winner |
 | MSI-Q22-TRIGGERS | Developer Q&A; skill-use versus eligible-hit trigger checks | Retained dependency; no trigger/rotation implementation |
 
 ## Replacement without equipping the candidate

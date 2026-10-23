@@ -186,13 +186,20 @@ test('QA PVP-LEVEL unambiguous within-band and cross-band transitions compound e
   }
 });
 
-test('QA PVP-LEVEL overlapping published boundary abstains for any path through99 to100', () => {
-  for (const mode of ['arena', 'world-arena', 'colosseum']) {
-    for (const [fromLevel, toLevel] of [[99, 100], [100, 99], [98, 101], [101, 98], [30, 100], [120, 30]]) {
-      assert.throws(() => pvpDefenderLevelRatio({ mode, fromLevel, toLevel }), /[Aa]mbiguous/);
-    }
-    // No transition across the overlapping point is consumed here.
-    assert.ok(pvpDefenderLevelRatio({ mode, fromLevel: 100, toLevel: 101 }) > 0);
+test('QA PVP-LEVEL same-date Korean corroboration assigns gained100 to preceding band and101 to next', () => {
+  // Evidence reconciliation: research/DEPENDENCY_RESEARCH_2026-10-22.md.
+  // This is a source-linked interpretation fixture, never live-game validation.
+  const claim = CLAIMS['MSI-G15-PVP-LEVEL'];
+  assert.ok(claim.corroboratingSources.some(source => source.url === 'https://maplestoryidle.nexon.com/ko/guide' && source.language === 'ko'));
+  assert.match(claim.translationResolution, /after100/);
+  assert.ok(claim.unresolved.some(text => /regional|build/.test(text)));
+  for (const [mode, preceding, following] of [['arena', .987, .985], ['world-arena', .987, .985], ['colosseum', .985, .975]]) {
+    close(pvpDefenderLevelRatio({ mode, fromLevel: 99, toLevel: 100 }), preceding);
+    close(pvpDefenderLevelRatio({ mode, fromLevel: 100, toLevel: 101 }), following);
+    const across = pvpDefenderLevelRatio({ mode, fromLevel: 98, toLevel: 102 });
+    close(across, preceding * preceding * following * following);
+    close(across * pvpDefenderLevelRatio({ mode, fromLevel: 102, toLevel: 98 }), 1);
+    assert.equal(compare(state(), state(240), { contextId: mode }).status, 'unsupported');
   }
 });
 

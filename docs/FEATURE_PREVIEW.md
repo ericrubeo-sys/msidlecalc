@@ -6,7 +6,7 @@ Branch: `feature/source-linked-damage-model`. Production remains visual release 
 
 - Versioned pure ordinary attack-based damage **before** content transformation and skill coefficient. Explicit effective factors and joint outcomes; no inferred critical/range distribution, hit curve, attribute conversion or rotation.
 - Attribute replacement retains flat → preaggregated ordinary multiplier → preaggregated skill multiplier → skill-flat order. Final Damage replaces independent multiplied sources; remaining-cap families reaggregate known sources. Exact-total inverses reject unsupported rounded/saturated/ill-conditioned cases.
-- An isolated PvP defender-level factor supports unambiguous published transitions; paths through the overlapping level-100 boundary reject. This is not a full Arena formula or equipment result.
+- The isolated PvP defender-level factor now includes the level100 transition using same-date Korean-guide corroboration:100 uses the preceding band,101 starts the next. Modelv4/claims4 record this interpretation and unknown regional/build applicability. This is not a full Arena formula or equipment result.
 - The application’s optional Advanced calculation explains only confirmed independent Final Damage item-source effects. Unchanged outside sources cancel, so this slice needs neither a current aggregate nor a candidate-equipped snapshot. All other item lines remain visible and explicitly unevaluated. Separate Chapter/Boss/Guild/Arena cards abstain.
 
 ## Source → requirement → implementation → verification
@@ -21,8 +21,8 @@ Branch: `feature/source-linked-damage-model`. Production remains visual release 
 | Multiple distinct context results | Advanced calculation context cards | Each explains its own unsupported profile; no generic Boss/Guild score |
 | Skill, artifact, buff and cadence completeness | Spec and official dated follow-up | Historical coefficient leads and October state-dependent rules recorded; no unsupported weighting or duplicate passive totals |
 | Henesys snapshot hypothesis | Spec controlled-observation protocol | No guarantee all buffs disappear; no player measurement collected |
-| Reproducible checks | `npm test`, `npm run check`, `npm run build`, GitHub workflow | 81 tests including independent precision and OCR-session regressions; syntax/local-reference/color checks pass |
-| OCR gate and privacy | Separate loopback evaluation harness and pure session contract | Pinned local resources; correction/stale-run tests and exercised resource-denial/recovery. One example has merged numeric columns: OCR not adopted. See `OCR_EVALUATION.md` and `OCR_QA.md` |
+| Reproducible checks | `npm test`, `npm run check`, `npm run build`, GitHub workflow | 111 tests including independent spatial/mask/precision/session regressions; synthetic evidence remains distinct from game validation |
+| OCR gate and privacy | Separate loopback evaluation harness, spatial proposals and sessionv2 | Reviewed crops/columns, optional explicit color assumption, count-only fixed scoring, correction review after segmentation changes. Development trial improves but still has errors; OCR not adopted. See `EXTRACTION_BENCHMARK.md` and `EXTRACTION_QA.md` |
 
 The Chief of Staff audit, source register, spec and QA were revisited before integration and preview review. Official publication confidence is separate from synthetic implementation checks and unperformed game prediction validation. See `DAMAGE_MODEL_QA.md` for independent findings and fixes.
 

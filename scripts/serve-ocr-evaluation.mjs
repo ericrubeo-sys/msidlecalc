@@ -10,6 +10,8 @@ const assets = new Map([
   ['/vendor/worker.min.js', 'node_modules/tesseract.js/dist/worker.min.js'],
   ['/vendor/lang/eng.traineddata.gz', 'node_modules/@tesseract.js-data/eng/4.0.0_best_int/eng.traineddata.gz'],
   ['/domain/ocr-session.js', 'public/domain/ocr-session.js'],
+  ['/domain/ocr-extraction.js', 'public/domain/ocr-extraction.js'],
+  ['/domain/ocr-preprocessing.js', 'public/domain/ocr-preprocessing.js'],
 ]);
 for (const name of await readdir(path.join(root, 'node_modules/tesseract.js-core'))) {
   if (/^tesseract-core(?:-(?:relaxedsimd|simd))?(?:-lstm)?\.wasm(?:\.js)?$/.test(name)) assets.set(`/vendor/core/${name}`, `node_modules/tesseract.js-core/${name}`);
@@ -21,6 +23,8 @@ for (const [packageName, expected] of [['tesseract.js', '7.0.0'], ['tesseract.js
 const html = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Private local OCR evaluation</title><style>body{font:16px system-ui;max-width:1000px;margin:24px auto;padding:12px}button,input,select{font:inherit;margin:8px}img,canvas{max-width:100%;height:auto}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#eee;padding:12px}label{display:block}.line{display:grid;grid-template-columns:1fr 1fr;gap:8px}.line input{min-width:0}small{color:#555}</style><h1>Private local OCR evaluation</h1><p>Evaluation only. No item parsing, recommendations or production adoption. Select a permitted image; pixels remain in this browser. Nothing is uploaded or saved.</p><input id="file" aria-label="Select permitted image" type="file" accept="image/png,image/jpeg,image/webp"><label>Evaluation layout<select id="layout"><option value="full">Full image</option><option value="approved">Approved example: two explicit panel crops (not universal detection)</option></select></label><button id="run" disabled>Run OCR</button><button id="repeat" disabled>Repeat same image/settings</button><button id="cancel">Cancel run</button><button id="reset">Remove image/reset</button><p id="status" role="status">Select a permitted image.</p><canvas id="preview" aria-label="Selected image preview"></canvas><pre id="metadata"></pre><div id="output"></div><script src="/vendor/tesseract.min.js"></script><script type="module" src="/harness.js"></script></html>`;
 
 const auditedHtml = html.replace('<p id="status"', '<button id="gate-block">Block vendor resource loads</button><button id="gate-open">Allow vendor resource loads</button><button id="audit-refresh">Refresh privacy audit</button><details open><summary>Local verification audit</summary><p>Counts only; no player text captured. Main-page instrumentation does not inspect worker globals. Resource gate denies same-origin vendor files; it does not disconnect the browser network.</p><pre id="audit">Audit initializing…</pre></details><p id="status"')
+  .replace('</select></label>', '<option value="reviewed">User-reviewed regions and columns</option></select></label><label>Reviewed normalized regions JSON (x/y/width/height and optional labelEnd/valueEnd cuts, each0–1)<textarea id="regions" rows="4" cols="72" aria-label="Reviewed regions JSON">[{"id":"current","box":[0.235,0.074,0.237,0.754]},{"id":"candidate","box":[0.47,0.074,0.232,0.754]}]</textarea></label><p>Regions and column cuts require your visual review. No automatic panel or item identity is inferred. Column OCR is separate; every proposal remains unconfirmed.</p>')
+  .replace('<button id="run"', '<label><input type="checkbox" id="neutral-mask">Optional neutral-text mask for label/value column proposals (evaluation only)</label><p>Assumes base text is bright and neutral while comparison text is colored. Colored base text can disappear; neutral comparison text can remain. Original image and whole-panel OCR are retained. No value is confirmed.</p><button id="run"')
   .replace('<script src="/vendor/tesseract.min.js">', '<script src="/audit.js"></script><script src="/vendor/tesseract.min.js">');
 
 function browserAudit() {
@@ -50,6 +54,8 @@ function browserAudit() {
 
 async function browserHarness() {
   const api = await import('/domain/ocr-session.js');
+  const extraction = await import('/domain/ocr-extraction.js');
+  const preprocessing = await import('/domain/ocr-preprocessing.js');
   const element = id => document.getElementById(id);
   let session = api.createOcrSession();
   let bitmap = null, worker = null, imageCounter = 0, previous = null, busy = false;
@@ -74,6 +80,8 @@ async function browserHarness() {
     element('run').disabled = !bitmap || busy;
     element('repeat').disabled = !bitmap || busy || !previous;
     element('layout').disabled = busy;
+    element('regions').disabled = busy;
+    element('neutral-mask').disabled = busy;
   }
   function render() {
     element('output').replaceChildren();
@@ -82,6 +90,12 @@ async function browserHarness() {
       const note = document.createElement('p'); note.textContent = 'Engine confidence metadata: ' + panel.confidence + ' (not a probability). All text requires review.';
       const raw = document.createElement('pre'); raw.textContent = panel.rawText;
       element('output').append(heading, note, raw);
+      if (panel.observationMetadata?.provenance?.extraction) {
+        const proposals = document.createElement('pre');
+        proposals.setAttribute('aria-label', 'Spatial proposals ' + panel.id);
+        proposals.textContent = JSON.stringify(panel.observationMetadata.provenance.extraction, null, 2);
+        element('output').append(proposals);
+      }
       for (const line of panel.lines) {
         const row = document.createElement('label'); row.className = 'line';
         const label = document.createElement('span'); label.textContent = (line.ordinal + 1) + ': ' + line.rawText + ' [' + line.state + ']';
@@ -139,7 +153,15 @@ async function browserHarness() {
     if (!bitmap || busy) return;
     const layout = repeat ? previous.layout : element('layout').value;
     element('layout').value = layout;
-    const runSettings = { ...settings, layout, crops: layout === 'approved' ? crops : null };
+    let reviewedRegions = null;
+    try {
+      reviewedRegions = repeat ? previous.settings.reviewedRegions : layout === 'reviewed' ? JSON.parse(element('regions').value) : null;
+      if (reviewedRegions !== null && (!Array.isArray(reviewedRegions) || !reviewedRegions.length || reviewedRegions.length > 6 || new Set(reviewedRegions.map(region => region.id)).size !== reviewedRegions.length || reviewedRegions.some(region => !/^[a-z][a-z0-9-]*$/.test(region.id) || !Array.isArray(region.box) || region.box.length !== 4 || !region.box.every(Number.isFinite) || region.box.some(value => value < 0 || value > 1) || region.box[2] <= 0 || region.box[3] <= 0 || region.box[0] + region.box[2] > 1 || region.box[1] + region.box[3] > 1 || ((region.labelEnd !== undefined || region.valueEnd !== undefined) && !(Number.isFinite(region.labelEnd) && Number.isFinite(region.valueEnd) && region.labelEnd > 0 && region.labelEnd < region.valueEnd && region.valueEnd < 1))))) throw new Error();
+    } catch { status('Invalid reviewed regions. Supply unique IDs, in-bounds normalized boxes and optional ordered column cuts.'); return; }
+    const neutralMask = repeat ? previous.settings.neutralMask : element('neutral-mask').checked;
+    element('neutral-mask').checked = neutralMask;
+    const runSettings = { ...settings, layout, crops: layout === 'approved' ? crops : null, reviewedRegions, extractionVersion: extraction.OCR_EXTRACTION_VERSION,
+      neutralMask, maskVersion: preprocessing.NEUTRAL_TEXT_MASK_VERSION, maskSettings: preprocessing.NEUTRAL_TEXT_MASK_SETTINGS, outputs: ['text', 'blocks'] };
     const start = api.beginOcrRun(session, runSettings); session = start.session;
     const token = start.token; const started = performance.now(); busy = true; controls(); status('Loading local worker resources…');
     let localWorker = worker, completed = false;
@@ -153,8 +175,9 @@ async function browserHarness() {
       worker = localWorker;
       await localWorker.setParameters({ tessedit_pageseg_mode: '6', user_defined_dpi: '300', preserve_interword_spaces: '1' });
       const panels = [];
-      const regions = layout === 'approved' ? Object.entries(crops) : [['full', [0, 0, 1, 1]]];
-      for (const [id, box] of regions) {
+      const regions = layout === 'reviewed' ? reviewedRegions : layout === 'approved' ? Object.entries(crops).map(([id, box]) => ({ id, box })) : [{ id: 'full', box: [0, 0, 1, 1] }];
+      for (const region of regions) {
+        const { id, box } = region;
         if (!api.isOcrRunCurrent(session, token)) return;
         const [x, y, width, height] = box;
         const sx = Math.round(bitmap.width * x), sy = Math.round(bitmap.height * y);
@@ -164,16 +187,48 @@ async function browserHarness() {
         const context = canvas.getContext('2d'); context.imageSmoothingEnabled = false;
         context.drawImage(bitmap, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
         status('Recognizing ' + id + ' locally…');
-        const result = await localWorker.recognize(canvas, {}, { text: true });
+        const result = await localWorker.recognize(canvas, {}, { text: true, blocks: true });
         if (!api.isOcrRunCurrent(session, token)) return;
-        panels.push({ id, rawText: result.data.text, confidence: result.data.confidence,
-          crop: { x: sx, y: sy, width: sw, height: sh }, provenance: { preprocessing: 'integer-upscale-nearest-v1', scale: 3 } });
+        const crop = { x: sx, y: sy, width: sw, height: sh };
+        const spatial = extraction.extractSpatialObservation({ rawText: result.data.text, blocks: result.data.blocks, crop, scale: 3 });
+        let columnProposals = null;
+        if (region.labelEnd !== undefined) {
+          const observations = [];
+          for (const [lane, left, right] of [['label', 0, region.labelEnd], ['value', region.labelEnd, region.valueEnd], ['delta', region.valueEnd, 1]]) {
+            if (!api.isOcrRunCurrent(session, token)) return;
+            const columnX = Math.round(sw * left), columnWidth = Math.round(sw * right) - columnX;
+            if (columnWidth < 1) throw new Error('Column too narrow.');
+            const columnCanvas = document.createElement('canvas'); canvases.push(columnCanvas);
+            columnCanvas.width = columnWidth * 3; columnCanvas.height = sh * 3;
+            const columnContext = columnCanvas.getContext('2d'); columnContext.imageSmoothingEnabled = false;
+            columnContext.drawImage(bitmap, sx + columnX, sy, columnWidth, sh, 0, 0, columnCanvas.width, columnCanvas.height);
+            const masked = neutralMask && lane !== 'delta';
+            if (masked) {
+              const pixels = columnContext.getImageData(0, 0, columnCanvas.width, columnCanvas.height);
+              const filtered = preprocessing.maskNeutralText(pixels);
+              pixels.data.set(filtered.data); columnContext.putImageData(pixels, 0, 0);
+            }
+            status('Recognizing reviewed ' + id + ' ' + lane + ' column locally…');
+            const columnResult = await localWorker.recognize(columnCanvas, {}, { text: true, blocks: true });
+            if (!api.isOcrRunCurrent(session, token)) return;
+            observations.push({ lane, preprocessing: masked ? { version: preprocessing.NEUTRAL_TEXT_MASK_VERSION, settings: preprocessing.NEUTRAL_TEXT_MASK_SETTINGS, assumption: 'bright-neutral-base-text; colored-comparison-text; unconfirmed' } : { version: 'integer-upscale-nearest-v1' }, extraction: extraction.extractSpatialObservation({ rawText: columnResult.data.text, blocks: columnResult.data.blocks, crop: { x: sx + columnX, y: sy, width: columnWidth, height: sh }, scale: 3, columns: { [lane]: [0, 1] } }) });
+          }
+          columnProposals = extraction.assembleColumnObservations(observations);
+        }
+        const segmentationIdentity = JSON.stringify({ crop, scale: 3, labelEnd: region.labelEnd ?? null, valueEnd: region.valueEnd ?? null, neutralMask, extractionVersion: extraction.OCR_EXTRACTION_VERSION, maskVersion: neutralMask ? preprocessing.NEUTRAL_TEXT_MASK_VERSION : null });
+        panels.push({ id, rawText: result.data.text, confidence: result.data.confidence, segmentationIdentity,
+          crop, boxes: spatial.rows, provenance: { preprocessing: 'integer-upscale-nearest-v1', scale: 3,
+            segmentationIdentity,
+            extraction: columnProposals ?? spatial } });
       }
       const text = panels.map(panel => [panel.id, panel.rawText]);
-      const equal = previous && JSON.stringify(previous.settings) === JSON.stringify(runSettings) ? JSON.stringify(previous.text) === JSON.stringify(text) : null;
-      const metadata = { versions, settings: runSettings, durationMs: Math.round(performance.now() - started), repeatedTextEqual: equal, imageDimensions: [bitmap.width, bitmap.height], resourceOrigin: location.origin };
+      const proposals = panels.map(panel => [panel.id, panel.provenance.extraction]);
+      const sameSettings = previous && JSON.stringify(previous.settings) === JSON.stringify(runSettings);
+      const equal = sameSettings ? JSON.stringify(previous.text) === JSON.stringify(text) : null;
+      const repeatedProposalsEqual = sameSettings ? JSON.stringify(previous.proposals) === JSON.stringify(proposals) : null;
+      const metadata = { versions, settings: runSettings, durationMs: Math.round(performance.now() - started), repeatedTextEqual: equal, repeatedProposalsEqual, imageDimensions: [bitmap.width, bitmap.height], resourceOrigin: location.origin };
       const accepted = api.acceptOcrRun(session, token, { panels, metadata }); session = accepted.session;
-      if (accepted.accepted) { completed = true; previous = { layout, settings: runSettings, text }; element('metadata').textContent = JSON.stringify(metadata, null, 2); render(); status('OCR finished; raw text only. Every line needs review.'); }
+      if (accepted.accepted) { completed = true; previous = { layout, settings: runSettings, text, proposals }; element('metadata').textContent = JSON.stringify(metadata, null, 2); render(); status('OCR finished; raw text only. Every line needs review.'); }
     } catch { if (api.isOcrRunCurrent(session, token)) { session = api.cancelOcrRun(session); status('Local OCR failed; no results fabricated.'); } }
     finally {
       if (localWorker && !completed) { try { await localWorker.terminate(); } catch {} }

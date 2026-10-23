@@ -3,7 +3,7 @@
 import { ordinaryDefenseFactor, relativeImpact, expectedTransformedDamage } from './mechanics.js';
 import { MECHANICS_DATA_VERSION } from './mechanics-data.js';
 
-export const MODEL_VERSION = 'ordinary-stage-2026-10-22-v3';
+export const MODEL_VERSION = 'ordinary-stage-2026-10-22-v4';
 export const MODEL_CLAIM_IDS = Object.freeze(['MSI-G15-DEFENSE', 'MSI-G15-DAMAGE-ORDER', 'MSI-G15-CRITICAL']);
 export const MULTIPLIER_IDS = Object.freeze([
   'targetDamageTakenIncrease', 'targetDamageTakenDecrease', 'targetDungeonAdjustment',
@@ -131,8 +131,9 @@ export function compareSupportedFactors(input) {
 // TAKEN multiplier from defender level only. Does not include the separate
 // defender prebattle-stat adjustment, attack damage or skill coefficient.
 // No absolute <=30 anchor, attacker-level difference or full PvP verdict is
-// inferred. Source ranges ending100 overlap its '100+' wording, so any path
-// crossing99->100 rejects rather than selecting a preferred interpretation.
+// inferred. Korean guide §4.2 says 'after level100', resolving the English
+// '100+' overlap: gained level100 uses the preceding inclusive band;101 uses
+// the next. See research/DEPENDENCY_RESEARCH_2026-10-22.md. Not game validation.
 export function pvpDefenderLevelRatio({ mode, fromLevel, toLevel }) {
   const bands = {
     arena: [[31, 60, .995], [61, 100, .987], [101, Infinity, .985]],
@@ -145,7 +146,6 @@ export function pvpDefenderLevelRatio({ mode, fromLevel, toLevel }) {
   }
   const lower = Math.min(fromLevel, toLevel);
   const upper = Math.max(fromLevel, toLevel);
-  if (lower < 100 && upper >= 100) throw new RangeError('Ambiguous published level-100 transition.');
   let ratio = 1;
   for (const [start, end, step] of bands[mode]) {
     const count = Math.max(0, Math.min(upper, end) - Math.max(lower, start - 1));

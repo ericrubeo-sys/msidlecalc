@@ -73,9 +73,12 @@ test('MSI-G15-PVP-LEVEL: relative defender-level bands multiply per gained level
   assert.ok(Math.abs(level('arena', 30, 99) - .995 ** 30 * .987 ** 39) < 1e-12);
   assert.ok(Math.abs(level('arena', 30, 99) * level('arena', 99, 30) - 1) < 1e-12);
   for (const mode of ['arena', 'world-arena', 'colosseum']) {
-    for (const [fromLevel, toLevel] of [[99, 100], [100, 99], [30, 101], [101, 30]]) {
-      assert.throws(() => level(mode, fromLevel, toLevel), /Ambiguous/);
-    }
+    const at100 = mode === 'colosseum' ? .985 : .987;
+    const at101 = mode === 'colosseum' ? .975 : .985;
+    assert.equal(level(mode, 99, 100), at100);
+    assert.equal(level(mode, 100, 99), 1 / at100);
+    assert.equal(level(mode, 99, 101), at100 * at101);
+    assert.ok(Math.abs(level(mode, 30, 101) * level(mode, 101, 30) - 1) < 1e-12);
     assert.equal(level(mode, 100, 100), 1);
   }
   for (const input of [{ mode: 'chapter', fromLevel: 30, toLevel: 31 }, { mode: 'arena', fromLevel: 29, toLevel: 31 }, { mode: 'arena', fromLevel: 30, toLevel: 31.5 }, { mode: 'arena', fromLevel: 30, toLevel: Number.MAX_SAFE_INTEGER }]) assert.throws(() => pvpDefenderLevelRatio(input));

@@ -34,6 +34,8 @@ Immediate operating changes: maintain the source→requirement→implementation�
 
 **OCR evaluation review:** identical repeated OCR text can still be wrong: the approved example merged adjacent candidate values. Preserve raw observations and require representative ground truth before adoption. An unblurred correction was lost by a change-only handler; commit edits on input and test retention through failure/recovery. A resource-denial gate establishes only the resources it actually blocks; main-page instrumentation does not cover worker globals. Keep those limits explicit in evidence and product claims.
 
+**Spatial extraction review:** the candidate base/delta boundary varies by row, so one fixed column cut can both clip a base digit and include a neighboring delta. Explicit optional color preprocessing can improve a development trial but may erase legitimate colored base text; retain raw evidence and never use it to establish item identity or numeric confirmation. Correction certainty must depend on segmentation/preprocessing identity as well as raw text: identical repeated text at the same ordinal can describe a different observation after a crop/mask change. The fixed scorer caught proposal newlines; fix proposal generation while retaining originals rather than loosening the scorer after seeing failures. Cross-language corroboration can resolve published wording without proving regional/live-build parity.
+
 Specialist briefing record: every dispatch must include this audit, current user corrections, relevant full source materials, exact write ownership and explicit output/verification boundary. Orchestrator owns integration, lessons and requirement reconciliation.
 
 - **Date / milestone:** 2026-10-22 — GitHub connection and planning transfer.

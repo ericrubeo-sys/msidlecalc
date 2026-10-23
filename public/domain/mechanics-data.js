@@ -1,5 +1,5 @@
 // Publication confidence is separate from implementation and live-game accuracy.
-export const MECHANICS_DATA_VERSION = 'msi-en-guide-2026-10-15-claims-3';
+export const MECHANICS_DATA_VERSION = 'msi-guide-2026-10-15-claims-4';
 const source = {
   url: 'https://maplestoryidle.nexon.com/en/guide', title: 'MapleStory : Idle RPG Additional Information',
   language: 'en', publishedOrUpdatedOn: '2026-10-15', accessedOn: '2026-10-22',
@@ -40,16 +40,23 @@ const records = [
   rule('MSI-G15-CONTEXT', 'Battle §2.1', 'Named Zakum/Horntail Boss/Guild Raid content has square-root-based adjustment; Guild Training has cube-root-based adjustment.',
     ['pre-context damage', 'mode adjustment', 'skill coefficient'], 'profile-specific', 'no generic Boss profile', 'transform outcomes then weight; coefficient afterward', null,
     ['named publication scopes, not enabled profiles'], ['root prose does not establish constants/eligibility'], ['Chapter Breakthrough', 'complete Arena rules', 'named-mode formulas/rounding']),
-  rule('MSI-G15-PVP-LEVEL', 'Battle §4.2: Level-Based Adjustment', 'Each gained defender level reduces received damage relative to previous level: Arena/World Arena31–60 by0.5%,61–100 by1.3%,100+ by1.5%; Colosseum31–60 by0.5%,61–70 by1.3%,71–100 by1.5%,100+ by2.5%.',
+  rule('MSI-G15-PVP-LEVEL', 'Battle §4.2: Level-Based Adjustment', 'Each gained defender level reduces received damage relative to previous level: Arena/World Arena31–60 by0.5%,61–100 by1.3%,after100 by1.5%; Colosseum31–60 by0.5%,61–70 by1.3%,71–100 by1.5%,after100 by2.5%. Korean guide resolves the English100+ boundary wording.',
     ['integer defender levels before/after', 'per-transition reduction r'], 'levels and fractional reduction per transition', 'derived recurrence product(1-r); reciprocal for lost levels',
     'isolated defender-level factor; full PvP needs other receiver/context inputs', null,
     ['relative defender-level change at levels>=30 in named PvP modes'], ['no attacker-level scaling or complete Arena result'],
-    ['absolute anchor<=30 unspecified', 'published100+ overlaps preceding closed band; paths crossing99→100 in either direction reject', 'rounding', 'live verification']),
+    ['absolute anchor<=30 unspecified', 'rounding', 'live verification', 'regional/build applicability not established']),
 ];
 records.find(({ id }) => id === 'MSI-G15-CONTEXT').confidence.implementation = 'named-profiles-not-implemented';
 records.find(({ id }) => id === 'MSI-G15-CRITICAL').confidence.implementation = 'explicit-outcome-arithmetic-only; effective-chance-not-inferred';
 records.find(({ id }) => id === 'MSI-G15-PVP-LEVEL').confidence.implementation = 'isolated-relative-level-factor-fixtures-only';
-records.find(({ id }) => id === 'MSI-G15-PVP-LEVEL').confidence.prediction = 'not-established; ambiguous level100 boundary rejected';
+const pvpLevel = records.find(({ id }) => id === 'MSI-G15-PVP-LEVEL');
+pvpLevel.corroboratingSources = [{ ...source, url: 'https://maplestoryidle.nexon.com/ko/guide',
+  title: '메이플 키우기 추가 정보', language: 'ko', section: '전투 시스템 안내 §4.2',
+  region: 'Korean guide; cross-language corroboration, shared server/build applicability not established',
+  supportedClaim: '61~100 and71~100 are followed by100 레벨 이후 (after level100); next band begins with gained level101.',
+}];
+pvpLevel.translationResolution = 'English100+ is interpreted as after100 using same-date Korean explicit wording; only isolated relative level factor resolved.';
+pvpLevel.confidence.prediction = 'not-established; no controlled live-game validation';
 const trigger = rule('MSI-Q22-TRIGGERS', 'Developer Q&A: attack versus strike', 'On-attack checks occur once per skill use; on-strike checks occur per eligible hit. Additional/continuous damage are excluded from the described triggers.',
   ['skill uses', 'eligible hits', 'trigger probability'], 'events and probabilities', 'trigger-specific', 'eligible event then check', null,
   ['described trigger definitions'], ['additional/continuous damage excluded'], ['complete skill catalog', 'cooldown', 'uptime', 'rotation']);
