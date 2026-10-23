@@ -12,6 +12,7 @@ const assets = new Map([
   ['/domain/ocr-session.js', 'public/domain/ocr-session.js'],
   ['/domain/ocr-extraction.js', 'public/domain/ocr-extraction.js'],
   ['/domain/ocr-preprocessing.js', 'public/domain/ocr-preprocessing.js'],
+  ['/domain/ocr-raster.js', 'public/domain/ocr-raster.js'],
 ]);
 for (const name of await readdir(path.join(root, 'node_modules/tesseract.js-core'))) {
   if (/^tesseract-core(?:-(?:relaxedsimd|simd))?(?:-lstm)?\.wasm(?:\.js)?$/.test(name)) assets.set(`/vendor/core/${name}`, `node_modules/tesseract.js-core/${name}`);
@@ -25,6 +26,7 @@ const html = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="v
 const auditedHtml = html.replace('<p id="status"', '<button id="gate-block">Block vendor resource loads</button><button id="gate-open">Allow vendor resource loads</button><button id="audit-refresh">Refresh privacy audit</button><details open><summary>Local verification audit</summary><p>Counts only; no player text captured. Main-page instrumentation does not inspect worker globals. Resource gate denies same-origin vendor files; it does not disconnect the browser network.</p><pre id="audit">Audit initializing…</pre></details><p id="status"')
   .replace('</select></label>', '<option value="reviewed">User-reviewed regions and columns</option></select></label><label>Reviewed normalized regions JSON (x/y/width/height and optional labelEnd/valueEnd cuts, each0–1)<textarea id="regions" rows="4" cols="72" aria-label="Reviewed regions JSON">[{"id":"current","box":[0.235,0.074,0.237,0.754]},{"id":"candidate","box":[0.47,0.074,0.232,0.754]}]</textarea></label><p>Regions and column cuts require your visual review. No automatic panel or item identity is inferred. Column OCR is separate; every proposal remains unconfirmed.</p>')
   .replace('<button id="run"', '<label><input type="checkbox" id="neutral-mask">Optional neutral-text mask for label/value column proposals (evaluation only)</label><p>Assumes base text is bright and neutral while comparison text is colored. Colored base text can disappear; neutral comparison text can remain. Original image and whole-panel OCR are retained. No value is confirmed.</p><button id="run"')
+  .replace('<button id="run"', '<label>Column raster experiment<select id="raster-mode"><option value="legacy">Existing3× nearest, no padding</option><option value="original">Original color,4× bilinear,8px padding</option><option value="luma-invert">Luminance inverted,4× bilinear,8px padding</option><option value="otsu-invert">Otsu inverted,4× nearest,8px padding</option></select></label><p>Experimental column observations only. Full-panel original OCR is retained. Raster variants cannot be combined with the separate neutral-text mask.</p><button id="run"')
   .replace('<script src="/vendor/tesseract.min.js">', '<script src="/audit.js"></script><script src="/vendor/tesseract.min.js">');
 
 function browserAudit() {
@@ -56,6 +58,7 @@ async function browserHarness() {
   const api = await import('/domain/ocr-session.js');
   const extraction = await import('/domain/ocr-extraction.js');
   const preprocessing = await import('/domain/ocr-preprocessing.js');
+  const raster = await import('/domain/ocr-raster.js');
   const element = id => document.getElementById(id);
   let session = api.createOcrSession();
   let bitmap = null, worker = null, imageCounter = 0, previous = null, busy = false;
@@ -82,6 +85,7 @@ async function browserHarness() {
     element('layout').disabled = busy;
     element('regions').disabled = busy;
     element('neutral-mask').disabled = busy;
+    element('raster-mode').disabled = busy;
   }
   function render() {
     element('output').replaceChildren();
@@ -160,11 +164,15 @@ async function browserHarness() {
     } catch { status('Invalid reviewed regions. Supply unique IDs, in-bounds normalized boxes and optional ordered column cuts.'); return; }
     const neutralMask = repeat ? previous.settings.neutralMask : element('neutral-mask').checked;
     element('neutral-mask').checked = neutralMask;
+    const rasterMode = repeat ? previous.settings.rasterMode : element('raster-mode').value;
+    element('raster-mode').value = rasterMode;
+    if (!['legacy', 'original', 'luma-invert', 'otsu-invert'].includes(rasterMode) || (neutralMask && rasterMode !== 'legacy')) { status('Choose either a raster variant or the legacy neutral-text mask experiment.'); return; }
+    const rasterOptions = rasterMode === 'legacy' ? null : { mode: rasterMode, scale: 4, padding: 8, interpolation: rasterMode === 'otsu-invert' ? 'nearest' : 'bilinear' };
     const runSettings = { ...settings, layout, crops: layout === 'approved' ? crops : null, reviewedRegions, extractionVersion: extraction.OCR_EXTRACTION_VERSION,
-      neutralMask, maskVersion: preprocessing.NEUTRAL_TEXT_MASK_VERSION, maskSettings: preprocessing.NEUTRAL_TEXT_MASK_SETTINGS, outputs: ['text', 'blocks'] };
+      neutralMask, maskVersion: preprocessing.NEUTRAL_TEXT_MASK_VERSION, maskSettings: preprocessing.NEUTRAL_TEXT_MASK_SETTINGS, rasterMode, rasterOptions, rasterVersion: raster.OCR_RASTER_VERSION, outputs: ['text', 'blocks'] };
     const start = api.beginOcrRun(session, runSettings); session = start.session;
     const token = start.token; const started = performance.now(); busy = true; controls(); status('Loading local worker resources…');
-    let localWorker = worker, completed = false;
+    let localWorker = worker, completed = false, stage = 'worker';
     const canvases = [];
     try {
       if (!localWorker) localWorker = await Tesseract.createWorker('eng', 1, {
@@ -199,9 +207,16 @@ async function browserHarness() {
             const columnX = Math.round(sw * left), columnWidth = Math.round(sw * right) - columnX;
             if (columnWidth < 1) throw new Error('Column too narrow.');
             const columnCanvas = document.createElement('canvas'); canvases.push(columnCanvas);
-            columnCanvas.width = columnWidth * 3; columnCanvas.height = sh * 3;
+            columnCanvas.width = rasterOptions ? columnWidth : columnWidth * 3; columnCanvas.height = rasterOptions ? sh : sh * 3;
             const columnContext = columnCanvas.getContext('2d'); columnContext.imageSmoothingEnabled = false;
             columnContext.drawImage(bitmap, sx + columnX, sy, columnWidth, sh, 0, 0, columnCanvas.width, columnCanvas.height);
+            let rasterProvenance = null;
+            if (rasterOptions) {
+              const transformed = raster.preprocessOcrRaster(columnContext.getImageData(0, 0, columnWidth, sh), rasterOptions);
+              rasterProvenance = transformed.provenance;
+              columnCanvas.width = transformed.width; columnCanvas.height = transformed.height;
+              columnContext.putImageData(new ImageData(transformed.data, transformed.width, transformed.height), 0, 0);
+            }
             const masked = neutralMask && lane !== 'delta';
             if (masked) {
               const pixels = columnContext.getImageData(0, 0, columnCanvas.width, columnCanvas.height);
@@ -211,11 +226,23 @@ async function browserHarness() {
             status('Recognizing reviewed ' + id + ' ' + lane + ' column locally…');
             const columnResult = await localWorker.recognize(columnCanvas, {}, { text: true, blocks: true });
             if (!api.isOcrRunCurrent(session, token)) return;
-            observations.push({ lane, preprocessing: masked ? { version: preprocessing.NEUTRAL_TEXT_MASK_VERSION, settings: preprocessing.NEUTRAL_TEXT_MASK_SETTINGS, assumption: 'bright-neutral-base-text; colored-comparison-text; unconfirmed' } : { version: 'integer-upscale-nearest-v1' }, extraction: extraction.extractSpatialObservation({ rawText: columnResult.data.text, blocks: columnResult.data.blocks, crop: { x: sx + columnX, y: sy, width: columnWidth, height: sh }, scale: 3, columns: { [lane]: [0, 1] } }) });
+            stage = 'column-coordinate-map';
+            let mappedBlocks;
+            try { mappedBlocks = rasterOptions ? raster.unpadOcrBlocks(columnResult.data.blocks, { padding: rasterOptions.padding }) : columnResult.data.blocks; }
+            catch (error) {
+              // Keep rejected observations visible locally; never clamp boxes,
+              // invent values, log their contents or silently score old output.
+              const diagnostic = document.createElement('pre');
+              diagnostic.setAttribute('aria-label', 'Rejected raster observation');
+              diagnostic.textContent = JSON.stringify({ imageRevision: token.imageRevision, run: token.run, panel: id, lane, wholePanelRawText: result.data.text, rawText: columnResult.data.text, blocks: columnResult.data.blocks, preprocessing: rasterProvenance, state: 'geometryNeedsReview' }, null, 2);
+              element('output').append(diagnostic); throw error;
+            }
+            stage = 'spatial-proposals';
+            observations.push({ lane, engineBlocks: structuredClone(columnResult.data.blocks), preprocessing: rasterProvenance ?? (masked ? { version: preprocessing.NEUTRAL_TEXT_MASK_VERSION, settings: preprocessing.NEUTRAL_TEXT_MASK_SETTINGS, assumption: 'bright-neutral-base-text; colored-comparison-text; unconfirmed' } : { version: 'integer-upscale-nearest-v1' }), extraction: extraction.extractSpatialObservation({ rawText: columnResult.data.text, blocks: mappedBlocks, crop: { x: sx + columnX, y: sy, width: columnWidth, height: sh }, scale: rasterOptions?.scale ?? 3, columns: { [lane]: [0, 1] } }) });
           }
           columnProposals = extraction.assembleColumnObservations(observations);
         }
-        const segmentationIdentity = JSON.stringify({ crop, scale: 3, labelEnd: region.labelEnd ?? null, valueEnd: region.valueEnd ?? null, neutralMask, extractionVersion: extraction.OCR_EXTRACTION_VERSION, maskVersion: neutralMask ? preprocessing.NEUTRAL_TEXT_MASK_VERSION : null });
+        const segmentationIdentity = JSON.stringify({ crop, scale: 3, labelEnd: region.labelEnd ?? null, valueEnd: region.valueEnd ?? null, neutralMask, rasterOptions, rasterVersion: raster.OCR_RASTER_VERSION, extractionVersion: extraction.OCR_EXTRACTION_VERSION, maskVersion: neutralMask ? preprocessing.NEUTRAL_TEXT_MASK_VERSION : null });
         panels.push({ id, rawText: result.data.text, confidence: result.data.confidence, segmentationIdentity,
           crop, boxes: spatial.rows, provenance: { preprocessing: 'integer-upscale-nearest-v1', scale: 3,
             segmentationIdentity,
@@ -229,7 +256,7 @@ async function browserHarness() {
       const metadata = { versions, settings: runSettings, durationMs: Math.round(performance.now() - started), repeatedTextEqual: equal, repeatedProposalsEqual, imageDimensions: [bitmap.width, bitmap.height], resourceOrigin: location.origin };
       const accepted = api.acceptOcrRun(session, token, { panels, metadata }); session = accepted.session;
       if (accepted.accepted) { completed = true; previous = { layout, settings: runSettings, text, proposals }; element('metadata').textContent = JSON.stringify(metadata, null, 2); render(); status('OCR finished; raw text only. Every line needs review.'); }
-    } catch { if (api.isOcrRunCurrent(session, token)) { session = api.cancelOcrRun(session); status('Local OCR failed; no results fabricated.'); } }
+    } catch { if (api.isOcrRunCurrent(session, token)) { session = api.cancelOcrRun(session); status('Local OCR failed; no results fabricated. Stage: ' + stage); } }
     finally {
       if (localWorker && !completed) { try { await localWorker.terminate(); } catch {} }
       canvases.forEach(canvas => { canvas.width = 0; canvas.height = 0; });

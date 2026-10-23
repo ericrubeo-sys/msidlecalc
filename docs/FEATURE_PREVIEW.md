@@ -21,7 +21,7 @@ Branch: `feature/source-linked-damage-model`. Production remains visual release 
 | Multiple distinct context results | Advanced calculation context cards | Each explains its own unsupported profile; no generic Boss/Guild score |
 | Skill, artifact, buff and cadence completeness | Spec and official dated follow-up | Historical coefficient leads and October state-dependent rules recorded; no unsupported weighting or duplicate passive totals |
 | Henesys snapshot hypothesis | Spec controlled-observation protocol | No guarantee all buffs disappear; no player measurement collected |
-| Reproducible checks | `npm test`, `npm run check`, `npm run build`, GitHub workflow | 111 tests including independent spatial/mask/precision/session regressions; synthetic evidence remains distinct from game validation |
+| Reproducible checks | `npm test`, `npm run check`, `npm run build`, GitHub workflow | 124 tests including independent raster/spatial/mask/precision/session regressions; synthetic evidence remains distinct from game validation |
 | OCR gate and privacy | Separate loopback evaluation harness, spatial proposals and sessionv2 | Reviewed crops/columns, optional explicit color assumption, count-only fixed scoring, correction review after segmentation changes. Development trial improves but still has errors; OCR not adopted. See `EXTRACTION_BENCHMARK.md` and `EXTRACTION_QA.md` |
 
 The Chief of Staff audit, source register, spec and QA were revisited before integration and preview review. Official publication confidence is separate from synthetic implementation checks and unperformed game prediction validation. See `DAMAGE_MODEL_QA.md` for independent findings and fixes.

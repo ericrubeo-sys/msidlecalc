@@ -50,3 +50,21 @@ Root added `ocr-preprocessing.js` mask version `neutral-text-mask-1`, default of
 Three independent pixel test groups passed. The tests check inclusive brightness/chroma/alpha boundaries, the inversion to grayscale text on opaque white, retained-pixel counts, same-input determinism, input nonmutation/settings detachment, and malformed/oversized-buffer rejection. They explicitly demonstrate the semantic limit: a colored base value is removed just like a colored comparison value; neutral comparison text can remain just like neutral base text. This is a versioned pixel transform under an assumption, not a detector of base values or item identity.
 
 No new code blocker found for retaining this opt-in evaluation path. Original pixels/whole-panel observations must remain available, missing masked content remains unknown, and corrections cannot stay confirmed across mask-mode changes. Known-layout improvements are development observations; they do not establish representative accuracy, general layout handling or production adoption. The integration owner owns browser runtime measurements and their private ground-truth evidence.
+
+## Development-only low-resolution raster follow-up
+
+Read the complete updated lessons and fixed benchmark at checkpoint `5614bcf`, the raster module, eight owner tests, full `LOW_RES_EXTRACTION.md` and harness mode integration. No held-out images, per-image held-out observations or private proposal files were opened for this review. The known aggregate baseline was required context; it was not used to choose pixel thresholds or transform settings.
+
+New `tests/ocr-raster-invariants.test.mjs`: **5 passed, 0 failed**. Latest full suite: **124 passed, 0 failed**. The independent synthetic tests exercise:
+
+- Opaque original-color copying into a detached buffer; nearest scaling with explicit border placement/intensity; source pixels remain unchanged and no value field is created.
+- Two-dimensional pixel-centre bilinear interpolation, edge replication and a checked intermediate grayscale result instead of binary/digit guessing.
+- Graded luminance inversion, explicit white alpha compositing and deterministic repeated calls from the same original.
+- Complete padded box → unpadding → scale reversal → original-crop offset mapping, with raw text, null stat/confirmed value and unchanged original engine hierarchy.
+- Padding-intersecting geometry failure without clamping or input destruction, absent-block retention, malformed options/buffers and pixel-budget rejection.
+
+The module contains no dictionary, digit whitelist, character substitution, numeric parser, OCR engine, network, logging or persistence. Otsu is an explicitly optional diagnostic, not proof of glyph recovery. Coordinate padding is measured in transformed pixels and removed before the existing scale division. The copied hierarchy retains its original `rasterBbox`; unknown extraction remains unconfirmed.
+
+The harness leaves whole-panel OCR/boxes unfiltered, applies variants only to independent column proposals, records mode/scale/padding/interpolation/version, includes the transform in segmentation identity and prevents combining it with the separate neutral-text mask. Its geometry-failure branch retains rejected raw text/blocks locally and reports an honest failure stage. Those rejected observations must not be scored as a successful fresh extraction; previous accepted corrections/observations may remain for review.
+
+No pure-raster correctness blocker found in the bounded review. The integration owner's development trials and failure denominators remain separate runtime evidence. Improvement in label or unit recognition cannot substitute for accurate value strings or justify automatic numerical adoption. Failed inverted runs must stay in the development report; the last two supplied images remain excluded from this tuning stage. Original structured column observations should remain available after success as well as failure, alongside their mapped proposals, when claiming full block preservation.

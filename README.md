@@ -53,4 +53,4 @@ The existing Vercel connection and `msidlecalc.com` domain were configured by th
 
 ## Verification
 
-Use `npm test`, `npm run check`, `npm run build`, and the local browser preview. The current feature checkpoint passes 111 synthetic tests. See the current feature and QA documents above for exercised browser behavior and the limits of those checks; arithmetic agreement is not live-game validation.
+Use `npm test`, `npm run check`, `npm run build`, and the local browser preview. The current feature checkpoint passes 124 synthetic tests. See the current feature and QA documents above for exercised browser behavior and the limits of those checks; arithmetic agreement is not live-game validation.
