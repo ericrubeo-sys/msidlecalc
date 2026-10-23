@@ -1,6 +1,6 @@
 # Source-linked calculation feature preview
 
-Branch: `feature/source-linked-damage-model`. Production remains visual release `b827d72`; this branch must not replace it without the user's later release approval.
+Branch: `feature/source-linked-damage-model`. The user subsequently approved release `71544b3` to production for screenshot-flow testing; production CI/Vercel and public smoke checks passed. See `SCREENSHOT_RELEASE_CHECK.md`. Further changes require a separate release approval. Earlier checkpoint delivery notes below are historical.
 
 ## Implemented numerical scope
 

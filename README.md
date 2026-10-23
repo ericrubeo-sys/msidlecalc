@@ -20,6 +20,8 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Current phase
 
+**Production update — 2026-10-23:** user-approved release `71544b3` is live at [msIdleCalc](https://www.msidlecalc.com/). It includes experimental local screenshot drafts and editable review. Production CI/Vercel and public OCR/fallback behavior were checked; see [release verification](docs/SCREENSHOT_RELEASE_CHECK.md). Historical phase notes below describe the earlier visual baseline.
+
 Production visual release `b827d72` provides local screenshot reference, dynamic manual item lines, repeated/unknown/unmatched line retention, exact raw differences, and instant System / BasilMarket / Hidden Street skins. Contact/report delivery and support payments are unavailable. See [visual release verification](docs/VISUAL_RELEASE.md).
 
 The `feature/source-linked-damage-model` branch adds pure source-linked aggregation, ordinary pre-content stages, an isolated independent Final Damage explanation, and experimental screenshot upload → local OCR → editable review. Every extracted line starts unconfirmed. Recognition still makes errors; complete battle-context recommendations and DPS remain unavailable. See [screenshot flow verification](docs/SCREENSHOT_RELEASE_CHECK.md), [feature scope](docs/FEATURE_PREVIEW.md), and [model QA](docs/DAMAGE_MODEL_QA.md). No controlled live-game validation has been performed.

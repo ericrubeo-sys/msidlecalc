@@ -1,6 +1,8 @@
 # Experimental screenshot review checkpoint — 2026-10-23
 
-Feature branch only. Production remains visual release `b827d72`. This is an application upload/read/review implementation, not reliable automatic equipment extraction, a completed damage calculator, or live-game validation. The user supplied four private images and requested ordinary screenshot intake; no additional images or product decision were needed for this increment.
+Released to production at `71544b35c6631994c432f6ae28e0aa7f30f7c53b` after the user's explicit “push it live” approval. This is an application upload/read/review implementation, not reliable automatic equipment extraction, a completed damage calculator, or live-game validation. The user supplied four private images and requested ordinary screenshot intake; no additional images or product decision were needed for this increment.
+
+Production release: fetched and inspected both branches, clean worktree and unchanged remote; fast-forwarded `main` without overwriting remote work or force-pushing. GitHub production verification succeeded and Vercel reported Deployment has completed for the released SHA ([deployment](https://vercel.com/erics-trade-binder/msidlecalc/5PsSvRKfqmriHCgEyqmLjVvjbKsH), [CI](https://github.com/ericrubeo-sys/msidlecalc/actions/runs/39996816021/job/120562376847)). Public `https://www.msidlecalc.com/` displayed the new availability text. Selecting the authorized example ran OCR, produced one proposed area and honestly offered marking/manual fallback; no captured browser errors/warnings. Remove screenshot restored the example. Existing project/domain settings were preserved. Further evolving calculation/OCR changes still require their own release approval.
 
 ## Source → requirement → implementation → verification
 
@@ -28,4 +30,4 @@ Limits: page counters do not instrument worker-global APIs; Tesseract uses same-
 
 OCR can merge digits, lose labels, include interface text and miss panel bounds. The current app uses a whole-image heading proposal plus region reading; prior reviewed-region benchmark scores are not scores for this pipeline. Users must inspect image areas and correct each line. No all-lines acceptance shortcut. Current item names are not inferred. Preview performance has not been benchmarked; cold OCR resource loading can be noticeable. Reusing any previously inspected last-two fixture is reused validation, not a fresh held-out test.
 
-Named encounter recommendations, complete source decomposition, skill/cadence dependencies and empirical game validation remain separate outstanding work. The isolated conditional Final Damage explanation is unchanged. Later production release still requires user approval. Local review server is `http://127.0.0.1:4177/`; `npm run dev` builds and serves the same application on the printed port.
+Named encounter recommendations, complete source decomposition, skill/cadence dependencies and empirical game validation remain separate outstanding work. The isolated conditional Final Damage explanation is unchanged. Local review server is `http://127.0.0.1:4177/`; `npm run dev` builds and serves the same application on the printed port.
