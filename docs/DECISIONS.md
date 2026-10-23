@@ -2,6 +2,8 @@
 
 ## Current execution authority — 2026-10-22
 
+**Item comparison release — 2026-10-23:** user authorized publishing when the iteration was ready for another live test. Released reviewed checkpoint `197640b` to existing production `main` via fast-forward, preserving project/domain settings. Production CI/Vercel succeeded and public fixed-role/visible-loss/gain behavior was checked. The feature-only note below is historical for this checkpoint; no full damage or universal OCR accuracy claim is enabled.
+
 **Item interpretation follow-up — 2026-10-23:** user establishes that the supported comparison layout always has equipped left and candidate right. This supersedes earlier role-selector requirements. Assign roles only for two distinct side-by-side areas, otherwise use area correction. Candidate colored deltas remain raw evidence, not extra item values or a complete list of gains/losses. Compare full visible item lists; missing recognition remains unknown. Explicit checked list completeness plus known reviewed values can establish visible-line absence for raw gain/loss only, never a full character/DPS replacement. New changes stay on the feature branch. See `ITEM_REVIEW_CHECK.md`.
 
 **Latest production — 2026-10-23:** user explicitly approved publishing the mobile iteration. Production `main` is now `3f83ca9`, with successful CI/Vercel status and public upload/loading/fallback/tap-editor smoke checks. This supersedes the feature-only status of that iteration below. Further product changes still require their own release approval.

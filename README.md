@@ -20,7 +20,7 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Current phase
 
-**Current feature:** fixed equipped-left/candidate-right interpretation, base-only previews and reviewed visible-line gains/losses. This follow-up is not on production. See [item review verification](docs/ITEM_REVIEW_CHECK.md).
+**Latest production:** approved release `197640b` adds fixed equipped-left/candidate-right interpretation, base-only previews and reviewed visible-line gains/losses. CI/Vercel and public behavior checks passed. See [item review verification](docs/ITEM_REVIEW_CHECK.md).
 
 **Latest production release:** user-approved `3f83ca9` adds an enlarged tap-controlled mobile read-area editor, a quiet reading screen with no example after upload, and bounded word/alternate-segmentation detection. Production CI/Vercel and public smoke checks passed. See [mobile verification](docs/MOBILE_REVIEW_CHECK.md).
 

@@ -1,6 +1,10 @@
 # Item interpretation checkpoint — 2026-10-23
 
-Feature branch only; production remains `3f83ca9`. Latest user live testing confirms the improved crop fallback was usable, but automatic localization still failed. This iteration addresses item roles, base/delta separation and omitted visible-line losses; it does not claim to fix general localization or complete the damage model. Newly attached images are private application screenshots, not new original-game evaluation fixtures.
+User-approved production release `197640b0169b5b76df9896ecacdc74e7d854b6b5`. Latest user live testing confirms the improved crop fallback was usable, but automatic localization still failed. This iteration addresses item roles, base/delta separation and omitted visible-line losses; it does not claim to fix general localization or complete the damage model. Newly attached images are private application screenshots, not new original-game evaluation fixtures.
+
+Release verification: fetched/inspected branches and clean changes, reviewed the release diff, rechecked build/public/vendor/contrast integrity, then fast-forwarded existing `main` without force-push or hosting/domain configuration changes. [Production CI succeeded](https://github.com/ericrubeo-sys/msidlecalc/actions/runs/40023312187/job/120653123235); [Vercel deployment completed](https://vercel.com/erics-trade-binder/msidlecalc/4VAVtqz9edA4F5ifxHcxaQvDaHfx) for the released SHA. Public `https://www.msidlecalc.com/` had no role selectors and included visible-list completeness. Invented manual values produced the expected reviewed raw loss/gain, with no captured console warnings/errors. Uploading the authorized example hid it during reading and produced the honest localization fallback. This is release smoke evidence, not new recognition-accuracy or game validation.
+
+The live guided two-area reread produced equipped-left/candidate-right cards and two base-value previews without role questions. Explicit import retained27 unconfirmed occurrences. Default seed crops still included ambiguous/interface text and needed adjustment; this is not a field-accuracy pass. No captured console warnings/errors. The site was reset to a clean initial state for user testing.
 
 ## Source → requirement → implementation → verification
 
@@ -18,4 +22,4 @@ Build/check and all189 synthetic tests passed, including13 independent follow-up
 
 Spatial evidence retains original transcripts, raw line order and word geometry. Full raw reading stays available but is not displayed as a second numerical item value. Recognized grouping separators remain literal and need correction/review under the existing numeric parser. No automatic confirmation, paid service, storage, screenshot logging or new network path was introduced. This increment did not repeat the entire prior worker/network privacy audit.
 
-Local review: `http://127.0.0.1:4179/`. Further production publication needs separate approval. Future localization work should be evaluated separately from base-value parsing and visible-list completeness.
+Local review: `http://127.0.0.1:4179/`. Future localization work should be evaluated separately from base-value parsing and visible-list completeness.
