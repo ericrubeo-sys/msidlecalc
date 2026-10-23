@@ -25,21 +25,18 @@
         <label class="upload" for="screenshot">Choose screenshot</label><input class="visually-hidden" id="screenshot" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="availability screenshot-status">
         <p class="availability" id="availability">Experimental screenshot reading stays on this device. Review every extracted line. Equipment recommendations are not available yet.</p>
         <p id="screenshot-status" role="status"></p>
-        <button type="button" class="quiet" id="show-example" hidden>Show example comparison</button>
+        <section id="reading-screen" aria-label="Reading photo" hidden><span class="reading-spinner" aria-hidden="true"></span><h2 role="status">Reading your photo…</h2><p>Stays on your device.</p><button type="button" id="cancel-reading">Cancel</button></section>
         <div id="image-reference" hidden>
           <img id="screenshot-preview" alt="Your selected screenshot reference" hidden>
-          <canvas id="screenshot-canvas" tabindex="0" aria-label="Selected screenshot and proposed panel areas" aria-describedby="mark-instructions"></canvas>
-          <div class="image-actions"><button type="button" id="read-image">Read again</button><button type="button" id="cancel-reading" hidden>Cancel reading</button><button type="button" id="remove-image">Remove screenshot</button></div>
-          <details id="region-review"><summary>Adjust item panel areas</summary>
-            <p id="mark-instructions">Choose an area below, then drag around its stat lines. With a keyboard, use arrows to move, Shift + arrows to resize, Alt for fine adjustment, and Enter to finish. Escape cancels.</p>
-            <div class="image-actions"><button type="button" id="mark-first">Mark area 1</button><button type="button" id="mark-second">Mark area 2</button><button type="button" id="read-regions" disabled>Read marked areas</button><button type="button" id="clear-regions">Clear markings</button></div>
-          </details>
+          <canvas id="screenshot-canvas" aria-label="Your photo and proposed item areas"></canvas>
+          <div class="image-actions"><button type="button" id="adjust-areas">Adjust read areas</button><details class="photo-options"><summary>Photo options</summary><div class="image-actions"><button type="button" id="read-image">Read again</button><button type="button" id="remove-image">Remove photo</button></div></details></div>
           <section id="screenshot-drafts" aria-labelledby="draft-title" hidden>
-            <h2 id="draft-title">Review screenshot reading</h2>
+            <h2 id="draft-title">Check your items</h2>
+            <p class="result-limit">Equipment recommendations aren’t available yet.</p>
             <p id="draft-description"></p><div id="panel-previews" class="items-grid"></div>
             <div class="items-grid assignment-fields"><label>Currently equipped panel<select id="current-panel"><option value="">Choose a panel</option></select></label><label>Candidate panel<select id="candidate-panel"><option value="">Choose a panel</option></select></label></div>
             <label class="confirmation"><input type="checkbox" id="panel-assignment-confirmed"> I checked the areas and which item is currently equipped.</label>
-            <p>Applying drafts replaces entered lines only when you choose the button below. Every imported line still needs your review. Missing values stay unknown.</p>
+            <p>Review the extracted lines next. Unreadable values stay unknown.</p>
             <button type="button" id="apply-drafts" disabled>Use these item drafts</button>
             <details><summary>Original screenshot reading</summary><pre id="whole-reading"></pre></details>
           </section>

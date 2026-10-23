@@ -1,0 +1,22 @@
+# Mobile screenshot follow-up — 2026-10-23
+
+Feature checkpoint after production `71544b3`; not a production release. User's new phone test is the source of this change. The existing one-image publication permission does not extend to either newly attached image. They remain private development evidence. No additional user input was required to build this increment.
+
+## Source → requirement → implementation → verification
+
+| Source / requirement | Implementation | Verification / limit |
+| --- | --- | --- |
+| Real-phone user report: finger region setting almost impossible | `crop-editor.js` enlarged dialog, one area per step, native Move/edge selector, four large directional buttons, one-pixel Fine adjustment | Actual browser tapped move, edge and fine controls; Back retained edits and Cancel restored previous bounds. Independent transaction/geometry fixtures. Physical finger ergonomics still needs user testing. |
+| User: example goes away after upload | Selected state hides example/legend, removes Show example action | Actual browser selection immediately showed selected=true/exampleVisible=false during loading and after reading. Removal restores the initial example. |
+| User: simple reading screen then results | Quiet activity indicator, Reading your photo…, local note and Cancel; other intake hidden without deleting values | Actual browser observed reading state with manual/example hidden; phone capture inspected. No percentage countdown or automatic numerical confirmation. |
+| User: incorrect/missing automatic areas | Word-backed complete heading anchors, geometric deduplication/aligned peer widths/observed action boundaries; one PSM3 fallback only below two proposals | New supplied Photo2 produced two proposals in actual browser. Node baseline also produced two, so the exact original failure is not consistently reproduced. Authorized example still yields one proposal; fallback remains necessary. No broad accuracy claim. |
+| Provenance and cancellation | Original and alternate observations retained separately; selected identity explicit; canvases released between passes | Owner/independent tests cover bounded alternate selection, stale completion and cancellation. Source review verifies no inferred roles/values. |
+| Preserve corrections and honest scope | Existing typed consumers/review adapter unchanged; loading only hides editor; canceled/failed reread restores bounds from prior staged observation | Existing shared-consumer and independent tests retained. Full equipment recommendations remain unavailable. |
+| Minimum usable/bounded crop | Integer pixel geometry, opposite-edge preservation, bounds/minimum8, malformed tiny proposal replaced by unconfirmed seed; near-duplicate areas cannot submit | Independent narrow proposal, large/small image, repeated-tap and overlap fixtures. Photos below40px receive an honest manual/larger-photo path. |
+| Quiet visual direction | Existing header, named skins, disclaimer/footer retained; no new branding | Viewport checks cover phone portrait/landscape, tablet and desktop in both skins. Same DOM/state across modes; no physical-device certification. |
+
+Build/check and all167 synthetic tests passed, including10 independent mobile tests. These establish declared logic and integration boundaries, not extraction field accuracy or live-game validity. `MOBILE_CROP_QA.md` documents independent source/test findings and fixes. `PANEL_DETECTION_IMPROVEMENTS.md` distinguishes the diagnostic rasters and reused fixtures.
+
+Integration viewport pairs:320×568,375×812,812×375,768×1024,1440×900, each in BasilMarket and Hidden Street. The dialog had no horizontal overflow or horizontally offscreen visible controls. It scrolled at320×568 and812×375; browser clicks reached edge adjustment, Next, Back and Cancel at320×568. Direction targets measured52px high. Phone captures were visually inspected at375×812. Back retained original-pixel changes; cancel/reopen restored committed bounds. Browser logs showed no captured warnings/errors. These are simulated viewports and ordinary browser clicks, not actual finger testing.
+
+Local review: `http://127.0.0.1:4179/`. Screenshot proof uses only the previously authorized public example; new player images and OCR outputs are excluded from source/public output. No new processing service, storage, analytics or upload endpoint was added. Earlier runtime privacy evidence is retained; this increment did not repeat a full worker/network/storage audit.

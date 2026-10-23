@@ -32,3 +32,35 @@ test('one heading stays one proposal, scale reverses, malformed geometry is reje
   assert.throws(() => detectComparisonPanels({ blocks: [], width: Infinity, height: 10 }));
   assert.equal(detectComparisonPanels({ blocks: blocks([line('On-Equip Effect', NaN, 0, 20, 10)]), width: 100, height: 100 }).panels.length, 0);
 });
+test('merged sparse line recovers two word-backed headings without dividing the line box', () => {
+  const words = [line('On-Equip', 90, 30, 138, 40), line('Effect', 143, 30, 175, 40), line('On-Equip', 245, 30, 293, 40), line('Effect', 298, 30, 330, 40)];
+  const merged = { ...line('On-Equip Effect On-Equip Effect', 90, 30, 330, 40), words };
+  const result = detectComparisonPanels({ blocks: blocks([merged]), width: 450, height: 200 });
+  assert.equal(result.panels.length, 2);
+  assert.deepEqual(result.panels.map(panel => panel.heading.box.x0), [90, 245]);
+  assert.ok(result.panels.every(panel => panel.heading.source === 'words' && panel.role === null));
+  assert.equal(merged.text, 'On-Equip Effect On-Equip Effect');
+});
+test('line and word observations of the same heading deduplicate geometrically', () => {
+  const heading = { ...line('On-Equip Effect', 40, 20, 120, 30), words: [line('On-Equip', 40, 20, 85, 30), line('Effect', 90, 20, 120, 30)] };
+  assert.equal(detectComparisonPanels({ blocks: blocks([heading, structuredClone(heading)]), width: 400, height: 200 }).panels.length, 1);
+});
+test('incomplete, far-apart and vertically unrelated word fragments do not create headings', () => {
+  const input = [
+    { ...line('On-Equip Effect extra', 0, 0, 300, 50), words: [line('On-Equip', 0, 0, 40, 10), line('Effect', 120, 0, 150, 10)] },
+    { ...line('On-Equip Effect extra', 0, 60, 100, 100), words: [line('On-Equip', 0, 60, 40, 70), line('Effect', 45, 80, 80, 90)] },
+    line('Effect', 30, 110, 80, 120),
+  ];
+  assert.equal(detectComparisonPanels({ blocks: blocks(input), width: 400, height: 200 }).panels.length, 0);
+});
+test('merged action row contributes observed word boundary without assuming missing final stats', () => {
+  const input = [line('On-Equip Effect', 100, 20, 180, 30), line('On-Equip Effect', 250, 20, 330, 30), { ...line('Dismantle Equip', 260, 160, 390, 175), words: [line('Dismantle', 260, 160, 315, 175), line('Equip', 345, 160, 390, 175)] }];
+  const result = detectComparisonPanels({ blocks: blocks(input), width: 450, height: 220 });
+  assert.equal(result.panels[1].region.y + result.panels[1].region.height, 160);
+  assert.equal(result.panels[0].region.y + result.panels[0].region.height, 220);
+});
+test('vertically separate headings cannot determine each other horizontal panel width', () => {
+  const input = [line('On-Equip Effect', 50, 20, 100, 30), line('On-Equip Effect', 70, 100, 120, 110)];
+  const result = detectComparisonPanels({ blocks: blocks(input), width: 500, height: 220 });
+  assert.ok(result.panels.every(panel => panel.region.width === 125));
+});

@@ -12,6 +12,8 @@ Record only durable lessons from user corrections, reproducible failures, daily 
 
 ## Lessons
 
+**Mobile fallback correction — 2026-10-23:** user testing on a real phone found failed panel detection and finger-based region drawing almost unusable; the attached screen also shows excessive instructions and competing actions. Earlier viewport overflow and keyboard checks did not establish touch usability. Replace precision dragging on a shrunken full image with an enlarged, guided adjustment surface and large tap controls; keep keyboard access. Hide the example and intake explanations after selection, show a quiet reading state, then only the relevant result/fallback. Validate the supplied new screenshot as development evidence, not a fresh held-out accuracy claim. Specialist briefs must include both supplied images and this correction before work.
+
 **Screenshot integration — 2026-10-23:** the real upload flow recognized one panel heading as a one-character variant, leaving only one proposal. A bounded heading-only tolerance recovered a second proposed region while retaining original text and unconfirmed roles. Do not extend this to numeric lookalikes or stat-label repair. Independent tests cover the boundary. Experimental editable drafts can be useful before reliable automatic extraction, but the product must say which stage it supports. Clean-checkout CI also needs asset generation before integrity verification; an existing local vendor directory can hide incorrect build order. Browser `getScreenshot` returned a reduced surface capture; use the documented tab `screenshot` method and verify actual viewport dimensions before presenting proof.
 
 ## Chief of Staff performance audit — 2026-10-22 execution restart

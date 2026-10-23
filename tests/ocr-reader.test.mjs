@@ -21,9 +21,46 @@ test('reviewed region OCR retains duplicates/blanks/unknown strings with no nume
   assert.ok(f.calls.includes('terminated'));
 });
 test('missing anchors preserves full raw output without fake regions', async () => {
-  const f = fixture([{ text: 'unknown\n', blocks: null }]);
+  const f = fixture([{ text: 'unknown\n', blocks: null }, { text: 'still unknown', blocks: null }]);
   const result = await f.reader({ width: 100, height: 100 });
   assert.deepEqual(result.proposedPanels, []); assert.equal(result.raw.text, 'unknown\n');
+  assert.equal(result.detectionObservations.length, 2);
+  assert.equal(result.detectionObservations[1].raw.text, 'still unknown');
+});
+const headingBlocks = xs => [{ paragraphs: [{ lines: xs.map(x => ({ text: 'On-Equip Effect', bbox: { x0: x, y0: 20, x1: x + 40, y1: 30 } })) }] }];
+test('bounded alternative segmentation selects an intact two-panel attempt and retains both raw observations', async () => {
+  const f = fixture([{ text: 'initial', blocks: headingBlocks([20]) }, { text: 'alternative', blocks: headingBlocks([20, 160]) }, { text: 'first O 1', blocks: null }, { text: 'second 0 2', blocks: null }]);
+  const result = await f.reader({ width: 300, height: 200 });
+  assert.equal(result.settings.detectionPsm, 3);
+  assert.deepEqual(result.detectionObservations.map(observation => observation.panelCount), [1, 2]);
+  assert.equal(result.raw.text, 'initial');
+  assert.equal(result.proposedPanels.length, 2);
+  assert.ok(result.proposedPanels.flatMap(panel => panel.lines).every(line => !line.confirmed && line.provenance.segmentationIdentity.includes('"detectionPsm":3')));
+  assert.deepEqual(f.calls.filter(call => call?.tessedit_pageseg_mode).map(call => call.tessedit_pageseg_mode), ['11', '3', '6']);
+});
+test('successful initial detection skips fallback, and an ambiguous fallback never replaces the initial attempt', async () => {
+  const first = fixture([{ text: 'initial', blocks: headingBlocks([20, 160]) }, { text: '', blocks: null }, { text: '', blocks: null }]);
+  const initial = await first.reader({ width: 300, height: 200 });
+  assert.equal(initial.detectionObservations.length, 1);
+  assert.equal(initial.settings.detectionPsm, 11);
+  const ambiguous = fixture([{ text: 'initial', blocks: headingBlocks([20]) }, { text: 'alternative', blocks: headingBlocks([20, 120, 220]) }, { text: 'kept initial crop', blocks: null }]);
+  const retained = await ambiguous.reader({ width: 300, height: 200 });
+  assert.equal(retained.settings.detectionPsm, 11);
+  assert.equal(retained.proposedPanels.length, 1);
+  assert.equal(retained.detectionObservations.length, 2);
+});
+test('completed recognition releases its raster before the next pass is allocated', async () => {
+  const f = fixture([{ text: 'unknown', blocks: null }, { text: 'still unknown', blocks: null }]);
+  const recognize = f.worker.recognize;
+  let count = 0;
+  f.worker.recognize = async () => {
+    count++;
+    assert.equal(f.canvases.filter(canvas => canvas.width > 0 && canvas.height > 0).length, 1);
+    return recognize();
+  };
+  await f.reader({ width: 300, height: 200 });
+  assert.equal(count, 2);
+  assert.ok(f.canvases.every(canvas => canvas.width === 0 && canvas.height === 0));
 });
 test('stale and already canceled runs do not create worker or overwrite output', async () => {
   const f = fixture([]), controller = new AbortController(); controller.abort();

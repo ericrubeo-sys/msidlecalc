@@ -1,5 +1,5 @@
 import { detectComparisonPanels, PANEL_DETECTION_VERSION } from './domain/panel-detection.js';
-export const OCR_READER_VERSION = 'browser-reader-1';
+export const OCR_READER_VERSION = 'browser-reader-2';
 let libraryPromise = null;
 function loadLocalLibrary() {
   if (!libraryPromise) libraryPromise = new Promise((resolve, reject) => {
@@ -38,6 +38,11 @@ export function createComparisonReader({ loadTesseract = loadLocalLibrary, creat
       context.drawImage(image, region.x, region.y, region.width, region.height, 0, 0, canvas.width, canvas.height);
       return canvas;
     }
+    async function recognizeRegion(region, scale) {
+      const canvas = canvasFor(region, scale);
+      try { return await pending(worker.recognize(canvas, {}, { text: true, blocks: true })); }
+      finally { canvas.width = 0; canvas.height = 0; }
+    }
     try {
       check(); onProgress({ stage: 'loading' });
       const library = await pending(loadTesseract()); check();
@@ -50,26 +55,39 @@ export function createComparisonReader({ loadTesseract = loadLocalLibrary, creat
       const scale = Math.max(1, Math.min(3, Math.floor(Math.sqrt(28000000 / (width * height)))));
       await pending(worker.setParameters({ tessedit_pageseg_mode: '11', user_defined_dpi: '300', preserve_interword_spaces: '1' })); check();
       onProgress({ stage: 'findingPanels' });
-      const whole = await pending(worker.recognize(canvasFor({ x: 0, y: 0, width, height }, scale), {}, { text: true, blocks: true })); check();
+      const whole = await recognizeRegion({ x: 0, y: 0, width, height }, scale); check();
       const raw = { text: typeof whole.data.text === 'string' ? whole.data.text : '', blocks: structuredClone(whole.data.blocks ?? null), scale, dimensions: [width, height], psm: 11 };
-      const detection = detectComparisonPanels({ blocks: raw.blocks, width, height, scale });
+      let detection = detectComparisonPanels({ blocks: raw.blocks, width, height, scale });
+      let detectionPsm = 11;
+      const detectionObservations = [{ psm: 11, raw: structuredClone(raw), panelCount: detection.panels.length }];
+      if (reviewed === null && detection.panels.length < 2) {
+        // One bounded alternative segmentation of the same untouched image.
+        // Select a complete two-panel attempt, never combine conflicting boxes
+        // or select values by apparent plausibility/engine confidence.
+        await pending(worker.setParameters({ tessedit_pageseg_mode: '3' })); check();
+        const alternative = await recognizeRegion({ x: 0, y: 0, width, height }, scale); check();
+        const alternateRaw = { text: typeof alternative.data.text === 'string' ? alternative.data.text : '', blocks: structuredClone(alternative.data.blocks ?? null), scale, dimensions: [width, height], psm: 3 };
+        const alternateDetection = detectComparisonPanels({ blocks: alternateRaw.blocks, width, height, scale });
+        detectionObservations.push({ psm: 3, raw: alternateRaw, panelCount: alternateDetection.panels.length });
+        if (alternateDetection.panels.length === 2) { detection = alternateDetection; detectionPsm = 3; }
+      }
       const proposals = reviewed ?? detection.panels;
       const proposedPanels = [];
       await pending(worker.setParameters({ tessedit_pageseg_mode: '6' })); check();
       for (const proposal of proposals) {
         check(); onProgress({ stage: 'readingPanel', panelId: proposal.id });
         const region = proposal.region;
-        const result = await pending(worker.recognize(canvasFor(region, scale), {}, { text: true, blocks: true })); check();
+        const result = await recognizeRegion(region, scale); check();
         const text = typeof result.data.text === 'string' ? result.data.text : '';
         const blocks = structuredClone(result.data.blocks ?? null);
         const structuredLines = (blocks ?? []).flatMap(block => (block.paragraphs ?? []).flatMap(paragraph => paragraph.lines ?? []));
         const lines = text.split(/\r\n|\r|\n/).map((rawText, ordinal) => ({ id: `${proposal.id}:line-${ordinal}`, ordinal, rawText, label: null, value: null, unit: null, statId: null, confirmed: false,
-          provenance: { kind: 'ocr', inputRevision, panelId: proposal.id, region: structuredClone(region), scale, segmentationIdentity: JSON.stringify({ region, scale, psm: 6, version: OCR_READER_VERSION }) } }));
+          provenance: { kind: 'ocr', inputRevision, panelId: proposal.id, region: structuredClone(region), scale, segmentationIdentity: JSON.stringify({ region, scale, psm: 6, detectionPsm: reviewed ? null : detectionPsm, detectionVersion: PANEL_DETECTION_VERSION, version: OCR_READER_VERSION }) } }));
         proposedPanels.push({ ...structuredClone(proposal), role: null, requiresReview: true, rawText: text, blocks, structuredLines, lines, confidence: Number.isFinite(result.data.confidence) ? result.data.confidence : null });
       }
       check();
-      return { version: OCR_READER_VERSION, inputRevision, raw, proposedPanels, issues: reviewed ? ['reviewedRegionsStillRequireRoleAndLineConfirmation'] : detection.issues,
-        settings: { tesseract: '7.0.0', core: '7.0.0', languagePackage: '1.0.0', languageVariant: '4.0.0_best_int', language: 'eng', scale, smoothing: false, detectionVersion: PANEL_DETECTION_VERSION, cacheMethod: 'none', workerBlobURL: false, resourceOrigin: origin } };
+      return { version: OCR_READER_VERSION, inputRevision, raw, detectionObservations, proposedPanels, issues: reviewed ? ['reviewedRegionsStillRequireRoleAndLineConfirmation'] : detection.issues,
+        settings: { tesseract: '7.0.0', core: '7.0.0', languagePackage: '1.0.0', languageVariant: '4.0.0_best_int', language: 'eng', scale, smoothing: false, detectionPsm: reviewed ? null : detectionPsm, detectionVersion: PANEL_DETECTION_VERSION, cacheMethod: 'none', workerBlobURL: false, resourceOrigin: origin } };
     } catch (error) {
       if (error?.name === 'AbortError' || canceled || signal?.aborted || !isCurrent()) throw abortError();
       // Dependency errors can contain player data; expose only a fixed code.

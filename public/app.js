@@ -4,6 +4,7 @@ import { compareSupportedFactors } from './domain/damage-model.js';
 import { replaceFinalDamageSources } from './domain/reaggregation.js';
 import { getClaim } from './domain/mechanics-data.js';
 import { readComparison } from './ocr-reader.js';
+import { openCropEditor } from './crop-editor.js';
 import { importScreenshotProposals, editScreenshotRecord, confirmScreenshotRecord, recordsForImage } from './domain/screenshot-review.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -14,7 +15,8 @@ let imageRevision = 0;
 const records = { current: [], candidate: [] };
 let sourceCanvas = null, stagedReading = null, previousEntries = null;
 let readingController = null, readingRun = 0, readingBusy = false;
-let markedRegions = [null, null], markingRegion = null, markingOriginal = null, dragStart = null;
+let readOnDecode = false;
+let markedRegions = [null, null], cropEditor = null;
 const units = [['unknown', 'Unknown'], ['statPoint', 'Points'], ['displayPercent', '%'], ['level', 'Levels'], ['factor', 'Multiplier'], ['internalRate', 'Internal rate']];
 const issueMessages = { invalidDecimal: 'Use a decimal number, without commas or suffixes. Leave unreadable values blank.', unitMismatch: 'Choose % for a percentage value.', unsupportedMagnitude: 'Value exceeds the supported numerical range.', unsupportedPrecision: 'Use at most 18 decimal places.', integerRequired: 'Skill levels must be whole numbers.' };
 
@@ -204,15 +206,19 @@ function refreshAssignment() {
 }
 function setReadingBusy(busy) {
   readingBusy = busy;
+  $('.intake').dataset.screen = busy ? 'reading' : sourceCanvas ? 'review' : 'choose';
+  $('#reading-screen').hidden = !busy;
   $('#read-image').disabled = busy || !sourceCanvas;
-  $('#cancel-reading').hidden = !busy;
-  $('#read-regions').disabled = busy || !sourceCanvas || markingRegion !== null || markedRegions.some(region => !region);
-  for (const id of ['mark-first', 'mark-second', 'clear-regions']) $(`#${id}`).disabled = busy || !sourceCanvas;
+  $('#adjust-areas').disabled = busy || !sourceCanvas;
+  $('label.upload').textContent = sourceCanvas ? 'Choose another photo' : 'Choose screenshot';
   refreshAssignment();
 }
 function cancelReading(announce = false) {
+  const wasReading = readingBusy;
+  readOnDecode = false;
   readingRun++; readingController?.abort(); readingController = null; setReadingBusy(false);
-  if (announce) $('#screenshot-status').textContent = 'Reading canceled. Your entered lines and corrections have been kept.';
+  if (wasReading) restoreStagedAreas();
+  if (announce) $('#screenshot-status').textContent = 'Reading canceled. Your edits are kept.';
 }
 function refreshReviewState() {
   for (const side of ['current', 'candidate']) for (const record of records[side]) {
@@ -240,6 +246,11 @@ function drawImageReference(temporary = null) {
     context.fillStyle = '#ffffff'; context.fillText(label, region.x + 2, Math.max(size, region.y - size * .25));
   }
 }
+function restoreStagedAreas() {
+  if (!sourceCanvas || !stagedReading || stagedReading.imageRevision !== imageRevision) return;
+  markedRegions = [stagedReading.proposedPanels[0]?.region ?? null, stagedReading.proposedPanels[1]?.region ?? null];
+  drawImageReference();
+}
 function showReading(reading) {
   stagedReading = reading;
   const panels = reading.proposedPanels;
@@ -247,7 +258,7 @@ function showReading(reading) {
   drawImageReference();
   $('#panel-previews').replaceChildren();
   $('#whole-reading').textContent = reading.raw.text;
-  $('#draft-description').textContent = panels.length < 2 ? `${panels.length ? 'Only one item area was found.' : 'Both item areas could not be identified.'} Mark the two areas visually or continue with item details below. No second item has been invented.` : 'These areas and readings are proposals. Check their bounds against the full screenshot, choose which item is equipped, then review each imported line. Extra interface text may need removing.';
+  $('#draft-description').textContent = 'Check the areas and choose which item is equipped.';
   for (const selector of ['#current-panel', '#candidate-panel']) {
     const select = $(selector); select.replaceChildren(); const option = element('option', 'Choose a panel'); option.value = ''; select.append(option);
   }
@@ -263,7 +274,7 @@ function showReading(reading) {
     for (const selector of ['#current-panel', '#candidate-panel']) { const option = element('option', `Panel ${index + 1}`); option.value = panel.id; $(selector).append(option); }
   });
   $('#panel-assignment-confirmed').checked = false;
-  $('#screenshot-drafts').hidden = false;
+  $('#screenshot-drafts').hidden = panels.length < 2;
   refreshAssignment();
 }
 async function startReading(regions = null) {
@@ -272,21 +283,18 @@ async function startReading(regions = null) {
   const runId = ++readingRun, selectedRevision = imageRevision, original = sourceCanvas;
   const controller = new AbortController(); readingController = controller;
   setReadingBusy(true);
-  $('#screenshot-status').textContent = 'Reading screenshot on this device… Your entered lines will stay in place.';
+  $('#screenshot-status').textContent = '';
   try {
     const reading = await readComparison(original, { inputRevision: selectedRevision, signal: controller.signal, regions,
       isCurrent: () => runId === readingRun && selectedRevision === imageRevision,
-      onProgress: ({ stage }) => {
-        if (runId !== readingRun || selectedRevision !== imageRevision) return;
-        $('#screenshot-status').textContent = ({ loading: 'Loading local screenshot reader…', findingPanels: 'Looking for item panels on this device…', readingPanel: 'Reading proposed item areas on this device…' })[stage] ?? 'Reading screenshot on this device…';
-      } });
+      onProgress: () => {} });
     if (runId !== readingRun || selectedRevision !== imageRevision) return;
     showReading({ ...reading, imageRevision: selectedRevision, runId });
-    $('#screenshot-status').textContent = reading.proposedPanels.length >= 2 ? 'Draft reading ready below. Check the item areas and review every line; existing entries have not been replaced.' : 'Reading finished, but both item areas were not identified. Mark their areas or use the item editor.';
+    $('#screenshot-status').textContent = reading.proposedPanels.length >= 2 ? '' : 'Couldn’t find both items. Adjust the read areas or enter details below.';
   } catch (error) {
-    if (runId === readingRun && selectedRevision === imageRevision && error?.name !== 'AbortError') $('#screenshot-status').textContent = 'Local screenshot reading could not finish. Your image and entries are kept. Try again, mark the item areas, or use the item editor.';
+    if (runId === readingRun && selectedRevision === imageRevision && error?.name !== 'AbortError') $('#screenshot-status').textContent = 'Couldn’t finish reading. Your edits are kept. Try adjusting the read areas.';
   } finally {
-    if (runId === readingRun) { readingController = null; setReadingBusy(false); }
+    if (runId === readingRun) { readingController = null; setReadingBusy(false); restoreStagedAreas(); }
   }
 }
 function replaceEditor(items, names) {
@@ -302,7 +310,7 @@ $('#apply-drafts').addEventListener('click', () => {
   const items = importScreenshotProposals({ proposedPanels: stagedReading.proposedPanels, assignment: { current: $('#current-panel').value, candidate: $('#candidate-panel').value }, assignmentConfirmed: $('#panel-assignment-confirmed').checked, imageRevision, runId: stagedReading.runId });
   previousEntries = { items: structuredClone(records), names: { current: $('#current-name').value, candidate: $('#candidate-name').value } };
   replaceEditor(items); $('#restore-entries').hidden = false;
-  $('#screenshot-status').textContent = 'Draft lines applied. Check labels, values and units, then confirm each line. Numbers containing separators need correction before confirmation.';
+  $('#screenshot-status').textContent = 'Check each extracted line against your photo.';
   $('#current-lines input')?.focus();
 });
 $('#restore-entries').addEventListener('click', () => {
@@ -314,83 +322,44 @@ for (const id of ['current-panel', 'candidate-panel']) $(`#${id}`).addEventListe
 $('#panel-assignment-confirmed').addEventListener('change', refreshAssignment);
 $('#read-image').addEventListener('click', () => startReading());
 $('#cancel-reading').addEventListener('click', () => cancelReading(true));
-$('#read-regions').addEventListener('click', () => startReading(markedRegions.map((region, index) => ({ id: `reviewed-${index + 1}`, region: structuredClone(region) }))));
-function finishMarking(cancel = false) {
-  if (cancel === true && markingRegion !== null) markedRegions[markingRegion] = markingOriginal;
-  markingRegion = null; markingOriginal = null; dragStart = null; $('#screenshot-canvas').style.touchAction = 'auto'; drawImageReference(); setReadingBusy(readingBusy);
-}
-for (const [id, index] of [['mark-first', 0], ['mark-second', 1]]) $(`#${id}`).addEventListener('click', () => {
+$('#adjust-areas').addEventListener('click', () => {
   if (!sourceCanvas || readingBusy) return;
-  if (markingRegion !== null) finishMarking(true);
-  markingRegion = index; markingOriginal = structuredClone(markedRegions[index]);
-  if (!markedRegions[index]) markedRegions[index] = { x: Math.floor(sourceCanvas.width * (index ? .55 : .2)), y: Math.floor(sourceCanvas.height * .25), width: Math.floor(sourceCanvas.width * .2), height: Math.floor(sourceCanvas.height * .5) };
-  $('#screenshot-canvas').style.touchAction = 'none'; $('#screenshot-canvas').focus(); drawImageReference(); setReadingBusy(false);
-  $('#screenshot-status').textContent = `Marking area ${index + 1}. Drag its rectangle, or use arrows to move and Shift + arrows to resize. Enter finishes.`;
-});
-$('#clear-regions').addEventListener('click', () => { markedRegions = [null, null]; finishMarking(); $('#screenshot-status').textContent = 'Area markings cleared. Your entered lines are unchanged.'; });
-const referenceCanvas = $('#screenshot-canvas');
-function imagePoint(event) {
-  const bounds = referenceCanvas.getBoundingClientRect();
-  return { x: Math.max(0, Math.min(sourceCanvas.width, (event.clientX - bounds.left) * sourceCanvas.width / bounds.width)), y: Math.max(0, Math.min(sourceCanvas.height, (event.clientY - bounds.top) * sourceCanvas.height / bounds.height)) };
-}
-function draggedRegion(point) {
-  return { x: Math.floor(Math.min(dragStart.x, point.x)), y: Math.floor(Math.min(dragStart.y, point.y)), width: Math.ceil(Math.abs(point.x - dragStart.x)), height: Math.ceil(Math.abs(point.y - dragStart.y)) };
-}
-referenceCanvas.addEventListener('pointerdown', event => {
-  if (markingRegion === null || !sourceCanvas || readingBusy) return;
-  event.preventDefault(); dragStart = imagePoint(event); referenceCanvas.setPointerCapture(event.pointerId);
-});
-referenceCanvas.addEventListener('pointermove', event => {
-  if (dragStart && markingRegion !== null) drawImageReference({ index: markingRegion, region: draggedRegion(imagePoint(event)) });
-});
-referenceCanvas.addEventListener('pointerup', event => {
-  if (!dragStart || markingRegion === null) return;
-  const region = draggedRegion(imagePoint(event));
-  region.width = Math.min(region.width, sourceCanvas.width - region.x); region.height = Math.min(region.height, sourceCanvas.height - region.y);
-  if (region.width >= 8 && region.height >= 8) { markedRegions[markingRegion] = region; $('#screenshot-status').textContent = 'Area marked. Check both areas, then choose Read marked areas.'; }
-  else $('#screenshot-status').textContent = 'That area is too small. Mark the full item stat area.';
-  if (referenceCanvas.hasPointerCapture(event.pointerId)) referenceCanvas.releasePointerCapture(event.pointerId);
-  finishMarking(region.width < 8 || region.height < 8);
-});
-referenceCanvas.addEventListener('pointercancel', () => finishMarking(true));
-referenceCanvas.addEventListener('keydown', event => {
-  if (markingRegion === null || !sourceCanvas) return;
-  if (event.key === 'Enter' || event.key === 'Escape') { event.preventDefault(); finishMarking(event.key === 'Escape'); return; }
-  if (!event.key.startsWith('Arrow')) return;
-  event.preventDefault(); const region = markedRegions[markingRegion];
-  const step = event.altKey ? 1 : Math.max(1, Math.round(sourceCanvas.width / 100));
-  const dx = event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0;
-  const dy = event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0;
-  if (event.shiftKey) { region.width = Math.max(8, Math.min(sourceCanvas.width - region.x, region.width + dx)); region.height = Math.max(8, Math.min(sourceCanvas.height - region.y, region.height + dy)); }
-  else { region.x = Math.max(0, Math.min(sourceCanvas.width - region.width, region.x + dx)); region.y = Math.max(0, Math.min(sourceCanvas.height - region.height, region.y + dy)); }
-  drawImageReference();
+  if (sourceCanvas.width < 40 || sourceCanvas.height < 40) { $('#screenshot-status').textContent = 'This photo is too small to adjust. Choose a larger photo or enter details below.'; return; }
+  cropEditor?.close();
+  cropEditor = openCropEditor({ image: sourceCanvas, regions: markedRegions,
+    onClose: () => { cropEditor = null; },
+    onApply: regions => {
+      markedRegions = regions; drawImageReference();
+      void startReading(regions.map((region, index) => ({ id: `reviewed-${index + 1}`, region })));
+    } });
 });
 function removeImage() {
-  imageRevision++; cancelReading(); markingRegion = null; markingOriginal = null; dragStart = null; markedRegions = [null, null]; stagedReading = null; referenceCanvas.style.touchAction = 'auto';
+  imageRevision++; cancelReading(); cropEditor?.close(); markedRegions = [null, null]; stagedReading = null;
   if (imageUrl) URL.revokeObjectURL(imageUrl); imageUrl = null;
   if (sourceCanvas) { sourceCanvas.width = 0; sourceCanvas.height = 0; sourceCanvas = null; }
   const preview = $('#screenshot-preview'); preview.onload = null; preview.onerror = null; preview.removeAttribute('src');
   $('#panel-previews').replaceChildren(); $('#whole-reading').textContent = ''; $('#screenshot-drafts').hidden = true;
   $('#image-reference').hidden = true; $('#screenshot').value = ''; $('#screenshot-status').textContent = '';
-  $('.guide-frame').hidden = false; $('.legend').hidden = false; $('#show-example').hidden = true;
+  $('.intake').dataset.selected = 'false'; $('.guide-frame').hidden = false; $('.legend').hidden = false;
   drawImageReference(); refreshReviewState(); markStale(); setReadingBusy(false);
 }
 $('#remove-image').addEventListener('click', () => { removeImage(); $('#screenshot-status').textContent = 'Screenshot removed. Entries and corrections are kept; screenshot lines need renewed review.'; });
-$('#show-example').addEventListener('click', () => { const hidden = !$('.guide-frame').hidden; $('.guide-frame').hidden = hidden; $('.legend').hidden = hidden; $('#show-example').textContent = hidden ? 'Show example comparison' : 'Hide example comparison'; });
 $('#screenshot').addEventListener('change', () => {
   const file = $('#screenshot').files[0]; if (!file) return;
   removeImage();
   if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024) { $('#screenshot-status').textContent = 'Choose a PNG, JPEG or WebP up to 10 MB. Your entries have been kept.'; return; }
+  $('.intake').dataset.selected = 'true'; setReadingBusy(true); readOnDecode = true;
   const selectedRevision = imageRevision; imageUrl = URL.createObjectURL(file);
   const preview = $('#screenshot-preview');
   preview.onload = () => {
     if (selectedRevision !== imageRevision) return;
+    const shouldRead = readOnDecode;
     if (preview.naturalWidth * preview.naturalHeight > 7000000) { removeImage(); $('#screenshot-status').textContent = 'This image exceeds the current 7-million-pixel limit. Your entries are kept.'; return; }
     sourceCanvas = document.createElement('canvas'); sourceCanvas.width = preview.naturalWidth; sourceCanvas.height = preview.naturalHeight;
     sourceCanvas.getContext('2d').drawImage(preview, 0, 0);
     $('#image-reference').hidden = false; $('.guide-frame').hidden = true; $('.legend').hidden = true;
-    $('#show-example').hidden = false; $('#show-example').textContent = 'Show example comparison';
-    drawImageReference(); setReadingBusy(false); void startReading();
+    drawImageReference(); setReadingBusy(false);
+    if (shouldRead) void startReading();
   };
   preview.onerror = () => { if (selectedRevision !== imageRevision) return; removeImage(); $('#screenshot-status').textContent = 'Image could not be opened. Try another image or use item entry; existing entries have been kept.'; };
   preview.src = imageUrl;
