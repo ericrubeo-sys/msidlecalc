@@ -34,8 +34,6 @@
             <h2 id="draft-title">Check your items</h2>
             <p class="result-limit">Equipment recommendations aren’t available yet.</p>
             <p id="draft-description"></p><div id="panel-previews" class="items-grid"></div>
-            <div class="items-grid assignment-fields"><label>Currently equipped panel<select id="current-panel"><option value="">Choose a panel</option></select></label><label>Candidate panel<select id="candidate-panel"><option value="">Choose a panel</option></select></label></div>
-            <label class="confirmation"><input type="checkbox" id="panel-assignment-confirmed"> I checked the areas and which item is currently equipped.</label>
             <p>Review the extracted lines next. Unreadable values stay unknown.</p>
             <button type="button" id="apply-drafts" disabled>Use these item drafts</button>
             <details><summary>Original screenshot reading</summary><pre id="whole-reading"></pre></details>
@@ -45,6 +43,7 @@
           <form id="comparison-form" novalidate>
             <p>Copy every visible line in order, including repeated or unknown stats. Blank values stay unknown. Enter 0 only for an explicit zero. No need to equip the candidate.</p>
             <p id="review-count" role="status"></p><button type="button" id="restore-entries" hidden>Restore previous entries</button><div class="items-grid" id="item-fields"></div>
+            <label class="confirmation"><input type="checkbox" id="visible-lines-complete"> I included and checked every visible stat line on both items.</label>
             <button class="primary" type="submit">Compare entered lines</button>
             <p class="form-error" id="form-error" role="alert" hidden></p>
           </form>

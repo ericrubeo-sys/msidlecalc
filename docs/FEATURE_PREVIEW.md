@@ -1,5 +1,7 @@
 # Source-linked calculation feature preview
 
+Latest feature follow-up: user-established left/right roles remove assignment questions; spatial row assembly separates proposed base values from retained game deltas. Explicit complete visible lists permit raw lost/gained-line comparisons while missing OCR remains unknown. Verification and limits: `ITEM_REVIEW_CHECK.md`. Production remains mobile release `3f83ca9` until this iteration is approved separately.
+
 Branch: `feature/source-linked-damage-model`. The user subsequently approved release `71544b3` to production for screenshot-flow testing; production CI/Vercel and public smoke checks passed. See `SCREENSHOT_RELEASE_CHECK.md`. Further changes require a separate release approval. Earlier checkpoint delivery notes below are historical.
 
 The mobile iteration follows the user's real-phone feedback: enlarged tap-controlled crop adjustment, example-free quiet reading state and bounded merged-heading/alternate-segmentation detection. Its traceability and167-test/browser evidence are in `MOBILE_REVIEW_CHECK.md`. The user subsequently approved production release `3f83ca9`; CI/Vercel and public smoke checks passed. Further changes remain subject to separate approval.

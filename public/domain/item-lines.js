@@ -1,6 +1,6 @@
 // Lossless manual-line intake and raw occurrence comparison. No game formula,
 // aggregation, weighting, storage, clock, network, or equipment recommendation.
-export const ITEM_LINES_VERSION = 'manual-lines-1';
+export const ITEM_LINES_VERSION = 'manual-lines-2';
 export const STAT_REGISTRY_VERSION = 'labels-1';
 export const STAT_REGISTRY = Object.freeze([
   ['attack', 'Attack', 'statPoint'],
@@ -128,9 +128,11 @@ const subtract = (before, after) => {
 };
 
 // Matching means nth compatible visible occurrence, NOT proven aggregation or
-// source equivalence. Missing lines never mean zero. Unknown labels are retained
+// source equivalence. Missing lines mean unknown unless a complete reviewed
+// opposite visible list establishes absence. Unknown labels are retained
 // and can expose raw same-label differences without establishing their meaning.
-export function compareItemLines(currentLines, candidateLines) {
+export function compareItemLines(currentLines, candidateLines, { currentComplete = false, candidateComplete = false } = {}) {
+  if (typeof currentComplete !== 'boolean' || typeof candidateComplete !== 'boolean') throw new TypeError('Explicit visible-list completeness flags required.');
   const available = new Map();
   for (const line of candidateLines) {
     const key = matchKey(line);
@@ -144,16 +146,23 @@ export function compareItemLines(currentLines, candidateLines) {
     return [current, candidate];
   });
   for (const candidate of candidateLines) if (!used.has(candidate)) pairs.push([null, candidate]);
+  const identity = line => line.statId ?? normalizeLabel(line.effectiveLabel);
+  const reliableList = lines => lines.every(line => line.effectiveLabel.trim() && line.state === 'confirmed' && line.effectiveValue);
+  const absenceAllowed = (line, opposite, complete) => complete && reliableList(opposite) && line?.effectiveLabel.trim() && line.state === 'confirmed' && line.effectiveValue && !opposite.some(other => identity(other) === identity(line) && matchKey(other) !== matchKey(line));
   const rows = pairs.map(([current, candidate]) => {
-    const before = current?.value ?? null;
-    const after = candidate?.value ?? null;
-    const differenceDecimal = current?.effectiveValue && candidate?.effectiveValue
+    const removed = current && !candidate && absenceAllowed(current,candidateLines,candidateComplete);
+    const added = candidate && !current && absenceAllowed(candidate,currentLines,currentComplete);
+    const before = added ? 0 : current?.value ?? null;
+    const after = removed ? 0 : candidate?.value ?? null;
+    const differenceDecimal = removed ? subtract(current.effectiveValue.decimal,'0') : added ? subtract('0',candidate.effectiveValue.decimal) : current?.effectiveValue && candidate?.effectiveValue
       ? subtract(current.effectiveValue.decimal, candidate.effectiveValue.decimal) : null;
     return {
       current, candidate, before, after,
       difference: differenceDecimal === null ? null : Number(differenceDecimal), differenceDecimal,
       unit: (current ?? candidate).unit,
-      status: !current || !candidate ? 'unmatched' : differenceDecimal === null ? 'unknown' : 'rawComparable',
+      status: removed || added ? 'rawComparable' : !current || !candidate ? 'unmatched' : differenceDecimal === null ? 'unknown' : 'rawComparable',
+      presenceChange: removed ? 'removed' : added ? 'added' : null,
+      absenceEvidence: removed || added ? 'reviewed-complete-visible-list' : null,
       matchingBasis: 'compatible-occurrence-only',
     };
   });

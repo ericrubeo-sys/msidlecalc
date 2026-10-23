@@ -2,6 +2,9 @@
 
 ## Active execution revision — 2026-10-22
 
+- [x] Implement user-corrected fixed equipped-left/candidate-right flow, base/delta separation and explicit reviewed visible-line losses/gains; independent QA and feature verification.
+- [ ] Review/publish this item-interpretation iteration separately; improve automatic localization and recognition against private original-image fixtures.
+
 - [x] Respond to real-phone screenshot feedback with distinct UX and independent QA: enlarged tap-only crop editor, simpler reading state and bounded detection improvements on feature branch.
 - [x] User approved mobile iteration release `3f83ca9`; production CI/Vercel and public smoke checks passed.
 - [ ] User physical-phone review of that mobile iteration; OCR accuracy remains a separate open gate.

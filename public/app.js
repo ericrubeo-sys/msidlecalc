@@ -5,6 +5,8 @@ import { replaceFinalDamageSources } from './domain/reaggregation.js';
 import { getClaim } from './domain/mechanics-data.js';
 import { readComparison } from './ocr-reader.js';
 import { openCropEditor } from './crop-editor.js';
+import { assignComparisonLayout } from './domain/comparison-layout.js';
+import { proposePanelRows } from './domain/ocr-item-rows.js';
 import { importScreenshotProposals, editScreenshotRecord, confirmScreenshotRecord, recordsForImage } from './domain/screenshot-review.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -19,6 +21,7 @@ let readOnDecode = false;
 let markedRegions = [null, null], cropEditor = null;
 const units = [['unknown', 'Unknown'], ['statPoint', 'Points'], ['displayPercent', '%'], ['level', 'Levels'], ['factor', 'Multiplier'], ['internalRate', 'Internal rate']];
 const issueMessages = { invalidDecimal: 'Use a decimal number, without commas or suffixes. Leave unreadable values blank.', unitMismatch: 'Choose % for a percentage value.', unsupportedMagnitude: 'Value exceeds the supported numerical range.', unsupportedPrecision: 'Use at most 18 decimal places.', integerRequired: 'Skill levels must be whole numbers.' };
+const effectiveRawValue = line => line.correction?.rawValue ?? line.rawValue ?? '';
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -26,8 +29,9 @@ function element(tag, text, className) {
   if (className) node.className = className;
   return node;
 }
-function markStale() {
+function markStale({ keepCompleteness = false } = {}) {
   revision++;
+  if (!keepCompleteness) $('#visible-lines-complete').checked = false;
   if (!$('#results').hidden) $('#stale-result').hidden = false;
   if (!$('#model-results').hidden) $('#model-stale').hidden = false;
   refreshAssignment();
@@ -97,7 +101,7 @@ function addLine(side, initial = null) {
     });
     label.append(check, document.createTextNode('I checked this line against the screenshot'));
     const evidence = element('details', undefined, 'line-source'); evidence.append(element('summary', 'Read from image'), element('pre', record.rawText));
-    if (record.comparisonText !== null) evidence.append(element('p', `Separate comparison text: ${record.comparisonText ?? 'Unknown'}. It has not been added to the item value.`));
+    if (record.comparisonText != null) evidence.append(element('p', `Game’s displayed change: ${record.comparisonText}. Not an item value.`));
     row.append(status, label, evidence);
   }
   row.append(remove, error); $(`#${side}-lines`).append(row); markStale(); updateReviewCount();
@@ -124,7 +128,7 @@ $('#comparison-form').addEventListener('submit', (event) => {
       const error = $(`#${line.id}-error`);
       const input = $(`#${line.id}-rawValue`);
       error.hidden = true; input.removeAttribute('aria-invalid');
-      if (line.state === 'invalid' || (!line.effectiveLabel.trim() && line.rawValue.trim())) {
+      if (line.state === 'invalid' || (!line.effectiveLabel.trim() && String(effectiveRawValue(line)).trim())) {
         error.textContent = line.state === 'invalid' ? (issueMessages[line.issues[0]] || 'Correct this value or leave it blank if unknown.') : 'Add a stat label so this value can be identified.';
         error.hidden = false; input.setAttribute('aria-invalid', 'true'); firstInvalid ??= input;
       }
@@ -134,21 +138,28 @@ $('#comparison-form').addEventListener('submit', (event) => {
   const nonempty = (lines) => lines.some((line) => line.effectiveLabel.trim());
   if (!nonempty(items.current) || !nonempty(items.candidate)) { $('#form-error').textContent = 'Enter at least one stat label for each item. Values may remain unknown.'; $('#form-error').hidden = false; return; }
   // Blank unused rows remain in the editor but need no result row.
-  const result = compareItemLines(items.current.filter(l => l.effectiveLabel.trim()), items.candidate.filter(l => l.effectiveLabel.trim()));
+  const complete = $('#visible-lines-complete').checked;
+  const meaningful = lines => lines.filter(l => l.effectiveLabel.trim() || String(effectiveRawValue(l)).trim());
+  const result = compareItemLines(meaningful(items.current), meaningful(items.candidate), {currentComplete:complete,candidateComplete:complete});
   const body = $('#result-rows'); body.replaceChildren();
   for (const row of result.rows) {
     const entry = element('article', undefined, 'result-row');
     const label = row.current?.effectiveLabel ?? row.candidate?.effectiveLabel;
     entry.append(element('strong', label));
     const show = (line) => !line ? 'No matched line' : line.effectiveValue ? `${line.effectiveValue.decimal}${line.unit === 'displayPercent' ? '%' : ` (${units.find(u => u[0] === line.unit)?.[1] || line.unit})`}` : 'Unknown';
-    entry.append(element('p', `Currently equipped: ${show(row.current)} · Candidate: ${show(row.candidate)}`));
+    const before = row.presenceChange === 'added' ? 'Absent from reviewed list' : show(row.current);
+    const after = row.presenceChange === 'removed' ? 'Absent from reviewed list' : show(row.candidate);
+    entry.append(element('p', `Currently equipped: ${before} · Candidate: ${after}`));
+    if (row.presenceChange) entry.append(element('p', row.presenceChange === 'removed' ? 'This visible item line is lost on replacement.' : 'This visible item line is added on replacement.'));
     entry.append(element('p', row.differenceDecimal === null ? 'Change: unknown' : `Raw change: ${row.difference > 0 ? '+' : ''}${row.differenceDecimal}${row.unit === 'displayPercent' ? ' percentage points' : ''}`));
     if (row.unit === 'unknown') entry.append(element('p', 'Unit and effect meaning are unconfirmed. This is only a raw numerical difference.'));
+    if (row.status === 'unmatched') entry.append(element('p','Unmatched: unknown until both visible lists are complete and their values are checked.'));
     body.append(entry);
   }
   $('#results').dataset.inputRevision = String(revision);
   $('#stale-result').hidden = true; $('#results').hidden = false; $('#results').focus();
 });
+$('#visible-lines-complete').addEventListener('change', () => markStale({keepCompleteness:true}));
 
 $('#independent-final').addEventListener('change', markStale);
 $('#calculate').addEventListener('click', () => {
@@ -199,8 +210,8 @@ $('#calculate').addEventListener('click', () => {
 });
 
 function refreshAssignment() {
-  const a = $('#current-panel').value, b = $('#candidate-panel').value;
-  $('#apply-drafts').disabled = readingBusy || !stagedReading || stagedReading.imageRevision !== imageRevision || !a || !b || a === b || !$('#panel-assignment-confirmed').checked;
+  const layout = assignComparisonLayout(stagedReading?.proposedPanels);
+  $('#apply-drafts').disabled = readingBusy || !stagedReading || stagedReading.imageRevision !== imageRevision || layout.status !== 'assigned';
   const populated = Object.values(records).some(lines => lines.some(record => String(record.correction?.rawLabel ?? record.rawLabel).trim() || String(record.correction?.rawValue ?? record.rawValue).trim()));
   $('#apply-drafts').textContent = populated ? 'Replace entered lines with these drafts' : 'Use these item drafts';
 }
@@ -248,33 +259,38 @@ function drawImageReference(temporary = null) {
 }
 function restoreStagedAreas() {
   if (!sourceCanvas || !stagedReading || stagedReading.imageRevision !== imageRevision) return;
-  markedRegions = [stagedReading.proposedPanels[0]?.region ?? null, stagedReading.proposedPanels[1]?.region ?? null];
+  const layout = assignComparisonLayout(stagedReading.proposedPanels);
+  markedRegions = layout.status === 'assigned' ? layout.panels.map(panel => panel.region) : [null,null];
   drawImageReference();
 }
 function showReading(reading) {
   stagedReading = reading;
   const panels = reading.proposedPanels;
-  markedRegions = [panels[0]?.region ?? null, panels[1]?.region ?? null];
+  const layout = assignComparisonLayout(panels);
+  markedRegions = layout.status === 'assigned' ? layout.panels.map(panel => panel.region) : [null,null];
   drawImageReference();
   $('#panel-previews').replaceChildren();
   $('#whole-reading').textContent = reading.raw.text;
-  $('#draft-description').textContent = 'Check the areas and choose which item is equipped.';
-  for (const selector of ['#current-panel', '#candidate-panel']) {
-    const select = $(selector); select.replaceChildren(); const option = element('option', 'Choose a panel'); option.value = ''; select.append(option);
-  }
+  $('#draft-description').textContent = 'Left: currently equipped. Right: candidate. Check the item values next.';
   panels.forEach((panel, index) => {
     const card = element('article', undefined, 'item-card panel-preview');
-    card.append(element('h3', `Panel ${index + 1}`));
+    const role = layout.status === 'assigned' ? (panel.id === layout.assignment.current ? 'Currently equipped · left' : 'Candidate · right') : `Area ${index + 1}`;
+    card.append(element('h3', role));
     const crop = document.createElement('canvas'); crop.width = panel.region.width; crop.height = panel.region.height;
     crop.getContext('2d').drawImage(sourceCanvas, panel.region.x, panel.region.y, panel.region.width, panel.region.height, 0, 0, crop.width, crop.height);
-    const image = element('img'); image.alt = `Proposed area for panel ${index + 1}; item role not confirmed`; image.src = crop.toDataURL('image/png'); card.append(image);
+    const image = element('img'); image.alt = `${role}; proposed read area`; image.src = crop.toDataURL('image/png'); card.append(image);
     crop.width = 0; crop.height = 0;
-    const details = element('details'); details.append(element('summary', 'Draft reading'), element('pre', panel.rawText)); card.append(details);
+    const summary = element('div',undefined,'base-value-preview');
+    for (const row of proposePanelRows(panel).rows) {
+      const fields = row.proposedFields;
+      if (!row.rawText.trim()) continue;
+      const entry = element('p'); entry.append(element('span',fields.rawLabel || 'Unreadable line'),element('strong',fields.rawValue || 'Needs review')); summary.append(entry);
+    }
+    card.append(summary);
+    const details = element('details'); details.append(element('summary', 'Raw OCR text (includes game deltas)'), element('pre', panel.rawText)); card.append(details);
     $('#panel-previews').append(card);
-    for (const selector of ['#current-panel', '#candidate-panel']) { const option = element('option', `Panel ${index + 1}`); option.value = panel.id; $(selector).append(option); }
   });
-  $('#panel-assignment-confirmed').checked = false;
-  $('#screenshot-drafts').hidden = panels.length < 2;
+  $('#screenshot-drafts').hidden = layout.status !== 'assigned';
   refreshAssignment();
 }
 async function startReading(regions = null) {
@@ -290,7 +306,7 @@ async function startReading(regions = null) {
       onProgress: () => {} });
     if (runId !== readingRun || selectedRevision !== imageRevision) return;
     showReading({ ...reading, imageRevision: selectedRevision, runId });
-    $('#screenshot-status').textContent = reading.proposedPanels.length >= 2 ? '' : 'Couldn’t find both items. Adjust the read areas or enter details below.';
+    $('#screenshot-status').textContent = assignComparisonLayout(reading.proposedPanels).status === 'assigned' ? '' : 'Couldn’t find both item areas. Adjust the read areas or enter details below.';
   } catch (error) {
     if (runId === readingRun && selectedRevision === imageRevision && error?.name !== 'AbortError') $('#screenshot-status').textContent = 'Couldn’t finish reading. Your edits are kept. Try adjusting the read areas.';
   } finally {
@@ -307,19 +323,19 @@ function replaceEditor(items, names) {
 }
 $('#apply-drafts').addEventListener('click', () => {
   if ($('#apply-drafts').disabled || !stagedReading || stagedReading.imageRevision !== imageRevision) return;
-  const items = importScreenshotProposals({ proposedPanels: stagedReading.proposedPanels, assignment: { current: $('#current-panel').value, candidate: $('#candidate-panel').value }, assignmentConfirmed: $('#panel-assignment-confirmed').checked, imageRevision, runId: stagedReading.runId });
-  previousEntries = { items: structuredClone(records), names: { current: $('#current-name').value, candidate: $('#candidate-name').value } };
+  const layout = assignComparisonLayout(stagedReading.proposedPanels);
+  if (layout.status !== 'assigned') return;
+  const items = importScreenshotProposals({ proposedPanels: stagedReading.proposedPanels, assignment: layout.assignment, assignmentConfirmed: true, imageRevision, runId: stagedReading.runId });
+  previousEntries = { items: structuredClone(records), names: { current: $('#current-name').value, candidate: $('#candidate-name').value }, complete:$('#visible-lines-complete').checked, imageRevision };
   replaceEditor(items); $('#restore-entries').hidden = false;
   $('#screenshot-status').textContent = 'Check each extracted line against your photo.';
   $('#current-lines input')?.focus();
 });
 $('#restore-entries').addEventListener('click', () => {
   if (!previousEntries) return;
-  replaceEditor(previousEntries.items, previousEntries.names); previousEntries = null; $('#restore-entries').hidden = true;
+  replaceEditor(previousEntries.items, previousEntries.names); $('#visible-lines-complete').checked = previousEntries.imageRevision === imageRevision && previousEntries.complete; previousEntries = null; $('#restore-entries').hidden = true;
   $('#screenshot-status').textContent = 'Previous entries restored. Screenshot-derived lines still require review for the current image.';
 });
-for (const id of ['current-panel', 'candidate-panel']) $(`#${id}`).addEventListener('change', () => { $('#panel-assignment-confirmed').checked = false; refreshAssignment(); });
-$('#panel-assignment-confirmed').addEventListener('change', refreshAssignment);
 $('#read-image').addEventListener('click', () => startReading());
 $('#cancel-reading').addEventListener('click', () => cancelReading(true));
 $('#adjust-areas').addEventListener('click', () => {

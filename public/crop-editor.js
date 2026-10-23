@@ -1,4 +1,5 @@
 import { adjustCrop, cropsOverlap } from './domain/crop-geometry.js';
+import { assignComparisonLayout } from './domain/comparison-layout.js';
 
 export function openCropEditor({ image, regions, onApply, onClose = () => {} }) {
   const width = image.width, height = image.height;
@@ -56,12 +57,14 @@ export function openCropEditor({ image, regions, onApply, onClose = () => {} }) 
       view = { x, y, width: Math.min(width, crop.x + crop.width + px) - x, height: Math.min(height, crop.y + crop.height + py) - y };
     }
     draw(overview,{x:0,y:0,width,height},crop); draw(detail,view,crop);
-    find('#crop-title').textContent = `Adjust area ${active + 1} of 2`;
+    find('#crop-title').textContent = active === 0 ? 'Equipped item · left' : 'Candidate item · right';
     find('[data-crop="back"]').hidden = active === 0;
     find('[data-crop="next"]').textContent = active === 0 ? 'Next area' : 'Read these areas';
-    const duplicate = active === 1 && cropsOverlap(crops[0],crops[1]);
+    const layout = assignComparisonLayout(crops.map((region,index)=>({id:`area-${index}`,region})));
+    const duplicate = active === 1 && (cropsOverlap(crops[0],crops[1]) || layout.status !== 'assigned' || layout.assignment.current !== 'area-0');
     find('[data-crop="next"]').disabled = duplicate;
     find('#crop-overlap').hidden = !duplicate;
+    find('#crop-overlap').textContent = 'Keep the equipped area on the left and the candidate on the right, without overlapping.';
     const target = find('#crop-target').value;
     for (const button of dialog.querySelectorAll('[data-direction]')) {
       const horizontal = ['left','right'].includes(button.dataset.direction);
