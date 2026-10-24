@@ -2,6 +2,8 @@
 
 ## New actual recommendation layer — feature only
 
+[Review deployment](https://msidlecalc-git-feature-source-linked-d30e05-erics-trade-binder.vercel.app/) requires Vercel sign-in. CI and deployment passed; local browser paths were exercised. Production remains unchanged. Access limitations and evidence are recorded in `RECOMMENDATION_PREVIEW.md`.
+
 `equipment-recommendation.js` now produces genuine conditional left/right choices for the whole admitted ordinary-landed-hit comparison, before mode rules, with dependency categories and source/uncertainty guards. It does not turn an isolated favorable factor into a winner while ignoring other effects. Mixed/critical/source-stage/skill/timing gaps still abstain.278 checks pass including16 independent recommendation groups; actual synthetic browser positive/reversal/blocker paths exercised. No production release is authorized. Current scope, conditions, limits and preview evidence: `RECOMMENDATION_PREVIEW.md`.
 
 **Current UI checkpoint2026-10-24:** compact typed-stat review, separate confirm/collapse controls and context-only abstaining results supersede the raw-comparison and Advanced FD presentation described below. Current production is `4256b0e`, build `4cca063d3252`;262 tests and production CI/deployment passed. Source-linked numerical helpers remain restricted experiments; no complete context winner is enabled. See `COMPACT_CONFIRMATION_RELEASE.md` and `ESSENTIAL_INPUT_STATUS.md`. Following release notes are historical.

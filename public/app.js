@@ -192,10 +192,11 @@ $('#comparison-form').addEventListener('submit', async event => {
   if(inputRevision!==revision) { $('#calculation-screen').hidden=true; setReadingBusy(false); return; }
   const body=$('#result-rows'); body.replaceChildren();
   const results=['ordinary-normal','ordinary-boss'].map(contextId=>recommendEquipment({...comparisonPayload(enteredAssumptions()),contextId}));
+  const hitLabel=results.some(result=>result.needsAttackType) && $('#attack-type').value ? $('#attack-type').value==='basic'?'basic hits':'skill hits':'ordinary hits';
   for(const result of results) {
     const row=element('article',undefined,'recommendation-row');
     const choice=result.recommendation==='current'?'Current equip (left)':result.recommendation==='candidate'?'New equip (right)':result.status==='noReliablePreference'?'No reliable preference':'Unable to recommend';
-    row.append(element('h3',result.contextId==='ordinary-normal'?'Normal monsters · ordinary hits':'Boss monsters · ordinary hits'),element('strong',choice),element('span',`Confidence: ${result.confidence}`)); body.append(row);
+    row.append(element('h3',`${result.contextId==='ordinary-normal'?'Normal monsters':'Boss monsters'} · ${hitLabel}`),element('strong',choice),element('span',`Confidence: ${result.confidence}`)); body.append(row);
   }
   const unavailable=element('article',undefined,'recommendation-row'); unavailable.append(element('h3','Named battles & PvP'),element('strong','Unable to recommend'),element('span','Confidence: Low')); body.append(unavailable);
   const explanation=$('#recommendation-explanation'); explanation.replaceChildren();

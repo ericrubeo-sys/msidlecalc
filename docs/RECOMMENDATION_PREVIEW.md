@@ -41,4 +41,10 @@ Confidence is Low. Published rules, bounded source inference, software tests and
 
 An optional user collection task was sent while independent work continued: use two already-owned same-slot items with one upper/main Attack line each, identical offensive percentages/Main Stat/skill-level effects, stable preset/slot upgrades/buffs. Report item Attack A/B and detailed character Attack in A→B→A, twice per state; note changed buffs. If no suitable pair exists, do not manufacture one or obtain a candidate. This can falsify an attachment assumption but does not establish every decomposition/rounding law. It is a validation experiment, not a requirement that future users equip an unavailable candidate.
 
-Hosted preview/CI details are recorded after feature publication. Production release requires explicit later approval.
+## Review access and deployment
+
+Feature implementation commit `6db73b3f29865f95f1d2db15909f6c28a8599653` passed GitHub CI and Vercel deployment. Review URL: https://msidlecalc-git-feature-source-linked-d30e05-erics-trade-binder.vercel.app/ . Vercel authentication protects this preview; the unauthenticated browser reached its login gate, so hosted application behavior is not claimed as tested. Local application behavior was exercised at http://127.0.0.1:4181/ .
+
+CI evidence: https://github.com/ericrubeo-sys/msidlecalc/actions/runs/40101530598/job/120894521079 . Production remained at `4256b0e4f37ade8534e64d53f5bbb1e8f92a37fa`, public build `4cca063d3252`, after feature publication. No production push was made. Production release requires explicit later approval.
+
+The user acknowledged the controlled observation task with “Yep”; no readings have been supplied or incorporated. A final UI clarification labels attack-specific results as basic hits or skill hits when that consumed choice applies.

@@ -6,6 +6,8 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Start here
 
+[Numerical feature review preview](https://msidlecalc-git-feature-source-linked-d30e05-erics-trade-binder.vercel.app/) requires Vercel sign-in. Production is unchanged. [Scope and verification](docs/RECOMMENDATION_PREVIEW.md).
+
 - [Project brief](docs/PROJECT_BRIEF.md): the product goal, constraints, and first-release scope.
 - [BasilMarket-inspired light style guide](docs/design/BASILMARKET_LIGHT_STYLE_GUIDE.md): screenshot-derived design principles and original implementation guidance.
 - [Hidden Street-inspired dark style guide](docs/design/HIDDEN_STREET_DARK_STYLE_GUIDE.md): dark surfaces, restrained orange accents, shared-component treatments, and accessibility requirements.

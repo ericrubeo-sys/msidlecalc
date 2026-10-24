@@ -6,7 +6,7 @@
 - [x] Implement source-guarded whole-comparison ordinary-hit dominance, structured dependencies and uncertainty abstention.
 - [x] Integrate consumed conditions/applicability questions after collapsed item confirmation; compact conditional left/right results and one explanation.
 - [x]278 software checks and actual browser positive/reversal/unsupported paths; no live-game accuracy claim.
-- [ ] Verify feature CI and hosted preview, keep production4cca063d3252 unchanged.
+- [x] Verify feature CI and successful preview deployment; local application behavior exercised. Hosted preview requires Vercel login; production4cca063d3252 unchanged.
 - [ ] Controlled Attack source observation requested, optional if suitable owned pair exists.
 - [ ] General Attack/bucket tradeoffs: observable affected-stage decomposition and rounding; critical event semantics; full named content and timing profiles.
 - [ ] Obtain user approval before any numerical production release.
