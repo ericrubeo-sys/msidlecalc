@@ -19,3 +19,11 @@ The visible Calculate action reports ordered raw item differences, gained/lost r
 Deployment evidence will be appended after release verification. The prior production version remains authoritative until then.
 
 Additional local browser check: theme switching preserved the entered value; same-image Read again retained corrected 8,034 and reset the review checkbox. No crop dialog was opened. Both themes were inspected at390×844 without horizontal overflow; the light mobile proof is kept in ignored .review/inline-review-mobile-light.png.
+
+## Production verification
+
+Commit 835022896066804d1a3ca1daa9e2f71eca317352 passed feature CI and preview deployment, then main was fast-forwarded and pushed without force. Production CI passed: https://github.com/ericrubeo-sys/msidlecalc/actions/runs/40082445045/job/120838591232 . Production Vercel deployment succeeded: https://vercel.com/erics-trade-binder/msidlecalc/BTveQn9QYnidG8FRbKmqDPH6pgRC . Public release.js reports build 6e53b1ef8a63.
+
+The live untouched authorized-example upload reached the new editor directly: two crops,12 editable primary value fields, unchecked final confirmation and no open crop dialog. Missing Attack was visibly highlighted. Live1440×900 desktop proof is retained privately at .review/inline-review-production-desktop.png. Local1280×720 manual layout also showed two columns. No browser warning/error messages were captured. The live test page was reset to the initial upload state and temporary viewport overrides were cleared. These checks establish deployed workflow behavior, not OCR accuracy or game-model validity.
+
+Hosted and local build identifiers can differ across source environments as previously documented; the hosted identifier is for diagnosing the loaded release. No domain, project connection, paid service or data-collection change was made.

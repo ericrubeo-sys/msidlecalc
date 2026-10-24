@@ -113,3 +113,5 @@ Initial page implemented for Vercel review on 2026-10-22. It provides raw stat d
 - Do not add user accounts, a database, analytics, donation links, paid AI/OCR, or a full planner without a concrete need and discussion.
 - Do not add an open-source license without the user's choice.
 - Do not publish, deploy, or change DNS without user review and approval.
+
+2026-10-24 inline review release: production commit8350228, hosted build6e53b1ef8a63; CI/deployment and live crop/editor smoke check passed.257 tests passed. Physical-phone retest remains open.
