@@ -1,5 +1,7 @@
 # Source-linked calculation feature preview
 
+Reading cleanup `f58f16a` is published under standing user live-test authorization: counted unresolved preview readings preserve correction records, and crop controls reserve space instead of overlapping.231 tests pass; public build `15f4a3e144c2` and production CI/Vercel verified. See `REVIEW_CLEANUP.md`; automatic localization and general recognition remain open.
+
 Second-panel field follow-up `5f3b431` is published under the user's standing live-test authorization. It separates pixel-supported base/comparison glyph runs, preserves border observations as evidence and blocks unsafe raw fallback.226 tests pass; see `SECOND_PANEL_FIX.md` and independent `SECOND_PANEL_QA.md`. Localization and full recognition accuracy remain open; numerical recommendation scope is unchanged.
 
 iPhone follow-up released as user-approved `0b2764b`: optional hold controls, scoped gesture handling, better second-area starting geometry, clipping advisories, Potential new equip wording, and inspectable build identity. Production CI/Vercel and public flow passed. Current212-test/UX/QA evidence is in `IPHONE_REVIEW_CHECK.md`; physical Safari behavior is not certified.
