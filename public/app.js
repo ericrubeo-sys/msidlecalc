@@ -104,13 +104,19 @@ $('#comparison-form').addEventListener('submit', (event) => {
       const input = $(`#${line.id}-rawValue`);
       error.hidden = true; input.removeAttribute('aria-invalid');
       if (line.state === 'invalid' || (!line.effectiveLabel.trim() && String(effectiveRawValue(line)).trim()) || (line.effectiveLabel.trim() && !String(effectiveRawValue(line)).trim()) || (records[side].length === 1 && !line.effectiveLabel.trim())) {
+        // A required correction must remain reachable even with diagnostics
+        // hidden. Surface its editable row rather than opening raw OCR tools.
+        if (input.closest('#other-readings')) {
+          records[side].find(record=>record.id===line.id).otherReading = false;
+          $(`#${side}-lines`).append(input.closest('.line'));
+        }
         error.textContent = line.state === 'invalid' ? (issueMessages[line.issues[0]] || 'Correct this value or leave it blank if unknown.') : (!line.effectiveLabel.trim() ? 'Add the stat name.' : 'Enter this item’s value. Blank is unknown, not zero.');
         const invalidField = !line.effectiveLabel.trim() ? $(`#${line.id}-rawLabel`) : input;
         error.hidden = false; invalidField.setAttribute('aria-invalid', 'true'); firstInvalid ??= invalidField;
       }
     }
   }
-  if (firstInvalid) { if (firstInvalid.closest('#other-readings')) $('#reading-details').open = true; $('#form-error').textContent = 'Correct the highlighted entries. Your other entries are kept.'; $('#form-error').hidden = false; firstInvalid.focus(); return; }
+  if (firstInvalid) { $('#form-error').textContent = 'Correct the highlighted entries. Your other entries are kept.'; $('#form-error').hidden = false; firstInvalid.focus(); return; }
   if (!$('#visible-lines-complete').checked) { $('#form-error').textContent = 'Check both items, then confirm the checkbox below them.'; $('#form-error').hidden = false; $('#visible-lines-complete').focus(); return; }
   const nonempty = (lines) => lines.some((line) => line.effectiveLabel.trim());
   if (!nonempty(items.current) || !nonempty(items.candidate)) { $('#form-error').textContent = 'Enter at least one stat label for each item. Values may remain unknown.'; $('#form-error').hidden = false; return; }
@@ -270,7 +276,6 @@ function showReading(reading) {
     }
   }
   $('#whole-reading').textContent = [reading.raw?.text ?? '',...panels.map(panel=>panel?.rawText ?? '')].join('\n\n');
-  $('#reading-details').hidden = false;
   $('#draft-description').textContent = adopted.preserved ? 'Your corrections are kept. Check the new read areas.' : detected ? 'Check the photo and correct any values below.' : 'Some details couldn’t be read. Fill the highlighted fields, or adjust the photo areas.';
   $('#screenshot-drafts').append($('#comparison-form'),$('#advanced'),$('#results'));
   $('#manual').hidden = true; $('#screenshot-drafts').hidden = false;

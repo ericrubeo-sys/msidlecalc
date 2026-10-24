@@ -73,6 +73,10 @@ Current 2026-10-22 kickoff and recovered decisions below supersede conflicting o
 
 For new choices, record the date, decision, alternatives considered, evidence, and any conditions that would change the choice.
 
+## 2026-10-24 — Hide OCR diagnostics
+
+User requests hiding raw OCR and other-reading dropdowns. Keep their evidence in session, but remove their visible disclosure. If an unclassified observation requires a correction before calculation, surface that editable row in its item card so a hidden field cannot block the user. This changes presentation, not recognition or recommendation scope.
+
 ## 2026-10-24 — One editable confirmation path
 
 The user explicitly requests that partial and failed reads reach the same item confirmation screen. Automatically populate the canonical editor, including tentative locally read areas when pair detection fails; do not claim those areas are successfully detected. Preserve available observations and put empty required stat fields in a visible highlight. Area adjustment is optional. Recognition and filling fields do not confirm them; one explicit review checkbox covers both visible lists and resets on every edit/reread.
