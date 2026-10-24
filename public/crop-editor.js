@@ -18,10 +18,10 @@ export function openCropEditor({ image, regions, onApply, onClose = () => {} }) 
   const previousFocus = document.activeElement;
   const dialog = document.createElement('dialog'); dialog.className = 'crop-editor'; dialog.setAttribute('aria-labelledby','crop-title');
   dialog.innerHTML = `<div class="crop-heading"><h2 id="crop-title">Adjust area 1 of 2</h2><button type="button" data-crop="cancel">Cancel</button></div>
-    <p class="crop-help">Include all stat labels and numbers. Tap an arrow, or hold to keep moving.</p>
+    <div class="crop-scroll"><p class="crop-help">Include all stat labels and numbers. Tap an arrow, or hold to keep moving.</p>
     <p id="crop-seed" hidden>Starting box only — check both edges include the full stat lines.</p>
     <canvas class="crop-overview" width="800" height="160" aria-label="Full photo with active area outlined"></canvas>
-    <canvas class="crop-detail" width="800" height="500" aria-label="Enlarged active area with its boundary outlined"></canvas>
+    <canvas class="crop-detail" width="800" height="500" aria-label="Enlarged active area with its boundary outlined"></canvas></div>
     <div class="crop-options"><label>Adjust<select id="crop-target"><option value="move">Move box</option><option value="left">Left edge</option><option value="right">Right edge</option><option value="top">Top edge</option><option value="bottom">Bottom edge</option></select></label><label class="crop-fine"><input type="checkbox" id="crop-fine">Fine adjustment</label></div>
     <div class="crop-arrows" role="group" aria-label="Move selected box or edge"><button type="button" data-direction="up" aria-label="Move up">↑</button><button type="button" data-direction="left" aria-label="Move left">←</button><button type="button" data-direction="down" aria-label="Move down">↓</button><button type="button" data-direction="right" aria-label="Move right">→</button></div>
     <p class="visually-hidden" id="crop-state" role="status"></p><p id="crop-overlap" hidden>Choose a separate area for the second item.</p>

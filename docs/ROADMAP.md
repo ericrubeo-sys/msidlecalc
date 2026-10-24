@@ -2,6 +2,9 @@
 
 ## Active execution revision — 2026-10-22
 
+- [x] Separate unresolved reading previews without data loss; reserve crop controls/actions space, verify ten step/viewport combinations and231-test checkpoint.
+- [ ] Verify reading-cleanup production release; physical-phone retest and automatic localization remain open.
+
 - [x] Reproduce second-panel merged base/comparison failure; implement original-pixel glyph evidence and preserve border artifacts outside stat rows. Independent226-test checkpoint; see `SECOND_PANEL_FIX.md`.
 - [x] Verify second-panel fix `5f3b431` production deployment and public build `1723e0d8dad4`.
 - [ ] User original-image iPhone retest; automatic localization and remaining label/punctuation recognition remain open.

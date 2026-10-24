@@ -7,6 +7,7 @@ import { readComparison } from './ocr-reader.js';
 import { openCropEditor } from './crop-editor.js';
 import { assignComparisonLayout } from './domain/comparison-layout.js';
 import { proposePanelRows } from './domain/ocr-item-rows.js';
+import { groupReviewRows } from './domain/ocr-review-groups.js';
 import { RELEASE_ID } from './release.js';
 import { importScreenshotProposals, editScreenshotRecord, confirmScreenshotRecord, recordsForImage } from './domain/screenshot-review.js';
 
@@ -286,12 +287,20 @@ function showReading(reading) {
       card.append(element('p',labels ? 'Some stat names may be outside this area. Adjust it to include each name and number.' : 'Some values may be outside this area. Check the right edge before using these drafts.','coverage-warning'));
     }
     const summary = element('div',undefined,'base-value-preview');
-    for (const row of proposePanelRows(panel).rows) {
+    const groups = groupReviewRows(proposePanelRows(panel).rows);
+    function previewRow(row) {
       const fields = row.proposedFields;
-      if (!row.rawText.trim()) continue;
-      const entry = element('p'); entry.append(element('span',fields.rawLabel || 'Unreadable line'),element('strong',fields.rawValue || 'Needs review')); summary.append(entry);
+      const entry = element('p'); entry.append(element('span',fields.rawLabel || 'Unreadable line'),element('strong',fields.rawValue || 'Needs review')); return entry;
     }
+    groups.stats.forEach(row=>summary.append(previewRow(row)));
+    if (!groups.stats.length) summary.append(element('p','No stat values could be read. Check the other readings or enter item details.'));
     card.append(summary);
+    if (groups.unresolved.length) {
+      const other = element('details',undefined,'other-readings');
+      other.open = groups.stats.length === 0;
+      other.append(element('summary',`${groups.unresolved.length} other ${groups.unresolved.length === 1 ? 'reading' : 'readings'} to check`),element('p','May include unreadable stats or background text. All readings remain in Item details and corrections.','other-reading-help'));
+      const list = element('div',undefined,'base-value-preview'); groups.unresolved.forEach(row=>list.append(previewRow(row))); other.append(list); card.append(other);
+    }
     const details = element('details'); details.append(element('summary', 'Raw OCR text (includes game deltas)'), element('pre', panel.rawText)); card.append(details);
     $('#panel-previews').append(card);
   });
