@@ -1,5 +1,7 @@
 # Roadmap
 
+2026-10-24 update: inline crop-and-field confirmation replaces the separate OCR import/correction workflow. Partial/failed reads must also reach it; highlight missing values and keep area adjustment optional. This is an OCR/editor release, not completion of the calculator. Next recommendation work is dependency eligibility, verified Attack/bucket replacement, critical-event semantics and a supported battle profile; see ESSENTIAL_INPUT_STATUS.md. Character questions must have actual supported consumers.
+
 ## Active execution revision — 2026-10-22
 
 - [x] Fix automatic intake with evidence-gated local OCR recovery; untouched example upload reaches item review without area forms. Independent integration/raster checks in `INITIAL_INTAKE_RECOVERY.md`.

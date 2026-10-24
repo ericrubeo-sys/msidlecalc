@@ -1,4 +1,4 @@
-import { parseItemLines, compareItemLines } from './domain/item-lines.js';
+import { compareItemLines } from './domain/item-lines.js';
 import { SUPPORT_DESTINATION } from './config.js';
 import { compareSupportedFactors } from './domain/damage-model.js';
 import { replaceFinalDamageSources } from './domain/reaggregation.js';
@@ -8,8 +8,9 @@ import { openCropEditor } from './crop-editor.js';
 import { assignComparisonLayout } from './domain/comparison-layout.js';
 import { proposePanelRows } from './domain/ocr-item-rows.js';
 import { groupReviewRows } from './domain/ocr-review-groups.js';
+import { parseReviewRecords, adoptReviewRecords } from './domain/inline-review.js';
 import { RELEASE_ID } from './release.js';
-import { importScreenshotProposals, editScreenshotRecord, confirmScreenshotRecord, recordsForImage } from './domain/screenshot-review.js';
+import { importScreenshotProposals, editScreenshotRecord } from './domain/screenshot-review.js';
 
 const $ = (selector) => document.querySelector(selector);
 let nextId = 0;
@@ -20,9 +21,10 @@ const records = { current: [], candidate: [] };
 let sourceCanvas = null, stagedReading = null, previousEntries = null;
 let readingController = null, readingRun = 0, readingBusy = false;
 let readOnDecode = false;
+let editorImageRevision = null, editorEdited = false;
 let markedRegions = [null, null], cropEditor = null;
 const units = [['unknown', 'Unknown'], ['statPoint', 'Points'], ['displayPercent', '%'], ['level', 'Levels'], ['factor', 'Multiplier'], ['internalRate', 'Internal rate']];
-const issueMessages = { invalidDecimal: 'Use a decimal number, without commas or suffixes. Leave unreadable values blank.', unitMismatch: 'Choose % for a percentage value.', unsupportedMagnitude: 'Value exceeds the supported numerical range.', unsupportedPrecision: 'Use at most 18 decimal places.', integerRequired: 'Skill levels must be whole numbers.' };
+const issueMessages = { invalidDecimal: 'Use a number such as 1234, 1,234 or 12.5%.', unitMismatch: 'Use % for a percentage value.', unsupportedMagnitude: 'Value exceeds the supported numerical range.', unsupportedPrecision: 'Use at most 18 decimal places.', integerRequired: 'Skill levels must be whole numbers.' };
 const effectiveRawValue = line => line.correction?.rawValue ?? line.rawValue ?? '';
 
 function element(tag, text, className) {
@@ -36,88 +38,58 @@ function markStale({ keepCompleteness = false } = {}) {
   if (!keepCompleteness) $('#visible-lines-complete').checked = false;
   if (!$('#results').hidden) $('#stale-result').hidden = false;
   if (!$('#model-results').hidden) $('#model-stale').hidden = false;
-  refreshAssignment();
+  $('#advanced').hidden = !Object.values(records).every(lines=>lines.some(record=>String(record.correction?.rawLabel ?? record.rawLabel).trim().toLowerCase() === 'final damage'));
 }
-function updateReviewCount() {
-  const all = [...records.current, ...records.candidate].filter(record => record.provenance?.kind === 'ocr' && (record.rawText.trim() || String(record.correction?.rawLabel ?? record.rawLabel).trim() || String(record.correction?.rawValue ?? record.rawValue).trim()));
-  const pending = all.filter(record => !record.confirmed || record.reviewedImageRevision !== imageRevision).length;
-  $('#review-count').textContent = all.length ? `${pending} of ${all.length} screenshot lines need review. Unknown values stay unknown.` : '';
-}
-function lineReviewStatus(record) {
-  if (record.provenance?.imageRevision !== imageRevision && record.reviewedImageRevision !== imageRevision) return 'From previous screenshot · needs review';
-  return record.confirmed && record.reviewedImageRevision === imageRevision ? 'Checked by you' : 'Needs review';
-}
-function addLine(side, initial = null) {
-  const record = initial ?? { id: `${side}-${nextId++}`, rawLabel: '', rawValue: '', unit: 'unknown', provenance: { kind: 'manual' }, confirmed: true };
+function addLine(side, initial = null, target = null) {
+  const record = initial ?? { id: `${side}-${nextId++}`, rawLabel: '', rawValue: '', unit: 'unknown', provenance: { kind: 'manual' }, confirmed: false };
   records[side].push(record);
-  const row = element('div', undefined, 'line');
-  row.dataset.lineId = record.id;
-  const fromImage = record.provenance?.kind === 'ocr';
-  let check = null, status = null;
-  const changed = (field, value) => {
-    if (fromImage) {
-      Object.assign(record, editScreenshotRecord(record, field, value));
-      if (check) check.checked = false;
-      if (status) status.textContent = lineReviewStatus(record);
-    } else record[field] = value;
-    markStale(); updateReviewCount();
-  };
-  for (const [field, labelText, className] of [['rawLabel', 'Stat label', 'label-field'], ['rawValue', 'Value (blank = unknown)', ''], ['unit', 'Unit', '']]) {
-    const label = element('label', labelText, className);
-    const input = element(field === 'unit' ? 'select' : 'input');
-    input.id = `${record.id}-${field}`;
-    label.htmlFor = input.id;
-    input.dataset.field = field;
-    if (field === 'unit') for (const [value, text] of units) {
-      const option = element('option', text); option.value = value; input.append(option);
-    }
-    else { input.type = 'text'; input.autocomplete = 'off'; input.maxLength = field === 'rawLabel' ? 200 : 100; if (field === 'rawValue') input.inputMode = 'decimal'; }
-    input.value = record.correction?.[field] ?? record[field];
-    input.addEventListener('input', () => changed(field, input.value));
-    input.addEventListener('change', () => {
-      if ((record.correction?.[field] ?? record[field]) !== input.value) changed(field, input.value);
+  const row = element('div', undefined, 'line inline-line'); row.dataset.lineId = record.id;
+  const sideName = side === 'current' ? 'Currently equipped' : 'Potential new equip';
+  const ordinal = records[side].length;
+  const error = element('p', '', 'field-error'); error.id = `${record.id}-error`; error.hidden = true;
+  for (const [field, labelText] of [['rawLabel', 'Stat'], ['rawValue', 'Value']]) {
+    const label = element('label', labelText, field === 'rawLabel' ? 'label-field' : 'value-field');
+    const input = element(field === 'rawLabel' ? 'textarea' : 'input'); input.id = `${record.id}-${field}`; label.htmlFor = input.id;
+    if (field === 'rawLabel') input.rows = 2; else input.type = 'text';
+    input.autocomplete = 'off'; input.maxLength = field === 'rawLabel' ? 200 : 100;
+    input.setAttribute('aria-label', `${sideName}, line ${ordinal}, ${labelText.toLowerCase()}`);
+    input.setAttribute('aria-describedby', error.id);
+    if (field === 'rawValue') { input.inputMode = 'decimal'; input.placeholder = 'Required'; }
+    input.dataset.field = field; input.value = record.correction?.[field] ?? record[field] ?? '';
+    const highlight = () => {
+      const missing = !input.value.trim(); input.classList.toggle('needs-value', missing);
+      if (missing) input.setAttribute('aria-invalid','true'); else input.removeAttribute('aria-invalid');
+    };
+    highlight();
+    input.addEventListener('input', () => {
+      if (record.provenance?.kind === 'ocr') Object.assign(record, editScreenshotRecord(record, field, input.value));
+      else record[field] = input.value;
+      {
+        const value = record.correction?.rawValue ?? record.rawValue;
+        const unit = value.trim().endsWith('%') ? 'displayPercent' : 'unknown';
+        if (record.provenance?.kind === 'ocr') Object.assign(record, editScreenshotRecord(record, 'unit', unit)); else record.unit = unit;
+      }
+      editorEdited = true; highlight(); error.hidden = true; markStale();
     });
     label.append(input); row.append(label);
   }
-  const remove = element('button', 'Remove line', 'remove');
-  remove.type = 'button'; remove.setAttribute('aria-label', `Remove ${side === 'current' ? 'currently equipped' : 'potential new equip'} line`);
+  const remove = element('button', '×', 'remove'); remove.type = 'button';
+  remove.setAttribute('aria-label', `Remove ${sideName.toLowerCase()} line ${ordinal}`);
   remove.addEventListener('click', () => {
-    records[side].splice(records[side].indexOf(record), 1); row.remove(); markStale(); updateReviewCount();
-    $(`#${side}-add`).focus();
+    records[side].splice(records[side].indexOf(record), 1); row.remove(); editorEdited = true; markStale(); $(`#${side}-add`).focus();
   });
-  const error = element('p', '', 'field-error'); error.id = `${record.id}-error`; error.hidden = true;
-  row.querySelector('[data-field="rawValue"]').setAttribute('aria-describedby', error.id);
-  if (fromImage) {
-    status = element('p', lineReviewStatus(record), 'review-line-status');
-    status.dataset.reviewStatus = record.id;
-    const label = element('label', undefined, 'confirmation line-confirmation');
-    check = element('input'); check.type = 'checkbox'; check.dataset.reviewLine = record.id;
-    check.checked = record.confirmed && record.reviewedImageRevision === imageRevision;
-    check.addEventListener('change', () => {
-      const proposed = confirmScreenshotRecord(record, { confirmed: check.checked, imageRevision });
-      const parsed = parseItemLines([proposed])[0];
-      if (check.checked && (parsed.state === 'invalid' || (!parsed.effectiveLabel.trim() && String(proposed.correction?.rawValue ?? proposed.rawValue).trim()))) {
-        check.checked = false; error.textContent = 'Correct the label, value or unit before checking this line. Leave an unreadable value blank.'; error.hidden = false; return;
-      }
-      Object.assign(record, proposed); error.hidden = true; status.textContent = lineReviewStatus(record); markStale(); updateReviewCount();
-    });
-    label.append(check, document.createTextNode('I checked this line against the screenshot'));
-    const evidence = element('details', undefined, 'line-source'); evidence.append(element('summary', 'Read from image'), element('pre', record.rawText));
-    if (record.comparisonText != null) evidence.append(element('p', `Game’s displayed change: ${record.comparisonText}. Not an item value.`));
-    row.append(status, label, evidence);
-  }
-  row.append(remove, error); $(`#${side}-lines`).append(row); markStale(); updateReviewCount();
-  return row;
+  row.append(remove,error); (target ?? $(`#${side}-lines`)).append(row); markStale(); return row;
 }
 for (const side of ['current', 'candidate']) {
   const card = element('section', undefined, 'item-card');
-  card.append(element('h2', side === 'current' ? 'Currently equipped' : 'Potential new equip'));
+  card.append(element('h2', side === 'current' ? 'Currently equipped · left' : 'Potential new equip · right'));
+  const crop = element('img', undefined, 'review-crop'); crop.id = `${side}-crop`; crop.hidden = true; card.append(crop);
   const name = element('label', 'Item name (optional)'); name.htmlFor = `${side}-name`;
   const input = element('input', undefined, 'item-name'); input.id = `${side}-name`; input.maxLength = 100; input.autocomplete = 'off'; input.addEventListener('input', markStale);
   const lines = element('div'); lines.id = `${side}-lines`;
   const add = element('button', 'Add line'); add.type = 'button'; add.id = `${side}-add`;
-  add.addEventListener('click', () => { addLine(side).querySelector('input').focus(); });
-  card.append(name, input, lines, add); $('#item-fields').append(card); addLine(side);
+  add.addEventListener('click', () => { editorEdited = true; addLine(side).querySelector('textarea').focus(); });
+  name.hidden = true; input.hidden = true; card.append(name, input, lines, add); $('#item-fields').append(card); addLine(side);
 }
 
 $('#comparison-form').addEventListener('submit', (event) => {
@@ -125,18 +97,21 @@ $('#comparison-form').addEventListener('submit', (event) => {
   const items = {};
   let firstInvalid = null;
   for (const side of ['current', 'candidate']) {
-    items[side] = parseItemLines(recordsForImage(records[side], imageRevision));
+    items[side] = parseReviewRecords(records[side], { imageRevision, confirmed: $('#visible-lines-complete').checked });
     for (const line of items[side]) {
+      if (records[side].find(record=>record.id===line.id)?.otherReading && !String(effectiveRawValue(line)).trim()) continue;
       const error = $(`#${line.id}-error`);
       const input = $(`#${line.id}-rawValue`);
       error.hidden = true; input.removeAttribute('aria-invalid');
-      if (line.state === 'invalid' || (!line.effectiveLabel.trim() && String(effectiveRawValue(line)).trim())) {
-        error.textContent = line.state === 'invalid' ? (issueMessages[line.issues[0]] || 'Correct this value or leave it blank if unknown.') : 'Add a stat label so this value can be identified.';
-        error.hidden = false; input.setAttribute('aria-invalid', 'true'); firstInvalid ??= input;
+      if (line.state === 'invalid' || (!line.effectiveLabel.trim() && String(effectiveRawValue(line)).trim()) || (line.effectiveLabel.trim() && !String(effectiveRawValue(line)).trim()) || (records[side].length === 1 && !line.effectiveLabel.trim())) {
+        error.textContent = line.state === 'invalid' ? (issueMessages[line.issues[0]] || 'Correct this value or leave it blank if unknown.') : (!line.effectiveLabel.trim() ? 'Add the stat name.' : 'Enter this item’s value. Blank is unknown, not zero.');
+        const invalidField = !line.effectiveLabel.trim() ? $(`#${line.id}-rawLabel`) : input;
+        error.hidden = false; invalidField.setAttribute('aria-invalid', 'true'); firstInvalid ??= invalidField;
       }
     }
   }
-  if (firstInvalid) { $('#form-error').textContent = 'Correct the highlighted entries. Your other entries are kept.'; $('#form-error').hidden = false; firstInvalid.focus(); return; }
+  if (firstInvalid) { if (firstInvalid.closest('#other-readings')) $('#reading-details').open = true; $('#form-error').textContent = 'Correct the highlighted entries. Your other entries are kept.'; $('#form-error').hidden = false; firstInvalid.focus(); return; }
+  if (!$('#visible-lines-complete').checked) { $('#form-error').textContent = 'Check both items, then confirm the checkbox below them.'; $('#form-error').hidden = false; $('#visible-lines-complete').focus(); return; }
   const nonempty = (lines) => lines.some((line) => line.effectiveLabel.trim());
   if (!nonempty(items.current) || !nonempty(items.candidate)) { $('#form-error').textContent = 'Enter at least one stat label for each item. Values may remain unknown.'; $('#form-error').hidden = false; return; }
   // Blank unused rows remain in the editor but need no result row.
@@ -168,8 +143,8 @@ $('#calculate').addEventListener('click', () => {
   const body = $('#model-effect'); body.replaceChildren();
   const trace = $('#model-trace'); trace.replaceChildren();
   const contexts = $('#context-results'); contexts.replaceChildren();
-  const current = parseItemLines(recordsForImage(records.current, imageRevision));
-  const candidate = parseItemLines(recordsForImage(records.candidate, imageRevision));
+  const current = parseReviewRecords(records.current, {imageRevision, confirmed: $('#visible-lines-complete').checked});
+  const candidate = parseReviewRecords(records.candidate, {imageRevision, confirmed: $('#visible-lines-complete').checked});
   const fd = lines => lines.filter(line => line.statId === 'finalDamage');
   const a = fd(current), b = fd(candidate);
   const valid = lines => lines.length > 0 && lines.every(line => line.state === 'confirmed' && line.unit === 'displayPercent' && line.value >= 0);
@@ -211,12 +186,6 @@ $('#calculate').addEventListener('click', () => {
   $('#model-stale').hidden = true; $('#model-results').focus();
 });
 
-function refreshAssignment() {
-  const layout = assignComparisonLayout(stagedReading?.proposedPanels);
-  $('#apply-drafts').disabled = readingBusy || !stagedReading || stagedReading.imageRevision !== imageRevision || layout.status !== 'assigned';
-  const populated = Object.values(records).some(lines => lines.some(record => String(record.correction?.rawLabel ?? record.rawLabel).trim() || String(record.correction?.rawValue ?? record.rawValue).trim()));
-  $('#apply-drafts').textContent = populated ? 'Replace entered lines with these drafts' : 'Use these item drafts';
-}
 function setReadingBusy(busy) {
   readingBusy = busy;
   $('.intake').dataset.screen = busy ? 'reading' : sourceCanvas ? 'review' : 'choose';
@@ -224,7 +193,6 @@ function setReadingBusy(busy) {
   $('#read-image').disabled = busy || !sourceCanvas;
   $('#adjust-areas').disabled = busy || !sourceCanvas;
   $('label.upload').textContent = sourceCanvas ? 'Choose another photo' : 'Choose screenshot';
-  refreshAssignment();
 }
 function cancelReading(announce = false) {
   const wasReading = readingBusy;
@@ -233,16 +201,7 @@ function cancelReading(announce = false) {
   if (wasReading) restoreStagedAreas();
   if (announce) $('#screenshot-status').textContent = 'Reading canceled. Your edits are kept.';
 }
-function refreshReviewState() {
-  for (const side of ['current', 'candidate']) for (const record of records[side]) {
-    if (record.provenance?.kind !== 'ocr') continue;
-    const status = document.querySelector(`[data-review-status="${record.id}"]`);
-    const check = document.querySelector(`[data-review-line="${record.id}"]`);
-    if (status) status.textContent = lineReviewStatus(record);
-    if (check) check.checked = record.confirmed && record.reviewedImageRevision === imageRevision;
-  }
-  updateReviewCount();
-}
+function refreshReviewState() { markStale(); }
 function drawImageReference(temporary = null) {
   const canvas = $('#screenshot-canvas');
   if (!sourceCanvas) { canvas.width = 0; canvas.height = 0; return; }
@@ -261,51 +220,62 @@ function drawImageReference(temporary = null) {
 }
 function restoreStagedAreas() {
   if (!sourceCanvas || !stagedReading || stagedReading.imageRevision !== imageRevision) return;
-  const layout = assignComparisonLayout(stagedReading.proposedPanels);
-  markedRegions = layout.status === 'assigned' ? layout.panels.map(panel => panel.region) : [null,null];
   drawImageReference();
 }
 function showReading(reading) {
   stagedReading = reading;
-  const panels = reading.proposedPanels;
-  const layout = assignComparisonLayout(panels);
-  markedRegions = layout.status === 'assigned' ? layout.panels.map(panel => panel.region) : [null,null];
-  drawImageReference();
-  $('#panel-previews').replaceChildren();
-  $('#whole-reading').textContent = reading.raw.text;
-  $('#draft-description').textContent = 'Left: currently equipped. Right: potential new equip. Check both item areas and values below.';
-  panels.forEach((panel, index) => {
-    const card = element('article', undefined, 'item-card panel-preview');
-    const role = layout.status === 'assigned' ? (panel.id === layout.assignment.current ? 'Currently equipped · left' : 'Potential new equip · right') : `Area ${index + 1}`;
-    card.append(element('h3', role));
-    const crop = document.createElement('canvas'); crop.width = panel.region.width; crop.height = panel.region.height;
-    crop.getContext('2d').drawImage(sourceCanvas, panel.region.x, panel.region.y, panel.region.width, panel.region.height, 0, 0, crop.width, crop.height);
-    const image = element('img'); image.alt = `${role}; proposed read area`; image.src = crop.toDataURL('image/png'); card.append(image);
-    crop.width = 0; crop.height = 0;
-    if (panel.coverageIssues?.length) {
-      const labels = panel.coverageIssues.some(issue=>issue.code === 'possibleClippedLabels');
-      card.append(element('p',labels ? 'Some stat names may be outside this area. Adjust it to include each name and number.' : 'Some values may be outside this area. Check the right edge before using these drafts.','coverage-warning'));
+  let layout = assignComparisonLayout(reading.proposedPanels);
+  const detected = layout.status === 'assigned';
+  if (!detected) layout = assignComparisonLayout(reading.recoveryAttempt?.proposedPanels);
+  let panels = layout.status === 'assigned' ? layout.panels : [null,null];
+  // A single located panel is a tentative draft, not a successful pair. Keep
+  // its values available for review rather than throwing its extraction away.
+  if (!panels.some(Boolean) && reading.proposedPanels?.length === 1) {
+    const panel = reading.proposedPanels[0];
+    if (panel.region && Array.isArray(panel.lines)) {
+      const side = panel.region.x + panel.region.width / 2 < sourceCanvas.width * .47 ? 0 : 1;
+      panels[side] = panel;
     }
-    const summary = element('div',undefined,'base-value-preview');
-    const groups = groupReviewRows(proposePanelRows(panel).rows);
-    function previewRow(row) {
-      const fields = row.proposedFields;
-      const entry = element('p'); entry.append(element('span',fields.rawLabel || 'Unreadable line'),element('strong',fields.rawValue || 'Needs review')); return entry;
+  }
+  let incoming = {current:[],candidate:[]};
+  if (panels.some(Boolean)) {
+    const importPanels = panels.map((panel,index)=>panel ?? {id:`empty-${index}`,lines:[],region:null});
+    incoming = importScreenshotProposals({ proposedPanels:importPanels, assignment:{current:importPanels[0].id,candidate:importPanels[1].id}, assignmentConfirmed:true, imageRevision, runId:reading.runId });
+  }
+  // Separators stay in original evidence. Non-stat observations remain editable
+  // in one quiet details panel; they are never silently interpreted as effects.
+  for (const side of ['current','candidate']) {
+    incoming[side] = incoming[side].filter(record => record.rawText.trim() || record.rawLabel.trim() || record.rawValue.trim());
+    const panel = panels[side === 'current' ? 0 : 1];
+    if (panel) {
+      const groups = groupReviewRows(proposePanelRows(panel).rows);
+      const unresolved = new Set(groups.unresolved.map(row=>row.rawText));
+      for (const record of incoming[side]) record.otherReading = unresolved.has(record.rawText);
     }
-    groups.stats.forEach(row=>summary.append(previewRow(row)));
-    if (!groups.stats.length) summary.append(element('p','No stat values could be read. Check the other readings or enter item details.'));
-    card.append(summary);
-    if (groups.unresolved.length) {
-      const other = element('details',undefined,'other-readings');
-      other.open = groups.stats.length === 0;
-      other.append(element('summary',`${groups.unresolved.length} other ${groups.unresolved.length === 1 ? 'reading' : 'readings'} to check`),element('p','May include unreadable stats or background text. All readings remain in Item details and corrections.','other-reading-help'));
-      const list = element('div',undefined,'base-value-preview'); groups.unresolved.forEach(row=>list.append(previewRow(row))); other.append(list); card.append(other);
+    if (!incoming[side].some(record=>!record.otherReading)) incoming[side].unshift({id:`blank-${imageRevision}-${reading.runId}-${side}`,rawLabel:'',rawValue:'',unit:'unknown',confirmed:false,provenance:{kind:'manual'}});
+  }
+  const adopted = adoptReviewRecords(records,incoming,{imageRevision,previousImageRevision:editorImageRevision,edited:editorEdited});
+  if (!adopted.preserved) {
+    previousEntries = {items:structuredClone(records),names:{current:$('#current-name').value,candidate:$('#candidate-name').value},imageRevision:editorImageRevision};
+    replaceEditor(adopted.items); editorEdited = false;
+  } else replaceEditor(adopted.items);
+  editorImageRevision = imageRevision;
+  markedRegions = panels.map(panel=>panel?.region ?? null); drawImageReference();
+  for (const [index,side] of ['current','candidate'].entries()) {
+    const image = $(`#${side}-crop`), panel = panels[index]; image.hidden = !panel;
+    if (panel) {
+      const crop = document.createElement('canvas'); crop.width=panel.region.width; crop.height=panel.region.height;
+      crop.getContext('2d').drawImage(sourceCanvas,panel.region.x,panel.region.y,panel.region.width,panel.region.height,0,0,crop.width,crop.height);
+      image.src=crop.toDataURL('image/png'); image.alt=side === 'current' ? 'Currently equipped item read area' : 'Potential new equip read area'; crop.width=0; crop.height=0;
     }
-    const details = element('details'); details.append(element('summary', 'Raw OCR text (includes game deltas)'), element('pre', panel.rawText)); card.append(details);
-    $('#panel-previews').append(card);
-  });
-  $('#screenshot-drafts').hidden = layout.status !== 'assigned';
-  refreshAssignment();
+  }
+  $('#whole-reading').textContent = [reading.raw?.text ?? '',...panels.map(panel=>panel?.rawText ?? '')].join('\n\n');
+  $('#reading-details').hidden = false;
+  $('#draft-description').textContent = adopted.preserved ? 'Your corrections are kept. Check the new read areas.' : detected ? 'Check the photo and correct any values below.' : 'Some details couldn’t be read. Fill the highlighted fields, or adjust the photo areas.';
+  $('#screenshot-drafts').append($('#comparison-form'),$('#advanced'),$('#results'));
+  $('#manual').hidden = true; $('#screenshot-drafts').hidden = false;
+  $('#restore-entries').hidden = !previousEntries || !Object.values(previousEntries.items).some(lines=>lines.some(record=>record.rawLabel.trim() || record.correction));
+  markStale();
 }
 async function startReading(regions = null) {
   if (!sourceCanvas) return;
@@ -320,34 +290,33 @@ async function startReading(regions = null) {
       onProgress: () => {} });
     if (runId !== readingRun || selectedRevision !== imageRevision) return;
     showReading({ ...reading, imageRevision: selectedRevision, runId });
-    $('#screenshot-status').textContent = assignComparisonLayout(reading.proposedPanels).status === 'assigned' ? '' : 'Couldn’t find both item areas. Adjust the read areas or enter details below.';
+    $('#screenshot-status').textContent = '';
   } catch (error) {
-    if (runId === readingRun && selectedRevision === imageRevision && error?.name !== 'AbortError') $('#screenshot-status').textContent = 'Couldn’t finish reading. Your edits are kept. Try adjusting the read areas.';
+    if (runId === readingRun && selectedRevision === imageRevision && error?.name !== 'AbortError') { showReading({proposedPanels:[],raw:{text:''},imageRevision:selectedRevision,runId}); $('#screenshot-status').textContent = ''; }
   } finally {
     if (runId === readingRun) { readingController = null; setReadingBusy(false); restoreStagedAreas(); }
   }
 }
 function replaceEditor(items, names) {
+  $('#other-readings').replaceChildren();
   for (const side of ['current', 'candidate']) {
     $(`#${side}-lines`).replaceChildren(); records[side] = [];
-    for (const record of items[side]) addLine(side, structuredClone(record));
+    for (const record of items[side]) {
+      let target = null;
+      if (record.otherReading) {
+        target = $(`#${side}-other`);
+        if (!target) { target=element('section'); target.id=`${side}-other`; target.append(element('h3',side === 'current' ? 'Other readings · left' : 'Other readings · right')); $('#other-readings').append(target); }
+      }
+      addLine(side,structuredClone(record),target);
+    }
     $(`#${side}-name`).value = names?.[side] ?? '';
   }
-  $('#manual').open = true; markStale(); updateReviewCount(); refreshAssignment();
+  $('#manual').open = true; markStale();
 }
-$('#apply-drafts').addEventListener('click', () => {
-  if ($('#apply-drafts').disabled || !stagedReading || stagedReading.imageRevision !== imageRevision) return;
-  const layout = assignComparisonLayout(stagedReading.proposedPanels);
-  if (layout.status !== 'assigned') return;
-  const items = importScreenshotProposals({ proposedPanels: stagedReading.proposedPanels, assignment: layout.assignment, assignmentConfirmed: true, imageRevision, runId: stagedReading.runId });
-  previousEntries = { items: structuredClone(records), names: { current: $('#current-name').value, candidate: $('#candidate-name').value }, complete:$('#visible-lines-complete').checked, imageRevision };
-  replaceEditor(items); $('#restore-entries').hidden = false;
-  $('#screenshot-status').textContent = 'Check each extracted line against your photo.';
-  $('#current-lines input')?.focus();
-});
 $('#restore-entries').addEventListener('click', () => {
   if (!previousEntries) return;
   replaceEditor(previousEntries.items, previousEntries.names); $('#visible-lines-complete').checked = previousEntries.imageRevision === imageRevision && previousEntries.complete; previousEntries = null; $('#restore-entries').hidden = true;
+  editorEdited = true; editorImageRevision = imageRevision;
   $('#screenshot-status').textContent = 'Previous entries restored. Screenshot-derived lines still require review for the current image.';
 });
 $('#read-image').addEventListener('click', () => startReading());
@@ -368,7 +337,9 @@ function removeImage() {
   if (imageUrl) URL.revokeObjectURL(imageUrl); imageUrl = null;
   if (sourceCanvas) { sourceCanvas.width = 0; sourceCanvas.height = 0; sourceCanvas = null; }
   const preview = $('#screenshot-preview'); preview.onload = null; preview.onerror = null; preview.removeAttribute('src');
-  $('#panel-previews').replaceChildren(); $('#whole-reading').textContent = ''; $('#screenshot-drafts').hidden = true;
+  $('#whole-reading').textContent = ''; $('#screenshot-drafts').hidden = true;
+  $('#manual').append($('#comparison-form'),$('#advanced'),$('#results')); $('#manual').hidden = false;
+  for (const side of ['current','candidate']) $(`#${side}-crop`).hidden = true;
   $('#image-reference').hidden = true; $('#screenshot').value = ''; $('#screenshot-status').textContent = '';
   $('.intake').dataset.selected = 'false'; $('.guide-frame').hidden = false; $('.legend').hidden = false;
   drawImageReference(); refreshReviewState(); markStale(); setReadingBusy(false);

@@ -73,6 +73,14 @@ Current 2026-10-22 kickoff and recovered decisions below supersede conflicting o
 
 For new choices, record the date, decision, alternatives considered, evidence, and any conditions that would change the choice.
 
+## 2026-10-24 — One editable confirmation path
+
+The user explicitly requests that partial and failed reads reach the same item confirmation screen. Automatically populate the canonical editor, including tentative locally read areas when pair detection fails; do not claim those areas are successfully detected. Preserve available observations and put empty required stat fields in a visible highlight. Area adjustment is optional. Recognition and filling fields do not confirm them; one explicit review checkbox covers both visible lists and resets on every edit/reread.
+
+Keep the crop, editable label/value rows and Add line together. Remove separate draft import, unit selectors and per-line checkboxes. Retain unresolved editable observations and original OCR together in one Reading details disclosure; this is evidence, not an excuse to score unknown effects. Strict English thousands grouping is accepted through a transient normalization overlay; malformed grouping is invalid and original source text is unchanged. Same-image rereads preserve corrected lists without ordinal remapping; image replacement archives the previous list for restoration.
+
+Show Calculate beneath the items with an explicit raw-comparison scope. Full recommendations and their character/context dependency questions remain unfinished; do not fabricate a winner or add unused fields. The existing isolated independent Final Damage action is only exposed when both lists include that effect. See ESSENTIAL_INPUT_STATUS.md for the actual consumers and next numerical work.
+
 ## 2026-10-22 — Repository reconciliation
 
 Inspected the existing `main` branch and initial commit. Preserve that history and `.gitignore`, expand the initial README with the local guide, and add the planning documents. The user authorized transferring these materials to `ericrubeo-sys/msidlecalc`; deployment and access to other projects are outside this authorization.

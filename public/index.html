@@ -28,23 +28,19 @@
         <section id="reading-screen" aria-label="Reading photo" hidden><span class="reading-spinner" aria-hidden="true"></span><h2 role="status">Reading your photo…</h2><p>Stays on your device.</p><button type="button" id="cancel-reading">Cancel</button></section>
         <div id="image-reference" hidden>
           <img id="screenshot-preview" alt="Your selected screenshot reference" hidden>
-          <canvas id="screenshot-canvas" aria-label="Your photo and proposed item areas"></canvas>
-          <div class="image-actions"><button type="button" id="adjust-areas">Adjust read areas</button><details class="photo-options"><summary>Photo options</summary><div class="image-actions"><button type="button" id="read-image">Read again</button><button type="button" id="remove-image">Remove photo</button></div></details></div>
+          <details class="photo-tools"><summary>Photo tools</summary><canvas id="screenshot-canvas" aria-label="Your photo and proposed item areas"></canvas><div class="image-actions"><button type="button" id="adjust-areas">Adjust read areas</button><button type="button" id="read-image">Read again</button><button type="button" id="remove-image">Remove photo</button></div></details>
           <section id="screenshot-drafts" aria-labelledby="draft-title" hidden>
             <h2 id="draft-title">Check your items</h2>
-            <p class="result-limit">Equipment recommendations aren’t available yet.</p>
-            <p id="draft-description"></p><div id="panel-previews" class="items-grid"></div>
-            <p>Review the extracted lines next. Unreadable values stay unknown.</p>
-            <button type="button" id="apply-drafts" disabled>Use these item drafts</button>
-            <details><summary>Original screenshot reading</summary><pre id="whole-reading"></pre></details>
+            <p id="draft-description">Correct any values below.</p>
           </section>
         </div>
-        <details id="manual"><summary>Item details and corrections</summary>
+        <details id="manual"><summary>Enter items manually</summary>
           <form id="comparison-form" novalidate>
-            <p>Copy every visible line in order, including repeated or unknown stats. Blank values stay unknown. Enter 0 only for an explicit zero. You don’t need to equip the new item.</p>
-            <p id="review-count" role="status"></p><button type="button" id="restore-entries" hidden>Restore previous entries</button><div class="items-grid" id="item-fields"></div>
-            <label class="confirmation"><input type="checkbox" id="visible-lines-complete"> I included and checked every visible stat line on both items.</label>
-            <button class="primary" type="submit">Compare entered lines</button>
+            <button type="button" id="restore-entries" hidden>Restore previous entries</button><div class="items-grid" id="item-fields"></div>
+            <details id="reading-details" hidden><summary>Reading details</summary><div id="other-readings"></div><pre id="whole-reading"></pre></details>
+            <label class="confirmation"><input type="checkbox" id="visible-lines-complete"> I checked both items against the photo, including every visible stat line.</label>
+            <button class="primary" type="submit">Calculate</button>
+            <p class="result-limit">Compares item values. Full equipment recommendations aren’t ready yet.</p>
             <p class="form-error" id="form-error" role="alert" hidden></p>
           </form>
           <details id="advanced"><summary>Advanced calculation · supported source effects</summary>
