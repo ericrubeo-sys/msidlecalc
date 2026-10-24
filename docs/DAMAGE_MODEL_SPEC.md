@@ -1,5 +1,7 @@
 # Source-linked damage model specification
 
+**2026-10-24 new feature layer:** `ordinary-dominance-2026-10-24-v1` adds a conditional whole-admitted-comparison equipment preference without changing the partial arithmetic APIs below. It is not a full named-mode or DPS model. See RECOMMENDATION_PREVIEW.md and the separate mechanics/independent-QA handoffs for source admission, consumed conditions, exact decimal ordering, source bounds and abstentions. Production remains unchanged pending approval.
+
 2026-10-22. Model `ordinary-stage-2026-10-22-v4`. The implemented scope is an ordinary pre-content arithmetic stage, partial-factor explanations and an isolated relative defender-level adjustment. It is not a named-content equipment recommendation, sustained DPS, absolute DPS or clear probability. Calculation/OCR production release needs separate user approval.
 
 ## Evidence reconciliation and traceability

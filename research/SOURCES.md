@@ -12,6 +12,8 @@ This register now links recovered prior planning and the 2026-10-22 primary-sour
 
 ## Source register
 
+2026-10-24 recommendation specialist freshly rendered Battle1.1/1.3, Dictionary and Content Guide → Equipment of the [official guide](https://maplestoryidle.nexon.com/en/guide), still updated2026-10-15. Scroll/Potential/Bonus Potential and Star Force attach to equipment slots; Star Force amplifies Main/Sub Options. Same-slot persistence is publication evidence; a single matched main-option Attack ordering under common positive amplification is a **bounded mathematical/source attribution inference**, not a published universal row schema or measured replacement law. Repeated main/sub Attack cannot be summed blindly. `docs/RECOMMENDATION_MECHANICS_2026-10-24.md` records the exact contract, critical-event gaps, future tradeoff algebra and controlled collection task. No live-game validation or exhaustive new patch audit occurred.
+
 2026-10-24 bounded UI taxonomy recheck: rendered [official guide](https://maplestoryidle.nexon.com/en/guide), Battle §2.1 and Stat Dictionary (reported update2026-10-15). Confirmed separate Arena/World Arena, Colosseum, Party Quest, Zakum/Horntail Boss/Guild Raid and Guild Training Ground rows; dictionary confirms flat/percent families, skill-level terminology and cooldown seconds versus percentage. Used for context labels and entry syntax only. No new executable battle profile, coefficient, empirical validation or equipment winner is established by this recheck.
 
 | Topic | Source / link | Date and game version | What it supports | Evidence type | Confidence / limitations |

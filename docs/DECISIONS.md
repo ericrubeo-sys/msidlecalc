@@ -73,6 +73,10 @@ Current 2026-10-22 kickoff and recovered decisions below supersede conflicting o
 
 For new choices, record the date, decision, alternatives considered, evidence, and any conditions that would change the choice.
 
+## 2026-10-24 — First real recommendation scope, feature only
+
+User authorizes distinct mathematics/QA/UX work, actual recommendation implementation and reviewable preview, explicitly forbidding production release without later approval. Implement whole-admitted-comparison directional dominance for ordinary damage-dealing landed hits before content adjustments. This admits conditional left/right choices without unsupported aggregate subtraction or invented weights. A single upper main-option Attack source needs observable source review; repeated/% Attack and critical/attribute/skill/timing tradeoffs abstain. Each source family initially has at most one occurrence per item. No numerical character questions are added when ordering does not consume them. Basic/Skill applicability is asked only for changed attack-specific bonuses. Rounding bounds are never invented; supplied overlapping source bounds abstain. Confidence remains Low without live-game corroboration. See RECOMMENDATION_PREVIEW.md and the separate mechanics/independent QA/UX handoffs.
+
 ## 2026-10-24 — Collapse confirmed items and show scoped context results
 
 User requests Confirm current equip / Confirm new equip actions that collapse their crop and fields, retain Edit item, and enable Calculate recommendation after both are valid. Editing one item invalidates that item; image/reread changes reset both. Replace the raw-change transcript with a simple checking state and a compact context list. The existing model has no full-context winner: every current context abstains with Low confidence, rather than turning incomplete arithmetic into a recommendation. This is presentation and eligibility, not release of a new calculation engine.

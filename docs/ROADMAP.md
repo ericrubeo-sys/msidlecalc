@@ -1,5 +1,16 @@
 # Roadmap
 
+## Actual recommendation feature — 2026-10-24
+
+- [x] Reconcile prior research with distinct mechanics, UX and independent QA specialists.
+- [x] Implement source-guarded whole-comparison ordinary-hit dominance, structured dependencies and uncertainty abstention.
+- [x] Integrate consumed conditions/applicability questions after collapsed item confirmation; compact conditional left/right results and one explanation.
+- [x]278 software checks and actual browser positive/reversal/unsupported paths; no live-game accuracy claim.
+- [ ] Verify feature CI and hosted preview, keep production4cca063d3252 unchanged.
+- [ ] Controlled Attack source observation requested, optional if suitable owned pair exists.
+- [ ] General Attack/bucket tradeoffs: observable affected-stage decomposition and rounding; critical event semantics; full named content and timing profiles.
+- [ ] Obtain user approval before any numerical production release.
+
 2026-10-24 compact confirmation follow-up: independently confirm/collapse each item; typed stat selection; checking screen; context-only abstaining results replace raw deltas and OCR fragments. Full context recommendations remain blocked by the documented replacement/profile dependencies. User review should assess confirmation/edit behavior and mobile entry separately from recommendation accuracy.
 
 2026-10-24 update: inline crop-and-field confirmation replaces the separate OCR import/correction workflow. Partial/failed reads must also reach it; highlight missing values and keep area adjustment optional. This is an OCR/editor release, not completion of the calculator. Next recommendation work is dependency eligibility, verified Attack/bucket replacement, critical-event semantics and a supported battle profile; see ESSENTIAL_INPUT_STATUS.md. Character questions must have actual supported consumers.

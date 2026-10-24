@@ -23,7 +23,7 @@
         <div class="guide-frame"><img class="sample-image" src="/assets/comparison-example.jpg" width="1280" height="590" alt="Example full game screenshot with the currently equipped panel outlined in gold and potential new equip panel in cyan"><span class="mark current" aria-hidden="true"></span><span class="mark candidate" aria-hidden="true"></span></div>
         <div class="legend"><span><i class="swatch" aria-hidden="true"></i>Currently equipped</span><span><i class="swatch candidate" aria-hidden="true"></i>Potential new equip</span></div>
         <label class="upload" for="screenshot">Choose screenshot</label><input class="visually-hidden" id="screenshot" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="availability screenshot-status">
-        <p class="availability" id="availability">Experimental screenshot reading stays on this device. Review every extracted line. Equipment recommendations are not available yet.</p>
+        <p class="availability" id="availability">Feature preview: local screenshot reading and conditional ordinary-hit recommendations. Review every item stat.</p>
         <p id="screenshot-status" role="status"></p>
         <section id="reading-screen" aria-label="Reading photo" hidden><span class="reading-spinner" aria-hidden="true"></span><h2 role="status">Reading your photo…</h2><p>Stays on your device.</p><button type="button" id="cancel-reading">Cancel</button></section>
         <section id="calculation-screen" aria-label="Checking comparison" hidden><span class="reading-spinner" aria-hidden="true"></span><h2 role="status">Checking your items…</h2></section>
@@ -40,6 +40,19 @@
             <button type="button" id="restore-entries" hidden>Restore previous entries</button><div class="items-grid" id="item-fields"></div>
             <div id="reading-details" hidden><div id="other-readings"></div><pre id="whole-reading"></pre></div>
             <input type="checkbox" id="visible-lines-complete" hidden>
+            <section id="essential-inputs" aria-labelledby="essential-title" hidden>
+              <h2 id="essential-title">Comparison conditions</h2>
+              <p id="essential-scope">Ordinary landed-hit damage only. No DPS, survival or named battle prediction.</p>
+              <p id="eligibility-note" role="status"></p>
+              <div id="scope-questions">
+                <label id="attack-type-question" hidden>Attacks being compared<select id="attack-type"><option value="">Choose attack type</option><option value="basic">Basic Attacks</option><option value="skill">Skills</option></select></label>
+                <label class="confirmation"><input type="checkbox" id="scope-onEquipSameSlot"> Same equipment slot and preset; these are the items’ On-Equip Effects, not character totals.</label>
+                <label class="confirmation"><input type="checkbox" id="scope-completeVisibleStats"> Every visible stat line is included above; leftover OCR fragments are background.</label>
+                <label class="confirmation"><input type="checkbox" id="scope-onlyListedEffects"> Only the listed effects change. No extra set, passive or triggered bonuses change.</label>
+                <label class="confirmation"><input type="checkbox" id="scope-ordinaryLandedHits"> Compare the same damage-dealing ordinary hits and buffs. Ignore misses, survival, MP limits and attack timing.</label>
+                <label class="confirmation" id="attack-source-question" hidden><input type="checkbox" id="scope-attackMainOptions"> Both Attack values are in the upper main/base-stat section, not extra options.</label>
+              </div>
+            </section>
             <button class="primary" id="recommend" type="submit" disabled>Calculate recommendation</button>
             <p class="result-limit">Confirm both items to continue.</p>
             <p class="form-error" id="form-error" role="alert" hidden></p>
@@ -53,7 +66,7 @@
             <p id="model-error" role="alert" hidden></p>
             <section id="model-results" aria-labelledby="model-title" tabindex="-1" hidden><h2 id="model-title">Calculation scope</h2><p id="model-stale" hidden>Entries changed. Calculate again to update this result.</p><div id="model-effect"></div><div id="context-results"></div><details><summary>Sources, assumptions and model version</summary><div id="model-trace"></div></details></section>
           </details>
-          <section id="results" tabindex="-1" aria-labelledby="result-title" hidden><h2 id="result-title">Recommendations</h2><p id="stale-result" hidden>Items changed. Calculate again.</p><p class="result-limit">These contexts still need a verified battle model and character inputs.</p><div id="result-rows"></div><button type="button" id="review-again">Back to items</button></section>
+          <section id="results" tabindex="-1" aria-labelledby="result-title" hidden><h2 id="result-title">Recommendations</h2><p id="stale-result" hidden>Items changed. Calculate again.</p><p class="result-limit">Conditional ordinary-hit choices, before battle-mode rules. Not DPS or a complete named battle prediction.</p><div id="result-rows"></div><details id="recommendation-details"><summary>Why &amp; limits</summary><div id="recommendation-explanation"></div></details><button type="button" id="review-again">Back to items</button></section>
         </details>
         <noscript><p>Enable JavaScript for local image selection and manual line comparison. No screenshot is sent to a processing service.</p></noscript>
       </div>

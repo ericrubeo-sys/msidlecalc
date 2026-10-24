@@ -11,6 +11,7 @@ import { groupReviewRows } from './domain/ocr-review-groups.js';
 import { parseReviewRecords, adoptReviewRecords } from './domain/inline-review.js';
 import { RELEASE_ID } from './release.js';
 import { importScreenshotProposals, editScreenshotRecord } from './domain/screenshot-review.js';
+import { recommendEquipment, RECOMMENDATION_ASSUMPTIONS } from './domain/equipment-recommendation.js';
 
 const $ = (selector) => document.querySelector(selector);
 let nextId = 0;
@@ -24,6 +25,33 @@ let readingController = null, readingRun = 0, readingBusy = false;
 let readOnDecode = false;
 let editorImageRevision = null, editorEdited = false;
 let markedRegions = [null, null], cropEditor = null;
+let requiredQuestions=[];
+
+function comparisonPayload(assumptions) {
+  return {current:records.current,candidate:records.candidate,imageRevision,inputRevision:revision,
+    confirmations:{...confirmedItems},assumptions,attackType:$('#attack-type').value || null};
+}
+function enteredAssumptions() {
+  return Object.fromEntries(Object.keys(RECOMMENDATION_ASSUMPTIONS).map(name=>[name,$(`#scope-${name}`).checked]));
+}
+function refreshRecommendationInputs() {
+  const complete=confirmedItems.current && confirmedItems.candidate;
+  $('#essential-inputs').hidden=!complete;
+  if(!complete) { requiredQuestions=[]; $('#recommend').disabled=true; return; }
+  const supplied=Object.fromEntries(Object.keys(RECOMMENDATION_ASSUMPTIONS).map(name=>[name,true]));
+  const probes=['ordinary-normal','ordinary-boss'].flatMap(contextId=>['basic','skill'].map(attackType=>recommendEquipment({...comparisonPayload(supplied),contextId,attackType})));
+  const canEvaluate=probes.some(result=>result.status!=='unavailable');
+  const hasAttack=Object.values(records).some(lines=>lines.some(record=>fieldForRecord(record)?.label==='Attack'));
+  requiredQuestions=canEvaluate?['onEquipSameSlot','completeVisibleStats','onlyListedEffects','ordinaryLandedHits',...(hasAttack?['attackMainOptions']:[])]:[];
+  $('#scope-questions').hidden=!canEvaluate;
+  $('#attack-source-question').hidden=!requiredQuestions.includes('attackMainOptions');
+  $('#attack-type-question').hidden=!canEvaluate || !probes.some(result=>result.needsAttackType);
+  $('#eligibility-note').textContent=canEvaluate?'No character totals are needed for this directional test.':`Not supported yet: ${probes[0].unsupportedMechanics[0]?.detail ?? probes[0].missingInputs[0]?.detail ?? 'These item effects need a verified model.'} Extra character numbers cannot resolve this rule gap yet.`;
+  const missing=requiredQuestions.filter(name=>!$(`#scope-${name}`).checked);
+  if(!$('#attack-type-question').hidden && !$('#attack-type').value) missing.push('attackType');
+  $('#recommend').disabled=missing.length>0;
+  $('#comparison-form>.result-limit').textContent=missing.length?'Review the comparison conditions to continue.':canEvaluate?'Ready for a conditional ordinary-hit recommendation.':'See supported scope and remaining blockers.';
+}
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -43,12 +71,14 @@ function refreshItemConfirmation(side) {
   $('#recommend').disabled=!$('#visible-lines-complete').checked;
   $('#comparison-form>.result-limit').textContent=$('#visible-lines-complete').checked?'Items confirmed. Unsupported contexts will be marked unavailable.':'Confirm both items to continue.';
   $('#draft-description').hidden=$('#visible-lines-complete').checked;
+  refreshRecommendationInputs();
 }
 function markStale({side=null}={}) {
   revision++;
+  $('#scope-attackMainOptions').checked=false; $('#scope-completeVisibleStats').checked=false;
   for (const key of side?[side]:['current','candidate']) { confirmedItems[key]=false; refreshItemConfirmation(key); }
   $('#visible-lines-complete').checked=confirmedItems.current && confirmedItems.candidate;
-  $('#recommend').disabled=!$('#visible-lines-complete').checked;
+  refreshRecommendationInputs();
   $('#results').hidden=true;
   $('#advanced').hidden=true;
   if (!$('#model-results').hidden) $('#model-stale').hidden=false;
@@ -58,11 +88,18 @@ function validateItem(side) {
   const visible=records[side].filter(record=>!record.otherReading);
   if (!visible.length) { addLine(side); }
   for (const record of records[side]) {
-    if(record.otherReading) continue; // retained evidence, not a selectable stat
+    if(record.otherReading && !fieldForRecord(record)) continue;
+    if(record.otherReading) {
+      record.otherReading=false;
+      const input=$(`#${record.id}-rawLabel`);
+      $(`#${side}-lines`).append(input.closest('.line'));
+      const error=$(`#${record.id}-error`); error.hidden=false; error.textContent='Review this recognized stat before confirming.';
+      first??=input;
+    }
     const field=fieldForRecord(record), value=record.correction?.rawValue ?? record.rawValue;
     const validation=validateStatValue(field,value);
     const error=$(`#${record.id}-error`), input=$(`#${record.id}-${field?'rawValue':'rawLabel'}`);
-    error.hidden=validation.valid;
+    if(first?.id!==`${record.id}-rawLabel`) error.hidden=validation.valid;
     if(!validation.valid) { error.textContent=validation.message; input.setAttribute('aria-invalid','true'); input.classList.add('needs-value'); first??=input; }
   }
   if(first) { first.focus(); return false; }
@@ -100,6 +137,7 @@ function addLine(side, initial = null, target = null) {
       const unit=selected?.unit ?? 'unknown';
       if(record.provenance?.kind==='ocr') Object.assign(record,editScreenshotRecord(record,'unit',unit)); else record.unit=unit;
       if(field==='rawLabel') { record.statFieldId=selected?.id ?? null; const number=row.querySelector('[data-field=rawValue]'); if(number) { number.placeholder=selected?.kind==='percent'?'0.0%':'Required'; number.inputMode=selected?.kind==='integer'?'numeric':'decimal'; } }
+      if(field==='rawLabel' && selected && record.otherReading) { record.otherReading=false; $(`#${side}-lines`).append(row); }
       editorEdited=true; highlight(); error.hidden=true; markStale({side});
     };
     input.addEventListener(field==='rawLabel'?'change':'input',change);
@@ -132,24 +170,49 @@ for (const side of ['current', 'candidate']) {
   const confirm=element('button',side==='current'?'Confirm current equip':'Confirm new equip','confirm-item'); confirm.type='button'; confirm.id=`${side}-confirm`; confirm.setAttribute('aria-controls',body.id); confirm.setAttribute('aria-expanded','true');
   confirm.addEventListener('click',()=>{
     if(confirmedItems[side]) markStale({side});
-    else if(validateItem(side)) { confirmedItems[side]=true; refreshItemConfirmation(side); const next=['current','candidate'].find(key=>!confirmedItems[key]); if(next) { const heading=$(`#${next}-card h2`); heading.tabIndex=-1; heading.focus(); } else $('#recommend').focus(); }
+    else if(validateItem(side)) { confirmedItems[side]=true; refreshItemConfirmation(side); const next=['current','candidate'].find(key=>!confirmedItems[key]); if(next) { const heading=$(`#${next}-card h2`); heading.tabIndex=-1; heading.focus(); } else { $('#essential-title').tabIndex=-1; $('#essential-title').focus(); } }
   });
   card.append(body,status,confirm); $('#item-fields').append(card); addLine(side);
 }
 
 $('.intake').append($('#results'));
+for(const name of Object.keys(RECOMMENDATION_ASSUMPTIONS)) $(`#scope-${name}`).addEventListener('change',()=>{
+  revision++; $('#results').hidden=true; refreshRecommendationInputs();
+});
+$('#attack-type').addEventListener('change',()=>{ revision++; $('#results').hidden=true; refreshRecommendationInputs(); });
 $('#comparison-form').addEventListener('submit', async event => {
   event.preventDefault();
   if(!confirmedItems.current || !confirmedItems.candidate) return;
+  const firstMissing=requiredQuestions.find(name=>!$(`#scope-${name}`).checked);
+  if(firstMissing) { $(`#scope-${firstMissing}`).focus(); return; }
+  if(!$('#attack-type-question').hidden && !$('#attack-type').value) { $('#attack-type').focus(); return; }
   const inputRevision=revision;
   $('.intake').dataset.screen='calculating'; $('#calculation-screen').hidden=false;
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   if(inputRevision!==revision) { $('#calculation-screen').hidden=true; setReadingBusy(false); return; }
   const body=$('#result-rows'); body.replaceChildren();
-  for(const result of recommendationContexts()) {
+  const results=['ordinary-normal','ordinary-boss'].map(contextId=>recommendEquipment({...comparisonPayload(enteredAssumptions()),contextId}));
+  for(const result of results) {
     const row=element('article',undefined,'recommendation-row');
-    row.append(element('h3',result.context),element('strong','Unable to recommend'),element('span',`Confidence: ${result.confidence}`)); body.append(row);
+    const choice=result.recommendation==='current'?'Current equip (left)':result.recommendation==='candidate'?'New equip (right)':result.status==='noReliablePreference'?'No reliable preference':'Unable to recommend';
+    row.append(element('h3',result.contextId==='ordinary-normal'?'Normal monsters · ordinary hits':'Boss monsters · ordinary hits'),element('strong',choice),element('span',`Confidence: ${result.confidence}`)); body.append(row);
   }
+  const unavailable=element('article',undefined,'recommendation-row'); unavailable.append(element('h3','Named battles & PvP'),element('strong','Unable to recommend'),element('span','Confidence: Low')); body.append(unavailable);
+  const explanation=$('#recommendation-explanation'); explanation.replaceChildren();
+  explanation.append(element('p',results[0].objective),element('p',results[0].uncertainty));
+  if(Object.values(records).some(lines=>lines.some(record=>fieldForRecord(record)?.label==='Attack'))) explanation.append(element('p',results[0].inference));
+  for(const result of results) {
+    explanation.append(element('h3',result.contextId==='ordinary-normal'?'Normal monsters':'Boss monsters'));
+    for(const [title,issues] of [['Missing information',result.missingInputs],['Unresolved mechanics',result.unsupportedMechanics],['Common effects',result.cancelled],['Outside this objective',result.outsideScope]]) {
+      if(!issues.length) continue;
+      explanation.append(element('h4',title)); const list=element('ul'); for(const entry of issues) list.append(element('li',entry.detail)); explanation.append(list);
+    }
+  }
+  explanation.append(element('h3','Conditions used'));
+  for(const [name,value] of Object.entries(enteredAssumptions())) if(value) explanation.append(element('p',RECOMMENDATION_ASSUMPTIONS[name]));
+  explanation.append(element('p',`Not implemented: ${recommendationContexts().map(entry=>entry.context).join('; ')}. The ordinary result is before their adjustments and exceptions.`));
+  const source=element('a','Official mechanics guide'); source.href=results[0].source; source.target='_blank'; source.rel='noopener noreferrer'; explanation.append(source,element('p',`Model: ${results[0].versions.model}. Data: ${results[0].versions.data}. Input revision: ${revision}. No controlled live-game validation.`));
+  $('#recommendation-details').open=false;
   $('#calculation-screen').hidden=true; $('.intake').dataset.screen='results';
   $('#results').hidden=false; $('#stale-result').hidden=true; $('#results').focus();
 });
@@ -349,6 +412,7 @@ $('#adjust-areas').addEventListener('click', () => {
     } });
 });
 function removeImage() {
+  for(const name of Object.keys(RECOMMENDATION_ASSUMPTIONS)) $(`#scope-${name}`).checked=false;
   imageRevision++; cancelReading(); cropEditor?.close(); markedRegions = [null, null]; stagedReading = null;
   if (imageUrl) URL.revokeObjectURL(imageUrl); imageUrl = null;
   if (sourceCanvas) { sourceCanvas.width = 0; sourceCanvas.height = 0; sourceCanvas = null; }
@@ -386,7 +450,7 @@ window.addEventListener('pageshow', event => { if (event.persisted) setReadingBu
 
 const panels = {
   methodology: ['Methodology', [
-    'This preview reads screenshots locally into editable item fields. Choose stat types, correct the values and confirm each item. Recognition can be wrong. The context results currently abstain with Low confidence because complete equipment recommendations are not implemented. Raw OCR fragments and numerical changes are not recommendation factors.',
+    'This feature preview can recommend an item for ordinary successful-hit damage when every admitted changed factor favors that item. It requires explicit same-slot, complete-item and ordinary-attack conditions. It does not use raw differences as damage weights. Mixed tradeoffs, unknown mechanics and named battle profiles abstain. Confidence is Low; no controlled live-game validation has been performed.',
     'A damage model needs supported replacement and stacking rules, baseline character information and separate battle profiles. Combat Power is not DPS. Unsupported effects and missing values will not be scored with invented weights.',
     'Selected screenshots and item entries stay in this page session. Only the appearance preference is saved locally. The header loads a fixed leaf image from MapleStory.io; screenshots are not sent there. Hosting providers receive normal page requests.',
     'BasilMarket and Hidden Street are visual inspiration for the light and dark skins. This project is not affiliated with either site.',

@@ -20,6 +20,8 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Current phase
 
+**New numerical feature preview — not production:** source-guarded ordinary-landed-hit dominance can now choose Current/New equip when every admitted effect favors it. It blocks unmodeled effects and tradeoffs, and asks only consumed conditions/applicability questions.278 software checks pass;16 recommendation groups are independently authored. No controlled game validation or full named-battle/DPS model. See [recommendation preview](docs/RECOMMENDATION_PREVIEW.md). Production stays unchanged until separate user approval.
+
 **Current production — compact confirmation, 2026-10-24:** `4256b0e` provides local OCR into editable typed stat selectors, separate item confirmations that collapse each crop/form, and a compact checking → context-status screen. Raw changes and OCR fragments are removed from normal results. All context winners currently abstain with Low confidence because the recommendation model and essential character/context integration remain unfinished.262 tests, CI and production deployment passed; public build `4cca063d3252`. See [compact workflow verification](docs/COMPACT_CONFIRMATION_RELEASE.md) and [essential-input status](docs/ESSENTIAL_INPUT_STATUS.md). This is not a validated calculator.
 
 ### Historical releases and superseded UI flows

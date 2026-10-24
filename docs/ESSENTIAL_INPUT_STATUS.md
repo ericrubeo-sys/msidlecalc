@@ -1,5 +1,11 @@
 # Essential inputs and recommendation status
 
+## New feature checkpoint — 2026-10-24
+
+The feature now has a genuine **conditional ordinary-landed-hit dominance** recommendation, before named content rules. It accounts for the complete admitted comparison and chooses only when all supported applicable changed factors favor one item. Same-slot On-Equip source/crop completeness and no nonlisted effect changes are required. Single flat main-option Attack admission needs observable main-position review and remains a bounded source inference; repeated/percentage Attack is blocked. Applicable damage buckets and a single independent item FD source can be ordered without aggregate totals. Basic/Skill Damage changes ask only the consumed attack-type question. Source uncertainty bounds, if explicitly supplied, must establish separated order; none is invented from display syntax.
+
+No numeric character totals are requested for this first directional scope because they cannot affect a coordinatewise ordering. This is **not** the Attack-versus-Crit tradeoff model: changed critical/attribute/skill/range/penetration/timing effects and contradictory factors abstain. The exact source-decomposition and effective-critical dependencies below remain open. See RECOMMENDATION_MECHANICS_2026-10-24.md, RECOMMENDATION_INPUT_UX.md and RECOMMENDATION_QA.md. Production is unchanged; numerical feature release requires user approval. The following audit describes the prior baseline.
+
 2026-10-24. Damage Mathematician read-only reconciliation of the current calculation code, not new mechanics research. Reviewed full `AGENTS.md`, `LESSONS.md`, `DAMAGE_MODEL_SPEC.md`, `DAMAGE_MODEL_QA.md`, `research/ENCODED_RULES.md`, recovered damage-model planning, current `mechanics-data.js`, `damage-model.js`, `reaggregation.js`, `app.js` and `index.html`. Historical raw-total-plus-item-delta and single-primary-context guidance remain superseded. No tests were run for this documentation-only review; previous fixture counts are historical evidence, not a fresh validation claim.
 
 ## Direct answer
