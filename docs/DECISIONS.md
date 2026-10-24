@@ -1,5 +1,9 @@
 # Decisions and open questions
 
+## Character-driven live estimate — 2026-10-24
+
+The user explicitly approves building and publishing the two-panel confirmation→conditional minimum stats→automatic context estimate workflow. Publish the checked experimental model, distinguishing official source facts from critical normalization, nonnegative g≥1 and pure-root scenario assumptions. Never label it a validated battle/DPS predictor. The two Attack sources require explicit Main/Sub roles; current Attack supplies a consumed bounded-response input instead of raw item-delta addition. Character fields and Advanced share one calculation and preserve values; no unused job/level inputs, candidate-equipped measurement or infeasible controlled experiment. Unknown resistance spans its range; zero requires an explicit entered scenario. PvP and unsupported changed effects abstain. See CHARACTER_RECOMMENDATION_RELEASE.md for arithmetic, table support12–30 and release checks.
+
 ## Minimum-input path — 2026-10-24
 
 - Derive character questions from an implemented dependency; no character number, job, level or activity selection is universally required. Automatic Basic/Skill branches must agree before an aggregate ordinary preference is presented.

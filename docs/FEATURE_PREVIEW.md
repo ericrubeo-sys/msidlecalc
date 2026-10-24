@@ -1,5 +1,7 @@
 # Source-linked calculation feature preview
 
+**Latest user-authorized publication:** the practical character-driven offensive estimate is ready for live testing after verification. It asks only consumed current totals, supports explicit Main/Sub Attack and critical/bucket tradeoffs, and feeds Advanced values into the same model. Context/root/critical assumptions are disclosed; PvP and unsupported effects abstain.324 software checks pass, with21 independent new groups. See CHARACTER_RECOMMENDATION_RELEASE.md. Earlier feature-only restrictions and isolated-sensitivity descriptions below are historical for their checkpoints.
+
 **Latest minimum-input checkpoint:** exact shared-sub-option polynomial proofs can settle some mixed tradeoffs without character numbers. Basic/Skill and activities evaluate automatically. Advanced contains only relevant bonus-total sensitivity ranges, with retained entries and no fabricated rounding/source guarantee.303 software checks pass;25 new groups independently authored. See MINIMUM_INPUT_PREVIEW.md for supported scope, experiment, evidence and remaining blockers. Production unchanged.
 
 ## New actual recommendation layer — feature only

@@ -1,5 +1,14 @@
 # Roadmap
 
+## Character-driven live-test estimate — 2026-10-24
+
+- [x] Distinct mechanics and independent QA; explicit Main/Sub sources; conditional current totals and preserved Advanced inputs.
+- [x] Model Attack/Crit/bucket replacement across coherent source stages and unknown resistance; outcome-first root-context estimates; PvP abstention.
+- [x]324 software checks including21 independent new groups; repaired numeric wrong-winner regression; actual screenshot correction, synthetic shoulder form/results and mobile/retention checks.
+- [ ] Publish user-authorized release after feature CI; verify production commit/build and real hosted flow.
+- [ ] Real-phone/player-total testing; controlled/held-out game evidence remains absent. No infeasible empty-slot or matched-pair task is pending.
+- [ ] Replace provisional critical/context assumptions with stronger evidence; implement attribute/skill/timing effects and full PvP/encounter profiles before claiming all battle predictions.
+
 ## Minimum-input path — 2026-10-24
 
 - [x] Fresh official amplification/taxonomy/critical-threshold research, distinct mathematics and independent QA.

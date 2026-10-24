@@ -6,6 +6,8 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Start here
 
+Latest release candidate: [character-driven equipment estimates](docs/CHARACTER_RECOMMENDATION_RELEASE.md). Confirm the two crops, distinguish Main/extra Attack, then enter only consumed current totals or use Advanced.324 software checks including21 new independent groups pass. The user authorized live publication after verification. These are disclosed experimental offensive estimates; full PvP, changed skill/attribute effects and game validation remain open.
+
 Latest feature work: [minimum-input recommendations](docs/MINIMUM_INPUT_PREVIEW.md), with no universally required numeric character stat, automatic activity/attack branches, exact shared-amplification proofs and optional sensitivity inputs.303 software checks pass; live-game validation and full activity models remain open. Production unchanged.
 
 [Numerical feature review preview](https://msidlecalc-git-feature-source-linked-d30e05-erics-trade-binder.vercel.app/) requires Vercel sign-in. Production is unchanged. [Scope and verification](docs/RECOMMENDATION_PREVIEW.md).

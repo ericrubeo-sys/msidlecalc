@@ -23,7 +23,7 @@
         <div class="guide-frame"><img class="sample-image" src="/assets/comparison-example.jpg" width="1280" height="590" alt="Example full game screenshot with the currently equipped panel outlined in gold and potential new equip panel in cyan"><span class="mark current" aria-hidden="true"></span><span class="mark candidate" aria-hidden="true"></span></div>
         <div class="legend"><span><i class="swatch" aria-hidden="true"></i>Currently equipped</span><span><i class="swatch candidate" aria-hidden="true"></i>Potential new equip</span></div>
         <label class="upload" for="screenshot">Choose screenshot</label><input class="visually-hidden" id="screenshot" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="availability screenshot-status">
-        <p class="availability" id="availability">Feature preview: local screenshot reading and conditional ordinary-hit recommendations. Review every item stat.</p>
+        <p class="availability" id="availability">Experimental damage estimates. Review both items, then enter only the character totals needed.</p>
         <p id="screenshot-status" role="status"></p>
         <section id="reading-screen" aria-label="Reading photo" hidden><span class="reading-spinner" aria-hidden="true"></span><h2 role="status">Reading your photo…</h2><p>Stays on your device.</p><button type="button" id="cancel-reading">Cancel</button></section>
         <section id="calculation-screen" aria-label="Checking comparison" hidden><span class="reading-spinner" aria-hidden="true"></span><h2 role="status">Checking your items…</h2></section>
@@ -41,21 +41,23 @@
             <div id="reading-details" hidden><div id="other-readings"></div><pre id="whole-reading"></pre></div>
             <input type="checkbox" id="visible-lines-complete" hidden>
             <section id="essential-inputs" aria-labelledby="essential-title" hidden>
-              <h2 id="essential-title">Comparison conditions</h2>
-              <p id="essential-scope">Ordinary landed-hit damage only. No DPS, survival or named battle prediction.</p>
+              <h2 id="essential-title">Character stats</h2>
+              <p id="essential-scope">Experimental offensive-damage estimate. Enter current equipped totals only.</p>
               <p id="eligibility-note" role="status"></p>
               <div id="scope-questions">
                 <label class="confirmation"><input type="checkbox" id="scope-onEquipSameSlot"> Same equipment slot and preset; these are the items’ On-Equip Effects, not character totals.</label>
                 <input type="checkbox" id="scope-completeVisibleStats" hidden>
-                <label class="confirmation"><input type="checkbox" id="scope-onlyListedEffects"> Only the listed effects change. No extra set, passive or triggered bonuses change.</label>
-                <label class="confirmation"><input type="checkbox" id="scope-ordinaryLandedHits"> Compare the same damage-dealing ordinary hits and buffs. Ignore misses, survival, MP limits and attack timing.</label>
+                <label class="confirmation"><input type="checkbox" id="scope-onlyListedEffects"> No changed set, skill, artifact-threshold or triggered effects outside these item lines.</label>
+                <input type="checkbox" id="scope-ordinaryLandedHits" hidden>
                 <label class="confirmation" id="attack-source-question" hidden><input type="checkbox" id="scope-attackMainOptions"> Both Attack values are in the upper main/base-stat section, not extra options.</label>
-                <label class="confirmation" id="background-question" hidden><input type="checkbox" id="scope-nonnegativeBackground"> No stat-reducing effects affect the compared Attack or damage bonuses.</label>
+                <input type="checkbox" id="scope-nonnegativeBackground" hidden>
                 <label class="confirmation" id="sub-options-question" hidden><input type="checkbox" id="scope-subOptionsSameStage"> The percentage bonuses are item sub-options in the lower section on both panels.</label>
+                <label class="confirmation"><input type="checkbox" id="scope-simpleModel"> Use the simple damage model: same successful hits and buffs, no Attack reductions. Critical and content rules are estimates, not a full battle simulation.</label>
               </div>
-              <details id="precision-inputs" hidden><summary>Advanced calculation</summary>
-                <p>Optional current equipped totals. Enter a known minimum and maximum in %. No complete stat sheet, job or level is needed. Values stay here when you edit items.</p>
-                <p>These are sensitivity scenarios while source scaling and display rounding remain unresolved. They cannot override an unsupported mechanic or change the main recommendation.</p>
+              <div id="character-fields"></div>
+              <details id="precision-inputs"><summary>Advanced calculation · all supported stats</summary>
+                <p>Optional. Enter precise current totals, known opponent resistance or uncertainty margins. Only changed effects consume them. Entered resistance applies to all estimated targets; blank checks its possible range.</p>
+                <p>Critical Damage is the full multiplier: 200% means 2×. For Star Force outside 12–30, enter both displayed Main/Sub amplification percentages. Uncertainty is user supplied; blank treats numbers as entered.</p>
                 <div id="precision-fields"></div>
               </details>
             </section>
@@ -72,7 +74,7 @@
             <p id="model-error" role="alert" hidden></p>
             <section id="model-results" aria-labelledby="model-title" tabindex="-1" hidden><h2 id="model-title">Calculation scope</h2><p id="model-stale" hidden>Entries changed. Calculate again to update this result.</p><div id="model-effect"></div><div id="context-results"></div><details><summary>Sources, assumptions and model version</summary><div id="model-trace"></div></details></section>
           </details>
-          <section id="results" tabindex="-1" aria-labelledby="result-title" hidden><h2 id="result-title">Recommendations</h2><p id="stale-result" hidden>Items changed. Calculate again.</p><p class="result-limit">Conditional ordinary-hit choices, before battle-mode rules. Not DPS or a complete named battle prediction.</p><div id="result-rows"></div><details id="recommendation-details"><summary>Why &amp; limits</summary><div id="recommendation-explanation"></div></details><button type="button" id="review-again">Back to items</button></section>
+          <section id="results" tabindex="-1" aria-labelledby="result-title" hidden><h2 id="result-title">Recommendations</h2><p id="stale-result" hidden>Items changed. Calculate again.</p><p class="result-limit">Experimental offensive-damage estimates. Survival, DPS and PvP outcomes are not modeled.</p><div id="result-rows"></div><details id="recommendation-details"><summary>Why &amp; limits</summary><div id="recommendation-explanation"></div></details><button type="button" id="review-again">Back to items</button></section>
         </details>
         <noscript><p>Enable JavaScript for local image selection and manual line comparison. No screenshot is sent to a processing service.</p></noscript>
       </div>

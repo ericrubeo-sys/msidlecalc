@@ -14,6 +14,7 @@ const assumptionNames={
   attackMainOptions:'Both single Attack values are the main/base option in the upper stat section, not extra options.',
   nonnegativeBackground:'No stat-reducing effects affect the compared Attack or damage bonuses; unchanged contributions are nonnegative.',
   subOptionsSameStage:'The percentage bonuses are item sub-options in the lower section on both panels, at the same equipment-slot stage.',
+  simpleModel:'Use the experimental offensive-hit model: ordinary critical normalization, nonnegative Attack response, unchanged spread/skills/triggers and pure-root content estimates. Not full battle or PvP prediction.',
 };
 // Decimal comparison uses integer arithmetic. No conversion of item differences
 // into final character totals, approximate weights or hidden damage scores.

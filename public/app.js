@@ -12,7 +12,7 @@ import { parseReviewRecords, adoptReviewRecords } from './domain/inline-review.j
 import { RELEASE_ID } from './release.js';
 import { importScreenshotProposals, editScreenshotRecord } from './domain/screenshot-review.js';
 import { RECOMMENDATION_ASSUMPTIONS } from './domain/equipment-recommendation.js';
-import { recommendMinimumInput, recommendAllActivities } from './domain/minimum-input.js';
+import { planCharacterInputs, recommendCharacterActivities, PLAYER_FIELDS, CHARACTER_MODEL_VERSION } from './domain/character-recommendation.js';
 
 const $ = (selector) => document.querySelector(selector);
 let nextId = 0;
@@ -27,61 +27,59 @@ let readOnDecode = false;
 let editorImageRevision = null, editorEdited = false;
 let markedRegions = [null, null], cropEditor = null;
 let requiredQuestions=[];
-const bucketTotals={};
+const playerValues={}, playerFieldNodes=new Map();
+let requiredPlayerFields=[];
 
 function comparisonPayload(assumptions) {
   return {current:records.current,candidate:records.candidate,imageRevision,inputRevision:revision,
-    confirmations:{...confirmedItems},assumptions,bucketTotals};
+    confirmations:{...confirmedItems},assumptions,player:playerValues};
 }
 function enteredAssumptions() {
-  return {...Object.fromEntries(Object.keys(RECOMMENDATION_ASSUMPTIONS).map(name=>[name,$(`#scope-${name}`).checked])),completeVisibleStats:confirmedItems.current && confirmedItems.candidate};
+  const values=Object.fromEntries(Object.keys(RECOMMENDATION_ASSUMPTIONS).map(name=>[name,$(`#scope-${name}`).checked]));
+  return {...values,completeVisibleStats:confirmedItems.current && confirmedItems.candidate,ordinaryLandedHits:values.simpleModel,nonnegativeBackground:values.simpleModel,subOptionsSameStage:values.simpleModel};
 }
 function refreshRecommendationInputs() {
   const complete=confirmedItems.current && confirmedItems.candidate;
   $('#essential-inputs').hidden=!complete;
   if(!complete) { requiredQuestions=[]; $('#recommend').disabled=true; return; }
-  const supplied=Object.fromEntries(Object.keys(RECOMMENDATION_ASSUMPTIONS).map(name=>[name,true]));
-  const payload=comparisonPayload(supplied);
-  const probes=recommendAllActivities(payload).slice(0,2).flatMap(result=>result.branches);
-  const canEvaluate=probes.some(result=>result.status!=='unavailable' && !result.unsupportedMechanics.length);
-  const hasAttack=Object.values(records).some(lines=>lines.some(record=>fieldForRecord(record)?.label==='Attack'));
-  requiredQuestions=canEvaluate?['onEquipSameSlot','onlyListedEffects','ordinaryLandedHits',...(hasAttack?['attackMainOptions']:[]),...(probes.some(result=>result.needsNonnegativeBackground)?['nonnegativeBackground']:[]),...(probes.some(result=>result.needsSubOptionsSameStage)?['subOptionsSameStage']:[])]:[];
-  $('#scope-questions').hidden=!canEvaluate;
-  $('#attack-source-question').hidden=!requiredQuestions.includes('attackMainOptions');
-  $('#background-question').hidden=!requiredQuestions.includes('nonnegativeBackground');
-  $('#sub-options-question').hidden=!requiredQuestions.includes('subOptionsSameStage');
-  $('#eligibility-note').textContent=canEvaluate?'No character numbers are required for this comparison. Basic and skill hits are checked automatically.':`No reliable preference yet: ${probes[0].unsupportedMechanics[0]?.detail ?? probes[0].missingInputs[0]?.detail ?? 'These item effects need a verified model.'}`;
-  const fields=new Map();
-  for(const contextId of ['ordinary-normal','ordinary-boss']) for(const attackType of ['basic','skill']) {
-    const scenario=recommendMinimumInput({...payload,bucketTotals:{},contextId,attackType,sourceContract:'effective-bonus-sources'});
-    if(scenario.unsupportedMechanics.some(entry=>!['overlappingPreferenceBounds'].includes(entry.code))) continue;
-    for(const field of scenario.precisionOpportunities??[]) fields.set(field.id,field);
-  }
-  renderPrecisionFields([...fields.values()]);
-  const missing=requiredQuestions.filter(name=>!$(`#scope-${name}`).checked);
-  $('#recommend').disabled=missing.length>0;
-  $('#comparison-form>.result-limit').textContent=missing.length?'Review the comparison conditions to continue.':canEvaluate?'Ready for a conditional ordinary-hit recommendation.':'See supported scope and remaining blockers.';
+  const plan=planCharacterInputs(comparisonPayload(enteredAssumptions()));
+  requiredQuestions=plan.unsupported.length?[]:['onEquipSameSlot','onlyListedEffects','simpleModel'];
+  requiredPlayerFields=plan.fields;
+  $('#scope-questions').hidden=plan.unsupported.length>0;
+  $('#attack-source-question').hidden=true;$('#sub-options-question').hidden=true;
+  $('#eligibility-note').textContent=plan.unsupported.length?plan.unsupported[0].detail:plan.fields.length?'Only the totals used by these item changes are needed. Leave unknown opponent resistance blank.':'No character numbers are needed for this comparison.';
+  renderPlayerFields(plan.fields);
+  updateRecommendationAvailability();
 }
 
-function renderPrecisionFields(fields) {
-  const container=$('#precision-fields');
-  const signature=fields.map(field=>field.id).join('|');
-  $('#precision-inputs').hidden=!fields.length;
-  if(container.dataset.fields===signature) return;
-  container.dataset.fields=signature;container.replaceChildren();
-  for(const field of fields) {
-    const group=element('fieldset');group.append(element('legend',`Current ${field.label} (%)`));
-    for(const [bound,title] of [['lower','Minimum'],['upper','Maximum']]) {
-      const label=element('label',`${title} (%)`),input=element('input');
-      input.type='text';input.inputMode='decimal';input.value=bucketTotals[field.id]?.[bound]??'';
-      input.setAttribute('aria-label',`Current ${field.label}, ${title.toLowerCase()}, percent`);
-      input.addEventListener('input',()=>{
-        bucketTotals[field.id]??={lower:'',upper:''};bucketTotals[field.id][bound]=input.value;
-        revision++;$('#results').hidden=true;
-      });
-      label.append(input);group.append(label);
+function playerValueValid(field) {
+  const value=String(playerValues[field.id]??'').trim(),numeric=Number(value.replaceAll(',','').replace(/%$/,''));
+  if(!value || !/^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?%?$/.test(value) || !Number.isFinite(numeric) || numeric<0 || numeric>Number.MAX_SAFE_INTEGER) return false;
+  if((field.unit==='points' || field.unit==='stars') && value.includes('%')) return false;
+  if(['attack','criticalDamage'].includes(field.id) && numeric<=0) return false;
+  return field.id!=='starForce' || Number.isInteger(numeric) && numeric>=12 && numeric<=30;
+}
+function updateRecommendationAvailability() {
+  const missing=requiredQuestions.filter(name=>!$(`#scope-${name}`).checked);
+  const numbers=requiredPlayerFields.filter(field=>!playerValueValid(field));
+  $('#recommend').disabled=!(confirmedItems.current && confirmedItems.candidate) || missing.length>0 || numbers.length>0;
+  $('#comparison-form>.result-limit').textContent=missing.length?'Review the model conditions.':numbers.length?'Fill the highlighted current totals before calculating.':'Ready to calculate all activity estimates.';
+  for(const field of requiredPlayerFields) playerFieldNodes.get(field.id)?.querySelector('input').classList.toggle('needs-value',!playerValueValid(field));
+}
+function renderPlayerFields(required) {
+  const ids=new Set(required.map(field=>field.id));
+  for(const field of PLAYER_FIELDS) {
+    let group=playerFieldNodes.get(field.id);
+    if(!group) {
+      group=element('label',`${field.label} (${field.unit})`,'player-stat');
+      const input=element('input');input.type='text';input.inputMode='decimal';input.id=`player-${field.id}`;input.value=playerValues[field.id]??'';input.autocomplete='off';
+      input.setAttribute('aria-label',`${field.label}, ${field.unit}`);
+      input.addEventListener('input',()=>{playerValues[field.id]=input.value;revision++;$('#results').hidden=true;updateRecommendationAvailability();});
+      input.addEventListener('change',refreshRecommendationInputs);
+      group.append(input);playerFieldNodes.set(field.id,group);
     }
-    container.append(group);
+    const target=ids.has(field.id)?$('#character-fields'):$('#precision-fields');
+    if(group.parentElement!==target) target.append(group);
   }
 }
 
@@ -133,6 +131,9 @@ function validateItem(side) {
     const error=$(`#${record.id}-error`), input=$(`#${record.id}-${field?'rawValue':'rawLabel'}`);
     if(first?.id!==`${record.id}-rawLabel`) error.hidden=validation.valid;
     if(!validation.valid) { error.textContent=validation.message; input.setAttribute('aria-invalid','true'); input.classList.add('needs-value'); first??=input; }
+    if(field?.label==='Attack' && field.kind==='integer' && !['main','sub'].includes(record.sourceRole)) {
+      const role=$(`#${record.id}-sourceRole`);role.classList.add('needs-value');error.hidden=false;error.textContent='Choose upper Main or lower extra Attack.';first??=role;
+    }
   }
   if(first) { first.focus(); return false; }
   return true;
@@ -170,6 +171,7 @@ function addLine(side, initial = null, target = null) {
       if(record.provenance?.kind==='ocr') Object.assign(record,editScreenshotRecord(record,'unit',unit)); else record.unit=unit;
       if(field==='rawLabel') { record.statFieldId=selected?.id ?? null; const number=row.querySelector('[data-field=rawValue]'); if(number) { number.placeholder=selected?.kind==='percent'?'0.0%':'Required'; number.inputMode=selected?.kind==='integer'?'numeric':'decimal'; } }
       if(field==='rawLabel' && selected && record.otherReading) { record.otherReading=false; $(`#${side}-lines`).append(row); }
+      updateRole();
       editorEdited=true; highlight(); error.hidden=true; markStale({side});
     };
     input.addEventListener(field==='rawLabel'?'change':'input',change);
@@ -180,12 +182,19 @@ function addLine(side, initial = null, target = null) {
     });
     label.append(input); row.append(label);
   }
+  const roleLabel=element('label','Attack source','source-role');
+  const roleSelect=element('select');roleSelect.id=`${record.id}-sourceRole`;roleSelect.setAttribute('aria-label',`${sideName}, line ${ordinal}, Attack source`);
+  for(const [value,title] of [['','Choose Attack source'],['main','Upper Main Attack'],['sub','Lower extra Attack']]) {const option=element('option',title);option.value=value;roleSelect.append(option);}
+  roleSelect.value=record.sourceRole??'';
+  function updateRole() {roleLabel.hidden=fieldForRecord(record)?.label!=='Attack' || fieldForRecord(record)?.kind!=='integer';roleSelect.classList.toggle('needs-value',!roleLabel.hidden && !roleSelect.value);}
+  roleSelect.addEventListener('change',()=>{record.sourceRole=roleSelect.value;updateRole();error.hidden=true;editorEdited=true;markStale({side});});
+  roleLabel.append(roleSelect);updateRole();
   const remove = element('button', '×', 'remove'); remove.type = 'button';
   remove.setAttribute('aria-label', `Remove ${sideName.toLowerCase()} line ${ordinal}`);
   remove.addEventListener('click', () => {
     records[side].splice(records[side].indexOf(record), 1); row.remove(); editorEdited = true; markStale({side}); $(`#${side}-add`).focus();
   });
-  row.append(remove,error); (target ?? $(`#${side}-lines`)).append(row); markStale({side}); return row;
+  row.append(remove,roleLabel,error); (target ?? $(`#${side}-lines`)).append(row); markStale({side}); return row;
 }
 for (const side of ['current', 'candidate']) {
   const card = element('section', undefined, 'item-card'); card.id=`${side}-card`;
@@ -216,45 +225,31 @@ $('#comparison-form').addEventListener('submit', async event => {
   if(!confirmedItems.current || !confirmedItems.candidate) return;
   const firstMissing=requiredQuestions.find(name=>!$(`#scope-${name}`).checked);
   if(firstMissing) { $(`#scope-${firstMissing}`).focus(); return; }
+  const numberMissing=requiredPlayerFields.find(field=>!playerValueValid(field));
+  if(numberMissing) { $(`#player-${numberMissing.id}`).focus(); return; }
   const inputRevision=revision;
   $('.intake').dataset.screen='calculating'; $('#calculation-screen').hidden=false;
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   if(inputRevision!==revision) { $('#calculation-screen').hidden=true; setReadingBusy(false); return; }
   const body=$('#result-rows'); body.replaceChildren();
   const payload=comparisonPayload(enteredAssumptions());
-  const activities=recommendAllActivities(payload),results=activities.slice(0,2);
+  const activities=recommendCharacterActivities(payload);
   for(const result of activities) {
     const row=element('article',undefined,'recommendation-row');
     const choice=result.recommendation==='current'?'Current equip (left)':result.recommendation==='candidate'?'New equip (right)':'No reliable preference';
     row.append(element('h3',result.label),element('strong',choice),element('span',`Confidence: ${result.confidence}`)); body.append(row);
   }
   const explanation=$('#recommendation-explanation'); explanation.replaceChildren();
-  explanation.append(element('p',results[0].objective),element('p',results[0].uncertainty));
-  if(Object.values(records).some(lines=>lines.some(record=>fieldForRecord(record)?.label==='Attack'))) explanation.append(element('p',results[0].inference));
-  for(const result of results) {
-    explanation.append(element('h3',result.contextId==='ordinary-normal'?'Normal monsters':'Boss monsters'));
-    explanation.append(element('p',result.attackAgreement));
-    for(const branch of result.branches) if(branch.proof) explanation.append(element('p',branch.proof),element('p',branch.sourceInference));
-    for(const [title,issues] of [['Missing information',result.missingInputs],['Unresolved mechanics',result.unsupportedMechanics],['Common effects',result.cancelled],['Outside this objective',result.outsideScope]]) {
-      if(!issues.length) continue;
-      explanation.append(element('h4',title)); const list=element('ul'); for(const entry of issues) list.append(element('li',entry.detail)); explanation.append(list);
-    }
+  explanation.append(element('p',activities[0].scope));
+  for(const text of activities[0].assumptions) explanation.append(element('p',text));
+  for(const result of activities) {
+    if(!result.issues.length) continue;
+    explanation.append(element('h3',result.label));
+    const list=element('ul');for(const entry of new Map(result.issues.map(entry=>[entry.detail,entry])).values()) list.append(element('li',entry.detail));explanation.append(list);
   }
-  if(Object.values(bucketTotals).some(bounds=>String(bounds.lower).trim() || String(bounds.upper).trim())) {
-    explanation.append(element('h3','Advanced sensitivity scenario'),element('p','Hypothetical effective bonus-source values and your current-total ranges, assuming same-slot ordinary hits, complete sources, nonnegative contributions and no other changed effects. Source display mapping and rounding are not verified. These scenario choices do not change the recommendations above.'));
-    for(const scenario of recommendAllActivities({...payload,assumptions:Object.fromEntries(Object.keys(RECOMMENDATION_ASSUMPTIONS).map(name=>[name,true])),sourceContract:'effective-bonus-sources'}).slice(0,2)) {
-      const choice=scenario.recommendation==='current'?'Current equip':scenario.recommendation==='candidate'?'New equip':'No reliable preference';
-      explanation.append(element('p',`${scenario.label}: ${choice} under the stated scenario only.`));
-      for(const entry of scenario.missingInputs) explanation.append(element('p',entry.detail));
-    }
-  }
-  explanation.append(element('h3','Conditions used'));
-  for(const [name,value] of Object.entries(enteredAssumptions())) if(value) explanation.append(element('p',RECOMMENDATION_ASSUMPTIONS[name]));
-  explanation.append(element('p',`Not implemented: ${recommendationContexts().map(entry=>entry.context).join('; ')}. The ordinary result is before their adjustments and exceptions.`));
-  for(const reference of results.flatMap(result=>result.branches).find(result=>result.sourceReferences)?.sourceReferences??[]) {
-    const link=element('a',reference.title);link.href=reference.url;link.target='_blank';link.rel='noopener noreferrer';explanation.append(link);
-  }
-  const source=element('a','Official mechanics guide'); source.href=results[0].source; source.target='_blank'; source.rel='noopener noreferrer'; explanation.append(source,element('p',`Model: ${results[0].versions.minimumInputs}. Data: ${results[0].versions.data}. Input revision: ${revision}. No controlled live-game validation.`));
+  const source=element('a','Official mechanics guide');source.href='https://maplestoryidle.nexon.com/en/guide';source.target='_blank';source.rel='noopener noreferrer';
+  const equipment=element('a','Official Equipment / Star Force update');equipment.href='https://forum.nexon.com/maplestoryidle/board_view?board=6675&thread=3537355';equipment.target='_blank';equipment.rel='noopener noreferrer';
+  explanation.append(source,element('br'),equipment,element('p',`Model: ${CHARACTER_MODEL_VERSION}. Input revision: ${revision}. No controlled live-game validation. Official facts and provisional model assumptions are distinguished above.`));
   $('#recommendation-details').open=false;
   $('#calculation-screen').hidden=true; $('.intake').dataset.screen='results';
   $('#results').hidden=false; $('#stale-result').hidden=true; $('#results').focus();
@@ -493,8 +488,8 @@ window.addEventListener('pageshow', event => { if (event.persisted) setReadingBu
 
 const panels = {
   methodology: ['Methodology', [
-    'This feature preview can recommend an item for ordinary successful-hit damage when every admitted changed factor favors that item. It requires explicit same-slot, complete-item and ordinary-attack conditions. It does not use raw differences as damage weights. Mixed tradeoffs, unknown mechanics and named battle profiles abstain. Confidence is Low; no controlled live-game validation has been performed.',
-    'A damage model needs supported replacement and stacking rules, baseline character information and separate battle profiles. Combat Power is not DPS. Unsupported effects and missing values will not be scored with invented weights.',
+    'This experimental calculator compares complete corrected item panels, asks for current character totals only where their effects change, and estimates offensive damage across supported activity models. Main and lower extra Attack are separate sources. The potential item never needs to be equipped. Confidence is Low; no controlled live-game validation has been performed.',
+    'Critical probability normalization, unchanged hit behavior and pure-root raid/training transforms are explicit simple-model assumptions. Critical outcomes are transformed before averaging. Unknown opponent resistance and possible source display stages are tested across their admitted ranges; a possible tie or reversal produces No reliable preference. PvP and changed skill/Main Stat/timing effects remain unsupported. These are damage estimates, not DPS, survival or full battle-winning predictions. Combat Power is not used as a damage score.',
     'Selected screenshots and item entries stay in this page session. Only the appearance preference is saved locally. The header loads a fixed leaf image from MapleStory.io; screenshots are not sent there. Hosting providers receive normal page requests.',
     'BasilMarket and Hidden Street are visual inspiration for the light and dark skins. This project is not affiliated with either site.',
     `App build: ${RELEASE_ID}. Include this when reporting an issue.`
