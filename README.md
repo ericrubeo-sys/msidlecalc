@@ -20,6 +20,10 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Current phase
 
+**Current production — compact confirmation, 2026-10-24:** `4256b0e` provides local OCR into editable typed stat selectors, separate item confirmations that collapse each crop/form, and a compact checking → context-status screen. Raw changes and OCR fragments are removed from normal results. All context winners currently abstain with Low confidence because the recommendation model and essential character/context integration remain unfinished.262 tests, CI and production deployment passed; public build `4cca063d3252`. See [compact workflow verification](docs/COMPACT_CONFIRMATION_RELEASE.md) and [essential-input status](docs/ESSENTIAL_INPUT_STATUS.md). This is not a validated calculator.
+
+### Historical releases and superseded UI flows
+
 **Latest production — automatic intake recovery:** `97c95b8` tries one evidence-gated local OCR pair before requiring area adjustment. The previously failing authorized example reaches item review on untouched upload; unsupported or insufficient evidence still falls back.250 tests and production CI/Vercel pass; hosted build `ca669bc85fcc` verified. See [initial intake verification](docs/INITIAL_INTAKE_RECOVERY.md).
 
 **Earlier reading cleanup:** `f58f16a` separates unresolved preview fragments into counted Other readings disclosures without changing correction imports, and prevents crop action buttons from covering arrows.231 tests and production CI/Vercel passed; hosted build `15f4a3e144c2` verified. See [review cleanup verification](docs/REVIEW_CLEANUP.md).
@@ -70,4 +74,4 @@ The existing Vercel connection and `msidlecalc.com` domain were configured by th
 
 ## Verification
 
-Run `npm run build`, `npm run check`, `npm test`, and the local browser preview. The current feature checkpoint passes 250 tests. See the current feature and QA documents above for exercised browser behavior and the limits of those checks; arithmetic agreement is not live-game validation.
+Run `npm run build`, `npm run check`, `npm test`, and the local browser preview. The current checkpoint passes262 tests. See the current feature and QA documents above for exercised browser behavior and the limits of those checks; arithmetic agreement is not live-game validation.

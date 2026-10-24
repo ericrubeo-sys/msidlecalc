@@ -1,5 +1,7 @@
 # Source-linked calculation feature preview
 
+**Current UI checkpoint2026-10-24:** compact typed-stat review, separate confirm/collapse controls and context-only abstaining results supersede the raw-comparison and Advanced FD presentation described below. Current production is `4256b0e`, build `4cca063d3252`;262 tests and production CI/deployment passed. Source-linked numerical helpers remain restricted experiments; no complete context winner is enabled. See `COMPACT_CONFIRMATION_RELEASE.md` and `ESSENTIAL_INPUT_STATUS.md`. Following release notes are historical.
+
 Initial intake recovery `97c95b8` is published under standing user live-test authorization: when whole-image layouts fail, independently read and validate one bounded local pair before requesting area forms. Unknown effects and all unconfirmed values remain reviewable.250 tests and production CI/Vercel pass; hosted build `ca669bc85fcc` verified. Scope/negative cases and untouched upload evidence: `INITIAL_INTAKE_RECOVERY.md`.
 
 Reading cleanup `f58f16a` is published under standing user live-test authorization: counted unresolved preview readings preserve correction records, and crop controls reserve space instead of overlapping.231 tests pass; public build `15f4a3e144c2` and production CI/Vercel verified. See `REVIEW_CLEANUP.md`; automatic localization and general recognition remain open.
