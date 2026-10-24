@@ -20,7 +20,9 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Current phase
 
-**Latest production — reading cleanup:** `f58f16a` separates unresolved preview fragments into counted Other readings disclosures without changing correction imports, and prevents crop action buttons from covering arrows.231 tests and production CI/Vercel pass; hosted build `15f4a3e144c2` verified. Automatic area detection remains unresolved. See [review cleanup verification](docs/REVIEW_CLEANUP.md).
+**Latest production — automatic intake recovery:** `97c95b8` tries one evidence-gated local OCR pair before requiring area adjustment. The previously failing authorized example reaches item review on untouched upload; unsupported or insufficient evidence still falls back.250 tests and production CI/Vercel pass; hosted build `ca669bc85fcc` verified. See [initial intake verification](docs/INITIAL_INTAKE_RECOVERY.md).
+
+**Earlier reading cleanup:** `f58f16a` separates unresolved preview fragments into counted Other readings disclosures without changing correction imports, and prevents crop action buttons from covering arrows.231 tests and production CI/Vercel passed; hosted build `15f4a3e144c2` verified. See [review cleanup verification](docs/REVIEW_CLEANUP.md).
 
 **Earlier second-panel follow-up:** `5f3b431` separates observed neutral base glyphs from trailing colored comparison glyphs and retains border artifacts outside stat rows. All226 tests passed; production CI/Vercel and public build `1723e0d8dad4` verified. Automatic localization, label fragments and punctuation recognition remain imperfect. See [field-recognition evidence and limits](docs/SECOND_PANEL_FIX.md).
 
@@ -68,4 +70,4 @@ The existing Vercel connection and `msidlecalc.com` domain were configured by th
 
 ## Verification
 
-Run `npm run build`, `npm run check`, `npm test`, and the local browser preview. The current feature checkpoint passes 231 tests. See the current feature and QA documents above for exercised browser behavior and the limits of those checks; arithmetic agreement is not live-game validation.
+Run `npm run build`, `npm run check`, `npm test`, and the local browser preview. The current feature checkpoint passes 250 tests. See the current feature and QA documents above for exercised browser behavior and the limits of those checks; arithmetic agreement is not live-game validation.

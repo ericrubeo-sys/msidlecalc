@@ -3,7 +3,8 @@
 ## Active execution revision — 2026-10-22
 
 - [x] Fix automatic intake with evidence-gated local OCR recovery; untouched example upload reaches item review without area forms. Independent integration/raster checks in `INITIAL_INTAKE_RECOVERY.md`.
-- [ ] Verify initial-intake production deployment; broader automatic layout/recognition coverage remains open.
+- [x] Verify initial-intake `97c95b8` production deployment and hosted build `ca669bc85fcc`.
+- [ ] User original-image intake retest; broader automatic layout/recognition coverage remains open.
 
 - [x] Separate unresolved reading previews without data loss; reserve crop controls/actions space, verify ten step/viewport combinations and231-test checkpoint.
 - [x] Verify reading-cleanup `f58f16a` production deployment and hosted build `15f4a3e144c2`.
