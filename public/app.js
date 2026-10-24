@@ -386,7 +386,7 @@ window.addEventListener('pageshow', event => { if (event.persisted) setReadingBu
 
 const panels = {
   methodology: ['Methodology', [
-    'This preview reads screenshots locally into unconfirmed drafts and can explain a conditional independent Final Damage source effect after your review. Recognition is experimental and can be wrong. It does not recommend equipment yet. Matching labels and units permits raw numerical subtraction only; repeated lines are never summed.',
+    'This preview reads screenshots locally into editable item fields. Choose stat types, correct the values and confirm each item. Recognition can be wrong. The context results currently abstain with Low confidence because complete equipment recommendations are not implemented. Raw OCR fragments and numerical changes are not recommendation factors.',
     'A damage model needs supported replacement and stacking rules, baseline character information and separate battle profiles. Combat Power is not DPS. Unsupported effects and missing values will not be scored with invented weights.',
     'Selected screenshots and item entries stay in this page session. Only the appearance preference is saved locally. The header loads a fixed leaf image from MapleStory.io; screenshots are not sent there. Hosting providers receive normal page requests.',
     'BasilMarket and Hidden Street are visual inspiration for the light and dark skins. This project is not affiliated with either site.',
