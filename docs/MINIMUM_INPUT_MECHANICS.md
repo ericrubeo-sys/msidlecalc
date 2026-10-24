@@ -154,6 +154,8 @@ Do not ask the player to choose Basic versus Skill as a substitute for automatic
 
 ## One-owned-item reversible Attack experiment
 
+**Feasibility correction from the user,2026-10-24:** their client requires a replacement and does not permit leaving this slot empty. This diagnostic is not feasible for this user and is retired. The protocol below records its hypothesis/identifiability analysis, not another measurement request. Do not return to the specially matched-pair request, purchases or irreversible changes. No available controlled calibration is established; continue official-source research and narrower proofs.
+
 The purpose is **diagnosing the mapping from visible gear Attack to character Attack**, not requiring an unavailable candidate or validating damage/DPS. A second specially matched item is not required for this diagnostic.
 
 First verify in the actual client that an already owned item can be unequipped and re-equipped without automatic replacement. Use a naturally existing nonweapon item if possible; do not buy, reroll, upgrade, consume items, change job or manufacture a clean slot. Record its complete visible effects. Prefer a single flat Attack main option and no Main Stat/Attack%/skill-level effect. Damage/crit/HP lines do not automatically confound the Attack stat, but any threshold/passive that changes Attack does.

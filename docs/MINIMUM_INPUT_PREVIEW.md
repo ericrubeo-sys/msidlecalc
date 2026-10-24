@@ -54,6 +54,8 @@ In the technical effective-source model, `planMinimumInputs` offers at most one 
 
 ## Controlled Attack observation: smaller and optional
 
+**User feasibility result,2026-10-24:** the user reports the client requires a replacement item and cannot leave this slot empty. The empty-slot diagnostic below is therefore **retired for this user**, not pending collection. Do not ask for the matched pair again or request purchases/upgrades. No feasible minimal calibration has been established from the available equipment. Continue source research and the narrower admitted proofs; current Attack/source response remains an evidence blocker.
+
 The matched-pair request is superseded. If the client permits it, one already-owned nonweapon item can provide a diagnostic: **equipped → empty slot → re-equipped**. Record its visible Attack-affecting options, slot upgrades/bonuses and two stable character Attack readings per state, keeping everything else fixed. Text suffices. Do not buy, upgrade or consume anything, and do not equip an unavailable candidate. If unequip is impossible, say so and stop this experiment.
 
 Template:
@@ -81,4 +83,4 @@ If slot bonuses disappear or the item changes Main Stat/skill/passive/threshold 
 
 Implementation commit `7dec71f` passed [GitHub verification](https://github.com/ericrubeo-sys/msidlecalc/actions/runs/40114054701/job/120931579721) and [Vercel deployment](https://vercel.com/erics-trade-binder/msidlecalc/9TZXm9bCHHFwdEUUoZD3iZ7aqK7Y). Review: https://msidlecalc-git-feature-source-linked-d30e05-erics-trade-binder.vercel.app/ . This existing preview requires Vercel sign-in; authenticated hosted application behavior was not tested. Actual application checks used http://127.0.0.1:4181/ . Synthetic result proof remains private at `.review/minimum-input-synthetic.png`.
 
-After the feature push, remote main remained `4256b0e4f37ade8534e64d53f5bbb1e8f92a37fa` and public production release remained `4cca063d3252`. The optional user question asks only whether an owned nonweapon item can leave a slot empty; no measurement or change was requested yet. Full controlled evidence remains absent. The previously supplied Attack-versus-Critical-Rate comparison is still blocked; this checkpoint does not claim it has become calculable.
+After the feature push, remote main remained `4256b0e4f37ade8534e64d53f5bbb1e8f92a37fa` and public production release remained `4cca063d3252`. The user answered the feasibility question: an empty slot is not permitted; a replacement is required. No measurement or change was requested. The proposed one-item diagnostic is retired for this user. Full controlled evidence remains absent. The previously supplied Attack-versus-Critical-Rate comparison is still blocked; this checkpoint does not claim it has become calculable.
