@@ -1,5 +1,7 @@
 # Damage model independent QA
 
+2026-10-24 minimum-input checkpoint: MINIMUM_INPUT_QA.md records25 separately authored tests of the new symbolic and effective-source scenario paths; full integrated suite303 passed. This adds conditional admitted ordinary choices without enabling full named content, critical normalization or live-game validity. Historical partial-stage audit below is retained.
+
 2026-10-22. Feature-branch review after the verified visual release `b827d72`. QA Breaker ownership: this report and `tests/damage-invariants.test.mjs` only. The audit/phase transition lessons, data contract, existing model QA, mechanics/source register and recovered planning were read before review. Production and OCR are outside this work.
 
 ## Evidence boundary

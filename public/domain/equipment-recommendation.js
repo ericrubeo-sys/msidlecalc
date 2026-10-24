@@ -12,6 +12,8 @@ const assumptionNames={
   onlyListedEffects:'The replacement changes only the listed effects; no extra set, passive or triggered bonus changes.',
   ordinaryLandedHits:'Compare the same damage-dealing successful ordinary Attack-based hits, with unchanged buffs and attack behavior. Excludes DPS, survival, resources and misses.',
   attackMainOptions:'Both single Attack values are the main/base option in the upper stat section, not extra options.',
+  nonnegativeBackground:'No stat-reducing effects affect the compared Attack or damage bonuses; unchanged contributions are nonnegative.',
+  subOptionsSameStage:'The percentage bonuses are item sub-options in the lower section on both panels, at the same equipment-slot stage.',
 };
 // Decimal comparison uses integer arithmetic. No conversion of item differences
 // into final character totals, approximate weights or hidden damage scores.

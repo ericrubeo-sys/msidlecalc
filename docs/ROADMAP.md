@@ -1,5 +1,15 @@
 # Roadmap
 
+## Minimum-input path — 2026-10-24
+
+- [x] Fresh official amplification/taxonomy/critical-threshold research, distinct mathematics and independent QA.
+- [x] Exact shared-sub-option whole-product proof; automatic Basic/Skill and activity evaluation; no mandatory character number, job/level or activity selector.
+- [x] Optional consumed bonus-total scenarios with preserved entries; no source-law or rounded-exact certification.
+- [x]303 software checks including25 independent new groups; actual browser proof, retained advanced values and scenario isolation.
+- [x] Replace infeasible matched pair with optional one-owned-item diagnostic and explicit confounding/identifiability limits.
+- [ ] Controlled game observations; source-display mapping/precision, effective critical laws and complete named-activity profiles.
+- [ ] User review and explicit approval before numerical production release.
+
 ## Actual recommendation feature — 2026-10-24
 
 - [x] Reconcile prior research with distinct mechanics, UX and independent QA specialists.

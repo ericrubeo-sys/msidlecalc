@@ -1,5 +1,14 @@
 # Decisions and open questions
 
+## Minimum-input path — 2026-10-24
+
+- Derive character questions from an implemented dependency; no character number, job, level or activity selection is universally required. Automatic Basic/Skill branches must agree before an aggregate ordinary preference is presented.
+- Extend complete admitted recommendations by exact shared-sub-option polynomial proof, tolerating unknown common amplification. Main Attack remains independent. Fresh official slot/Sub-option taxonomy supports the bounded inference; conditional no-negative-background and observable source-position review are consumed.
+- Keep optional current-total ranges in one Advanced calculation disclosure, preserve entries, and label them sensitivity scenarios. Effective-source arithmetic cannot silently certify cropped values or turn rounded display strings into exact totals. Missing mechanics do not become player questions.
+- Separate item confirmation supplies visible-list completeness, removing its duplicate checkbox. Every named unsupported activity says No reliable preference; no Low-confidence invented winner.
+- Supersede matched-pair collection with an optional one-owned-item equipped→empty→re-equipped diagnostic, subject to slot/buff confounds. Infeasible or confounded means stop collecting that trial, not buy or manufacture a pair.
+- Keep numerical changes feature-only until explicit production approval. Full scope, evidence and limits: MINIMUM_INPUT_PREVIEW.md.
+
 ## Current execution authority — 2026-10-22
 
 **Automatic intake recovery — 2026-10-24:** user directs fixing initial upload routing, not just successful manual reread. Add a bounded second local OCR opportunity after whole-image attempts fail; proceed only on independently read headings/stat geometry for both areas. Coordinates alone, ambiguous layouts and clipped evidence cannot bypass fallback. Accepted drafts still require item/value review. See `INITIAL_INTAKE_RECOVERY.md`; standing live-test production authorization applies.

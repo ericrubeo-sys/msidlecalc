@@ -1,5 +1,7 @@
 # Encoded mechanics and replacement contract
 
+2026-10-24 reconciliation: `minimum-input.js` adds a source-guarded shared-Sub amplification certificate; no guessed character baselines or display-rounding bounds. Fresh September3 Equipment Details explicitly identifies fixed FD and damage/critical lower options as Sub Options, with one Sub amplification per slot stage; source-display pre/post-amplification remains unresolved. Distinct Main response and common nonnegative scenario gates are retained. The effective-source rational-enclosure API is exercised separately as a technical scenario, not adopted as an uploaded-item source law. Automatic branch agreement and all activity abstentions, exact limits and remaining critical/source gaps: `docs/MINIMUM_INPUT_PREVIEW.md`. No empirical prediction claim.
+
 2026-10-22; feature branch only. MapleStory : Idle RPG. This records publication evidence, implemented operations and their limits separately. No controlled live-game validation has occurred. No named encounter profile, sustained-DPS model or complete item winner is established by source replacement.
 
 ## Evidence chain

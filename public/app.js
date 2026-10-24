@@ -11,7 +11,8 @@ import { groupReviewRows } from './domain/ocr-review-groups.js';
 import { parseReviewRecords, adoptReviewRecords } from './domain/inline-review.js';
 import { RELEASE_ID } from './release.js';
 import { importScreenshotProposals, editScreenshotRecord } from './domain/screenshot-review.js';
-import { recommendEquipment, RECOMMENDATION_ASSUMPTIONS } from './domain/equipment-recommendation.js';
+import { RECOMMENDATION_ASSUMPTIONS } from './domain/equipment-recommendation.js';
+import { recommendMinimumInput, recommendAllActivities } from './domain/minimum-input.js';
 
 const $ = (selector) => document.querySelector(selector);
 let nextId = 0;
@@ -26,31 +27,62 @@ let readOnDecode = false;
 let editorImageRevision = null, editorEdited = false;
 let markedRegions = [null, null], cropEditor = null;
 let requiredQuestions=[];
+const bucketTotals={};
 
 function comparisonPayload(assumptions) {
   return {current:records.current,candidate:records.candidate,imageRevision,inputRevision:revision,
-    confirmations:{...confirmedItems},assumptions,attackType:$('#attack-type').value || null};
+    confirmations:{...confirmedItems},assumptions,bucketTotals};
 }
 function enteredAssumptions() {
-  return Object.fromEntries(Object.keys(RECOMMENDATION_ASSUMPTIONS).map(name=>[name,$(`#scope-${name}`).checked]));
+  return {...Object.fromEntries(Object.keys(RECOMMENDATION_ASSUMPTIONS).map(name=>[name,$(`#scope-${name}`).checked])),completeVisibleStats:confirmedItems.current && confirmedItems.candidate};
 }
 function refreshRecommendationInputs() {
   const complete=confirmedItems.current && confirmedItems.candidate;
   $('#essential-inputs').hidden=!complete;
   if(!complete) { requiredQuestions=[]; $('#recommend').disabled=true; return; }
   const supplied=Object.fromEntries(Object.keys(RECOMMENDATION_ASSUMPTIONS).map(name=>[name,true]));
-  const probes=['ordinary-normal','ordinary-boss'].flatMap(contextId=>['basic','skill'].map(attackType=>recommendEquipment({...comparisonPayload(supplied),contextId,attackType})));
-  const canEvaluate=probes.some(result=>result.status!=='unavailable');
+  const payload=comparisonPayload(supplied);
+  const probes=recommendAllActivities(payload).slice(0,2).flatMap(result=>result.branches);
+  const canEvaluate=probes.some(result=>result.status!=='unavailable' && !result.unsupportedMechanics.length);
   const hasAttack=Object.values(records).some(lines=>lines.some(record=>fieldForRecord(record)?.label==='Attack'));
-  requiredQuestions=canEvaluate?['onEquipSameSlot','completeVisibleStats','onlyListedEffects','ordinaryLandedHits',...(hasAttack?['attackMainOptions']:[])]:[];
+  requiredQuestions=canEvaluate?['onEquipSameSlot','onlyListedEffects','ordinaryLandedHits',...(hasAttack?['attackMainOptions']:[]),...(probes.some(result=>result.needsNonnegativeBackground)?['nonnegativeBackground']:[]),...(probes.some(result=>result.needsSubOptionsSameStage)?['subOptionsSameStage']:[])]:[];
   $('#scope-questions').hidden=!canEvaluate;
   $('#attack-source-question').hidden=!requiredQuestions.includes('attackMainOptions');
-  $('#attack-type-question').hidden=!canEvaluate || !probes.some(result=>result.needsAttackType);
-  $('#eligibility-note').textContent=canEvaluate?'No character totals are needed for this directional test.':`Not supported yet: ${probes[0].unsupportedMechanics[0]?.detail ?? probes[0].missingInputs[0]?.detail ?? 'These item effects need a verified model.'} Extra character numbers cannot resolve this rule gap yet.`;
+  $('#background-question').hidden=!requiredQuestions.includes('nonnegativeBackground');
+  $('#sub-options-question').hidden=!requiredQuestions.includes('subOptionsSameStage');
+  $('#eligibility-note').textContent=canEvaluate?'No character numbers are required for this comparison. Basic and skill hits are checked automatically.':`No reliable preference yet: ${probes[0].unsupportedMechanics[0]?.detail ?? probes[0].missingInputs[0]?.detail ?? 'These item effects need a verified model.'}`;
+  const fields=new Map();
+  for(const contextId of ['ordinary-normal','ordinary-boss']) for(const attackType of ['basic','skill']) {
+    const scenario=recommendMinimumInput({...payload,bucketTotals:{},contextId,attackType,sourceContract:'effective-bonus-sources'});
+    if(scenario.unsupportedMechanics.some(entry=>!['overlappingPreferenceBounds'].includes(entry.code))) continue;
+    for(const field of scenario.precisionOpportunities??[]) fields.set(field.id,field);
+  }
+  renderPrecisionFields([...fields.values()]);
   const missing=requiredQuestions.filter(name=>!$(`#scope-${name}`).checked);
-  if(!$('#attack-type-question').hidden && !$('#attack-type').value) missing.push('attackType');
   $('#recommend').disabled=missing.length>0;
   $('#comparison-form>.result-limit').textContent=missing.length?'Review the comparison conditions to continue.':canEvaluate?'Ready for a conditional ordinary-hit recommendation.':'See supported scope and remaining blockers.';
+}
+
+function renderPrecisionFields(fields) {
+  const container=$('#precision-fields');
+  const signature=fields.map(field=>field.id).join('|');
+  $('#precision-inputs').hidden=!fields.length;
+  if(container.dataset.fields===signature) return;
+  container.dataset.fields=signature;container.replaceChildren();
+  for(const field of fields) {
+    const group=element('fieldset');group.append(element('legend',`Current ${field.label} (%)`));
+    for(const [bound,title] of [['lower','Minimum'],['upper','Maximum']]) {
+      const label=element('label',`${title} (%)`),input=element('input');
+      input.type='text';input.inputMode='decimal';input.value=bucketTotals[field.id]?.[bound]??'';
+      input.setAttribute('aria-label',`Current ${field.label}, ${title.toLowerCase()}, percent`);
+      input.addEventListener('input',()=>{
+        bucketTotals[field.id]??={lower:'',upper:''};bucketTotals[field.id][bound]=input.value;
+        revision++;$('#results').hidden=true;
+      });
+      label.append(input);group.append(label);
+    }
+    container.append(group);
+  }
 }
 
 function element(tag, text, className) {
@@ -179,40 +211,50 @@ $('.intake').append($('#results'));
 for(const name of Object.keys(RECOMMENDATION_ASSUMPTIONS)) $(`#scope-${name}`).addEventListener('change',()=>{
   revision++; $('#results').hidden=true; refreshRecommendationInputs();
 });
-$('#attack-type').addEventListener('change',()=>{ revision++; $('#results').hidden=true; refreshRecommendationInputs(); });
 $('#comparison-form').addEventListener('submit', async event => {
   event.preventDefault();
   if(!confirmedItems.current || !confirmedItems.candidate) return;
   const firstMissing=requiredQuestions.find(name=>!$(`#scope-${name}`).checked);
   if(firstMissing) { $(`#scope-${firstMissing}`).focus(); return; }
-  if(!$('#attack-type-question').hidden && !$('#attack-type').value) { $('#attack-type').focus(); return; }
   const inputRevision=revision;
   $('.intake').dataset.screen='calculating'; $('#calculation-screen').hidden=false;
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   if(inputRevision!==revision) { $('#calculation-screen').hidden=true; setReadingBusy(false); return; }
   const body=$('#result-rows'); body.replaceChildren();
-  const results=['ordinary-normal','ordinary-boss'].map(contextId=>recommendEquipment({...comparisonPayload(enteredAssumptions()),contextId}));
-  const hitLabel=results.some(result=>result.needsAttackType) && $('#attack-type').value ? $('#attack-type').value==='basic'?'basic hits':'skill hits':'ordinary hits';
-  for(const result of results) {
+  const payload=comparisonPayload(enteredAssumptions());
+  const activities=recommendAllActivities(payload),results=activities.slice(0,2);
+  for(const result of activities) {
     const row=element('article',undefined,'recommendation-row');
-    const choice=result.recommendation==='current'?'Current equip (left)':result.recommendation==='candidate'?'New equip (right)':result.status==='noReliablePreference'?'No reliable preference':'Unable to recommend';
-    row.append(element('h3',`${result.contextId==='ordinary-normal'?'Normal monsters':'Boss monsters'} · ${hitLabel}`),element('strong',choice),element('span',`Confidence: ${result.confidence}`)); body.append(row);
+    const choice=result.recommendation==='current'?'Current equip (left)':result.recommendation==='candidate'?'New equip (right)':'No reliable preference';
+    row.append(element('h3',result.label),element('strong',choice),element('span',`Confidence: ${result.confidence}`)); body.append(row);
   }
-  const unavailable=element('article',undefined,'recommendation-row'); unavailable.append(element('h3','Named battles & PvP'),element('strong','Unable to recommend'),element('span','Confidence: Low')); body.append(unavailable);
   const explanation=$('#recommendation-explanation'); explanation.replaceChildren();
   explanation.append(element('p',results[0].objective),element('p',results[0].uncertainty));
   if(Object.values(records).some(lines=>lines.some(record=>fieldForRecord(record)?.label==='Attack'))) explanation.append(element('p',results[0].inference));
   for(const result of results) {
     explanation.append(element('h3',result.contextId==='ordinary-normal'?'Normal monsters':'Boss monsters'));
+    explanation.append(element('p',result.attackAgreement));
+    for(const branch of result.branches) if(branch.proof) explanation.append(element('p',branch.proof),element('p',branch.sourceInference));
     for(const [title,issues] of [['Missing information',result.missingInputs],['Unresolved mechanics',result.unsupportedMechanics],['Common effects',result.cancelled],['Outside this objective',result.outsideScope]]) {
       if(!issues.length) continue;
       explanation.append(element('h4',title)); const list=element('ul'); for(const entry of issues) list.append(element('li',entry.detail)); explanation.append(list);
     }
   }
+  if(Object.values(bucketTotals).some(bounds=>String(bounds.lower).trim() || String(bounds.upper).trim())) {
+    explanation.append(element('h3','Advanced sensitivity scenario'),element('p','Hypothetical effective bonus-source values and your current-total ranges, assuming same-slot ordinary hits, complete sources, nonnegative contributions and no other changed effects. Source display mapping and rounding are not verified. These scenario choices do not change the recommendations above.'));
+    for(const scenario of recommendAllActivities({...payload,assumptions:Object.fromEntries(Object.keys(RECOMMENDATION_ASSUMPTIONS).map(name=>[name,true])),sourceContract:'effective-bonus-sources'}).slice(0,2)) {
+      const choice=scenario.recommendation==='current'?'Current equip':scenario.recommendation==='candidate'?'New equip':'No reliable preference';
+      explanation.append(element('p',`${scenario.label}: ${choice} under the stated scenario only.`));
+      for(const entry of scenario.missingInputs) explanation.append(element('p',entry.detail));
+    }
+  }
   explanation.append(element('h3','Conditions used'));
   for(const [name,value] of Object.entries(enteredAssumptions())) if(value) explanation.append(element('p',RECOMMENDATION_ASSUMPTIONS[name]));
   explanation.append(element('p',`Not implemented: ${recommendationContexts().map(entry=>entry.context).join('; ')}. The ordinary result is before their adjustments and exceptions.`));
-  const source=element('a','Official mechanics guide'); source.href=results[0].source; source.target='_blank'; source.rel='noopener noreferrer'; explanation.append(source,element('p',`Model: ${results[0].versions.model}. Data: ${results[0].versions.data}. Input revision: ${revision}. No controlled live-game validation.`));
+  for(const reference of results.flatMap(result=>result.branches).find(result=>result.sourceReferences)?.sourceReferences??[]) {
+    const link=element('a',reference.title);link.href=reference.url;link.target='_blank';link.rel='noopener noreferrer';explanation.append(link);
+  }
+  const source=element('a','Official mechanics guide'); source.href=results[0].source; source.target='_blank'; source.rel='noopener noreferrer'; explanation.append(source,element('p',`Model: ${results[0].versions.minimumInputs}. Data: ${results[0].versions.data}. Input revision: ${revision}. No controlled live-game validation.`));
   $('#recommendation-details').open=false;
   $('#calculation-screen').hidden=true; $('.intake').dataset.screen='results';
   $('#results').hidden=false; $('#stale-result').hidden=true; $('#results').focus();

@@ -45,13 +45,19 @@
               <p id="essential-scope">Ordinary landed-hit damage only. No DPS, survival or named battle prediction.</p>
               <p id="eligibility-note" role="status"></p>
               <div id="scope-questions">
-                <label id="attack-type-question" hidden>Attacks being compared<select id="attack-type"><option value="">Choose attack type</option><option value="basic">Basic Attacks</option><option value="skill">Skills</option></select></label>
                 <label class="confirmation"><input type="checkbox" id="scope-onEquipSameSlot"> Same equipment slot and preset; these are the items’ On-Equip Effects, not character totals.</label>
-                <label class="confirmation"><input type="checkbox" id="scope-completeVisibleStats"> Every visible stat line is included above; leftover OCR fragments are background.</label>
+                <input type="checkbox" id="scope-completeVisibleStats" hidden>
                 <label class="confirmation"><input type="checkbox" id="scope-onlyListedEffects"> Only the listed effects change. No extra set, passive or triggered bonuses change.</label>
                 <label class="confirmation"><input type="checkbox" id="scope-ordinaryLandedHits"> Compare the same damage-dealing ordinary hits and buffs. Ignore misses, survival, MP limits and attack timing.</label>
                 <label class="confirmation" id="attack-source-question" hidden><input type="checkbox" id="scope-attackMainOptions"> Both Attack values are in the upper main/base-stat section, not extra options.</label>
+                <label class="confirmation" id="background-question" hidden><input type="checkbox" id="scope-nonnegativeBackground"> No stat-reducing effects affect the compared Attack or damage bonuses.</label>
+                <label class="confirmation" id="sub-options-question" hidden><input type="checkbox" id="scope-subOptionsSameStage"> The percentage bonuses are item sub-options in the lower section on both panels.</label>
               </div>
+              <details id="precision-inputs" hidden><summary>Advanced calculation</summary>
+                <p>Optional current equipped totals. Enter a known minimum and maximum in %. No complete stat sheet, job or level is needed. Values stay here when you edit items.</p>
+                <p>These are sensitivity scenarios while source scaling and display rounding remain unresolved. They cannot override an unsupported mechanic or change the main recommendation.</p>
+                <div id="precision-fields"></div>
+              </details>
             </section>
             <button class="primary" id="recommend" type="submit" disabled>Calculate recommendation</button>
             <p class="result-limit">Confirm both items to continue.</p>

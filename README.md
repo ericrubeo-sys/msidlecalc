@@ -6,6 +6,8 @@ This workspace is connected to `ericrubeo-sys/msidlecalc`. Planning materials we
 
 ## Start here
 
+Latest feature work: [minimum-input recommendations](docs/MINIMUM_INPUT_PREVIEW.md), with no universally required numeric character stat, automatic activity/attack branches, exact shared-amplification proofs and optional sensitivity inputs.303 software checks pass; live-game validation and full activity models remain open. Production unchanged.
+
 [Numerical feature review preview](https://msidlecalc-git-feature-source-linked-d30e05-erics-trade-binder.vercel.app/) requires Vercel sign-in. Production is unchanged. [Scope and verification](docs/RECOMMENDATION_PREVIEW.md).
 
 - [Project brief](docs/PROJECT_BRIEF.md): the product goal, constraints, and first-release scope.

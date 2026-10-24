@@ -1,5 +1,7 @@
 # Source-linked calculation feature preview
 
+**Latest minimum-input checkpoint:** exact shared-sub-option polynomial proofs can settle some mixed tradeoffs without character numbers. Basic/Skill and activities evaluate automatically. Advanced contains only relevant bonus-total sensitivity ranges, with retained entries and no fabricated rounding/source guarantee.303 software checks pass;25 new groups independently authored. See MINIMUM_INPUT_PREVIEW.md for supported scope, experiment, evidence and remaining blockers. Production unchanged.
+
 ## New actual recommendation layer — feature only
 
 [Review deployment](https://msidlecalc-git-feature-source-linked-d30e05-erics-trade-binder.vercel.app/) requires Vercel sign-in. CI and deployment passed; local browser paths were exercised. Production remains unchanged. Access limitations and evidence are recorded in `RECOMMENDATION_PREVIEW.md`.
