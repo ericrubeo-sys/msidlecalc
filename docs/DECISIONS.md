@@ -2,6 +2,8 @@
 
 ## Current execution authority — 2026-10-22
 
+**Automatic intake recovery — 2026-10-24:** user directs fixing initial upload routing, not just successful manual reread. Add a bounded second local OCR opportunity after whole-image attempts fail; proceed only on independently read headings/stat geometry for both areas. Coordinates alone, ambiguous layouts and clipped evidence cannot bypass fallback. Accepted drafts still require item/value review. See `INITIAL_INTAKE_RECOVERY.md`; standing live-test production authorization applies.
+
 **Reading cleanup — 2026-10-23:** user requests the remaining fix after a successful stat-reading test. Separate unresolved preview observations in a counted disclosure while preserving all correction records; keep recognized-but-incomplete stats prominent. Replace sticky action occlusion with reserved control space and short-screen scrolling. Distinct UX/QA review supports the change. Automatic detection remains unresolved; no guessed anchors added. See `REVIEW_CLEANUP.md`. Standing live-test release authorization applies.
 
 **Second-panel recognition follow-up — 2026-10-23:** the latest captures include the full region but show merged base/delta text and border artifacts. Implement original-pixel glyph evidence, lossless border classification and conservative fallback, without borrowing equipped-item labels or halving repeated strings. Independent QA found and verified a fallback safety fix. A heading-color localization experiment recovered no additional panels and was rejected. Standing user instruction authorizes publishing a ready follow-up for live testing. See `SECOND_PANEL_FIX.md` for exact development counts and remaining limits.

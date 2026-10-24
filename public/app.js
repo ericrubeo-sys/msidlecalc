@@ -273,7 +273,7 @@ function showReading(reading) {
   drawImageReference();
   $('#panel-previews').replaceChildren();
   $('#whole-reading').textContent = reading.raw.text;
-  $('#draft-description').textContent = 'Left: currently equipped. Right: potential new equip. Check the item values next.';
+  $('#draft-description').textContent = 'Left: currently equipped. Right: potential new equip. Check both item areas and values below.';
   panels.forEach((panel, index) => {
     const card = element('article', undefined, 'item-card panel-preview');
     const role = layout.status === 'assigned' ? (panel.id === layout.assignment.current ? 'Currently equipped · left' : 'Potential new equip · right') : `Area ${index + 1}`;

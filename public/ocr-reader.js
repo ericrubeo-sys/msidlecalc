@@ -1,7 +1,9 @@
 import { detectComparisonPanels, PANEL_DETECTION_VERSION } from './domain/panel-detection.js';
 import { assessCropCoverage, CROP_COVERAGE_VERSION } from './domain/crop-coverage.js';
 import { annotateFieldEvidence, OCR_FIELD_EVIDENCE_VERSION } from './domain/ocr-field-evidence.js';
-export const OCR_READER_VERSION = 'browser-reader-4';
+import { assignComparisonLayout } from './domain/comparison-layout.js';
+import { createLocalPanelHypotheses, assessLocalPanelRecovery, LOCAL_PANEL_RECOVERY_VERSION } from './domain/local-panel-recovery.js';
+export const OCR_READER_VERSION = 'browser-reader-5';
 let libraryPromise = null;
 function loadLocalLibrary() {
   if (!libraryPromise) libraryPromise = new Promise((resolve, reject) => {
@@ -68,8 +70,8 @@ export function createComparisonReader({ loadTesseract = loadLocalLibrary, creat
       const raw = { text: typeof whole.data.text === 'string' ? whole.data.text : '', blocks: structuredClone(whole.data.blocks ?? null), scale, dimensions: [width, height], psm: 11 };
       let detection = detectComparisonPanels({ blocks: raw.blocks, width, height, scale });
       let detectionPsm = 11;
-      const detectionObservations = [{ psm: 11, raw: structuredClone(raw), panelCount: detection.panels.length }];
-      if (reviewed === null && detection.panels.length < 2) {
+      const detectionObservations = [{ psm: 11, raw: structuredClone(raw), panelCount: detection.panels.length, issues:structuredClone(detection.issues) }];
+      if (reviewed === null && assignComparisonLayout(detection.panels).status !== 'assigned') {
         // One bounded alternative segmentation of the same untouched image.
         // Select a complete two-panel attempt, never combine conflicting boxes
         // or select values by apparent plausibility/engine confidence.
@@ -77,12 +79,13 @@ export function createComparisonReader({ loadTesseract = loadLocalLibrary, creat
         const alternative = await recognizeRegion({ x: 0, y: 0, width, height }, scale); check();
         const alternateRaw = { text: typeof alternative.data.text === 'string' ? alternative.data.text : '', blocks: structuredClone(alternative.data.blocks ?? null), scale, dimensions: [width, height], psm: 3 };
         const alternateDetection = detectComparisonPanels({ blocks: alternateRaw.blocks, width, height, scale });
-        detectionObservations.push({ psm: 3, raw: alternateRaw, panelCount: alternateDetection.panels.length });
-        if (alternateDetection.panels.length === 2) { detection = alternateDetection; detectionPsm = 3; }
+        detectionObservations.push({ psm: 3, raw: alternateRaw, panelCount: alternateDetection.panels.length, issues:structuredClone(alternateDetection.issues) });
+        if (assignComparisonLayout(alternateDetection.panels).status === 'assigned') { detection = alternateDetection; detectionPsm = 3; }
       }
       const proposals = reviewed ?? detection.panels;
-      const proposedPanels = [];
       await pending(worker.setParameters({ tessedit_pageseg_mode: '6' })); check();
+      async function readPanels(proposals, source) {
+      const proposedPanels = [];
       for (const proposal of proposals) {
         check(); onProgress({ stage: 'readingPanel', panelId: proposal.id });
         const region = proposal.region;
@@ -91,13 +94,28 @@ export function createComparisonReader({ loadTesseract = loadLocalLibrary, creat
         const blocks = structuredClone(result.data.blocks ?? null);
         const structuredLines = (result.fieldBlocks ?? blocks ?? []).flatMap(block => (block.paragraphs ?? []).flatMap(paragraph => paragraph.lines ?? []));
         const lines = text.split(/\r\n|\r|\n/).map((rawText, ordinal) => ({ id: `${proposal.id}:line-${ordinal}`, ordinal, rawText, label: null, value: null, unit: null, statId: null, confirmed: false,
-          provenance: { kind: 'ocr', inputRevision, panelId: proposal.id, region: structuredClone(region), scale, segmentationIdentity: JSON.stringify({ region, scale, psm: 6, detectionPsm: reviewed ? null : detectionPsm, detectionVersion: PANEL_DETECTION_VERSION, fieldEvidenceVersion: OCR_FIELD_EVIDENCE_VERSION, version: OCR_READER_VERSION }) } }));
+          provenance: { kind: 'ocr', inputRevision, panelId: proposal.id, region: structuredClone(region), scale, areaSource: source, segmentationIdentity: JSON.stringify({ region, scale, psm: 6, detectionPsm: source === 'whole-image-headings' ? detectionPsm : null, detectionVersion: PANEL_DETECTION_VERSION, localRecoveryVersion: source === 'local-layout-hypothesis' ? LOCAL_PANEL_RECOVERY_VERSION : null, fieldEvidenceVersion: OCR_FIELD_EVIDENCE_VERSION, version: OCR_READER_VERSION }) } }));
         const coverageIssues = assessCropCoverage({ blocks: raw.blocks, width, height, scale, region });
         proposedPanels.push({ ...structuredClone(proposal), role: null, requiresReview: true, fieldEvidenceVersion: OCR_FIELD_EVIDENCE_VERSION, coverageIssues, coverageProvenance: { version: CROP_COVERAGE_VERSION, observation: 'initialWholeImage', psm: raw.psm, scale, region: structuredClone(region), advisoryOnly: true }, rawText: text, blocks, structuredLines, lines, confidence: Number.isFinite(result.data.confidence) ? result.data.confidence : null });
       }
+      return proposedPanels;
+      }
+      let detectionSource = reviewed ? 'reviewed-regions' : 'whole-image-headings';
+      let proposedPanels = await readPanels(proposals, detectionSource);
+      let recoveryAttempt = null;
+      if (reviewed === null && assignComparisonLayout(proposedPanels).status !== 'assigned' && detectionObservations.every(attempt=>attempt.panelCount <= 2 && !attempt.issues.includes('tooManyHeadingAnchors'))) {
+        const hypotheses = createLocalPanelHypotheses({width,height});
+        if (hypotheses.length) {
+          check(); onProgress({stage:'checkingLocalAreas'});
+          const localPanels = await readPanels(hypotheses,'local-layout-hypothesis'); check();
+          const evidence = assessLocalPanelRecovery({panels:localPanels,width,height,scale});
+          recoveryAttempt = {status:evidence.eligible ? 'accepted' : 'rejected',evidence,proposedPanels:localPanels};
+          if (evidence.eligible) { proposedPanels = localPanels; detectionSource = 'local-layout-hypothesis'; }
+        }
+      }
       check();
-      return { version: OCR_READER_VERSION, inputRevision, raw, detectionObservations, proposedPanels, issues: reviewed ? ['reviewedRegionsStillRequireRoleAndLineConfirmation'] : detection.issues,
-        settings: { tesseract: '7.0.0', core: '7.0.0', languagePackage: '1.0.0', languageVariant: '4.0.0_best_int', language: 'eng', scale, smoothing: false, detectionPsm: reviewed ? null : detectionPsm, detectionVersion: PANEL_DETECTION_VERSION, cacheMethod: 'none', workerBlobURL: false, resourceOrigin: origin } };
+      return { version: OCR_READER_VERSION, inputRevision, raw, detectionObservations, proposedPanels, recoveryAttempt, route:assignComparisonLayout(proposedPanels).status === 'assigned' ? 'itemReview' : 'needsAreas', issues: recoveryAttempt?.status === 'accepted' ? ['localAreasAndValuesRequireReview'] : reviewed ? ['reviewedRegionsStillRequireRoleAndLineConfirmation'] : detection.issues,
+        settings: { tesseract: '7.0.0', core: '7.0.0', languagePackage: '1.0.0', languageVariant: '4.0.0_best_int', language: 'eng', scale, smoothing: false, detectionSource, detectionPsm: detectionSource === 'whole-image-headings' ? detectionPsm : null, detectionVersion: PANEL_DETECTION_VERSION, localRecoveryVersion: LOCAL_PANEL_RECOVERY_VERSION, cacheMethod: 'none', workerBlobURL: false, resourceOrigin: origin } };
     } catch (error) {
       if (error?.name === 'AbortError' || canceled || signal?.aborted || !isCurrent()) throw abortError();
       // Dependency errors can contain player data; expose only a fixed code.
