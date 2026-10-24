@@ -52,6 +52,11 @@ test('a tall bridging box cannot merge two numeric rows into a proposed value', 
   const result = proposePanelRows(panel([line(word('Attack', 0, 10, 35, 20)), line(word('45', 200, 10, 35, 14)), line(word('9', 200, 16, 35, 14))]));
   assert.ok(result.rows.every(row => row.proposedFields.rawValue === ''));
 });
+
+test('normal descender-height variation can associate a label and shorter numeric box', () => {
+  const result = proposePanelRows(panel([line(word('Unknown',0,4,100,52),word('47',200,11,40,33))]));
+  assert.equal(result.rows.length,1); assert.equal(result.rows[0].proposedFields.rawValue,'47');
+});
 test('overlapping horizontal boxes are ambiguous and all words remain evidence', () => {
   const result = proposePanelRows(panel([line(word('Attack', 0, 10, 100), word('45', 90, 10))]));
   assert.equal(result.rows[0].proposedFields.rawValue, '');

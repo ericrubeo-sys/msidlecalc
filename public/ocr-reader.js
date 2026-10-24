@@ -1,6 +1,7 @@
 import { detectComparisonPanels, PANEL_DETECTION_VERSION } from './domain/panel-detection.js';
 import { assessCropCoverage, CROP_COVERAGE_VERSION } from './domain/crop-coverage.js';
-export const OCR_READER_VERSION = 'browser-reader-3';
+import { annotateFieldEvidence, OCR_FIELD_EVIDENCE_VERSION } from './domain/ocr-field-evidence.js';
+export const OCR_READER_VERSION = 'browser-reader-4';
 let libraryPromise = null;
 function loadLocalLibrary() {
   if (!libraryPromise) libraryPromise = new Promise((resolve, reject) => {
@@ -39,9 +40,16 @@ export function createComparisonReader({ loadTesseract = loadLocalLibrary, creat
       context.drawImage(image, region.x, region.y, region.width, region.height, 0, 0, canvas.width, canvas.height);
       return canvas;
     }
-    async function recognizeRegion(region, scale) {
+    async function recognizeRegion(region, scale, inspectFields = false) {
       const canvas = canvasFor(region, scale);
-      try { return await pending(worker.recognize(canvas, {}, { text: true, blocks: true })); }
+      try {
+        const result = await pending(worker.recognize(canvas, {}, { text: true, blocks: true }));
+        if (inspectFields) {
+          const context = canvas.getContext('2d');
+          result.fieldBlocks = context?.getImageData ? annotateFieldEvidence(result.data.blocks ?? null, context.getImageData(0,0,canvas.width,canvas.height)) : null;
+        }
+        return result;
+      }
       finally { canvas.width = 0; canvas.height = 0; }
     }
     try {
@@ -78,14 +86,14 @@ export function createComparisonReader({ loadTesseract = loadLocalLibrary, creat
       for (const proposal of proposals) {
         check(); onProgress({ stage: 'readingPanel', panelId: proposal.id });
         const region = proposal.region;
-        const result = await recognizeRegion(region, scale); check();
+        const result = await recognizeRegion(region, scale, true); check();
         const text = typeof result.data.text === 'string' ? result.data.text : '';
         const blocks = structuredClone(result.data.blocks ?? null);
-        const structuredLines = (blocks ?? []).flatMap(block => (block.paragraphs ?? []).flatMap(paragraph => paragraph.lines ?? []));
+        const structuredLines = (result.fieldBlocks ?? blocks ?? []).flatMap(block => (block.paragraphs ?? []).flatMap(paragraph => paragraph.lines ?? []));
         const lines = text.split(/\r\n|\r|\n/).map((rawText, ordinal) => ({ id: `${proposal.id}:line-${ordinal}`, ordinal, rawText, label: null, value: null, unit: null, statId: null, confirmed: false,
-          provenance: { kind: 'ocr', inputRevision, panelId: proposal.id, region: structuredClone(region), scale, segmentationIdentity: JSON.stringify({ region, scale, psm: 6, detectionPsm: reviewed ? null : detectionPsm, detectionVersion: PANEL_DETECTION_VERSION, version: OCR_READER_VERSION }) } }));
+          provenance: { kind: 'ocr', inputRevision, panelId: proposal.id, region: structuredClone(region), scale, segmentationIdentity: JSON.stringify({ region, scale, psm: 6, detectionPsm: reviewed ? null : detectionPsm, detectionVersion: PANEL_DETECTION_VERSION, fieldEvidenceVersion: OCR_FIELD_EVIDENCE_VERSION, version: OCR_READER_VERSION }) } }));
         const coverageIssues = assessCropCoverage({ blocks: raw.blocks, width, height, scale, region });
-        proposedPanels.push({ ...structuredClone(proposal), role: null, requiresReview: true, coverageIssues, coverageProvenance: { version: CROP_COVERAGE_VERSION, observation: 'initialWholeImage', psm: raw.psm, scale, region: structuredClone(region), advisoryOnly: true }, rawText: text, blocks, structuredLines, lines, confidence: Number.isFinite(result.data.confidence) ? result.data.confidence : null });
+        proposedPanels.push({ ...structuredClone(proposal), role: null, requiresReview: true, fieldEvidenceVersion: OCR_FIELD_EVIDENCE_VERSION, coverageIssues, coverageProvenance: { version: CROP_COVERAGE_VERSION, observation: 'initialWholeImage', psm: raw.psm, scale, region: structuredClone(region), advisoryOnly: true }, rawText: text, blocks, structuredLines, lines, confidence: Number.isFinite(result.data.confidence) ? result.data.confidence : null });
       }
       check();
       return { version: OCR_READER_VERSION, inputRevision, raw, detectionObservations, proposedPanels, issues: reviewed ? ['reviewedRegionsStillRequireRoleAndLineConfirmation'] : detection.issues,

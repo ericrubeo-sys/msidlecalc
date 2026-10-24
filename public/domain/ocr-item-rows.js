@@ -1,5 +1,5 @@
 // Pure, conservative draft assembly. Coordinates suggest rows, never truth.
-export const OCR_ITEM_ROWS_VERSION = 'item-base-rows-1';
+export const OCR_ITEM_ROWS_VERSION = 'item-base-rows-2';
 const copy = value => structuredClone(value);
 const numericSource = '[+-]?(?:\\d{1,3}(?:,\\d{3})+|\\d+)(?:\\.\\d+)?%?';
 const numeric = new RegExp(`^${numericSource}$`);
@@ -18,15 +18,19 @@ export function proposeRawLineFields(rawText) {
   return fields(match[1], match[2], match[3] ?? null);
 }
 const validBox = box => box && ['x0', 'y0', 'x1', 'y1'].every(key => Number.isFinite(box[key])) && box.x0 >= 0 && box.y0 >= 0 && box.x1 > box.x0 && box.y1 > box.y0;
-const sameRow = (a, b) => Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) >= .65 * Math.max(a.y1 - a.y0, b.y1 - b.y0);
+// Descenders can make a label box taller than its numeric neighbor. Still
+// require mutual overlap for every member, rejecting tall cross-row bridges.
+const sameRow = (a, b) => Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) >= .6 * Math.max(a.y1 - a.y0, b.y1 - b.y0);
 const tokens = text => text.trim().split(/\s+/).filter(Boolean).sort();
 const isHeading = text => text.toLowerCase().replace(/[\s-]+/g, '') === 'onequipeffect';
+const isBorder = text => text.trim().length > 0 && /^[|;:[\](){}_=~—–\\/]+$/.test(text.trim());
 function separateEvidence(rows) {
-  return { rows: rows.filter(row => !isHeading(row.rawText)).map((row, ordinal) => ({ ...row, ordinal })),
-    evidenceRows: rows.filter(row => isHeading(row.rawText)).map(row => ({ ...row, evidenceKind: 'exactOnEquipHeading' })) };
+  return { rows: rows.filter(row => !isHeading(row.rawText) && !isBorder(row.rawText)).map((row, ordinal) => ({ ...row, ordinal })),
+    evidenceRows: rows.filter(row => isHeading(row.rawText) || isBorder(row.rawText)).map(row => ({ ...row, evidenceKind: isHeading(row.rawText) ? 'exactOnEquipHeading' : 'nonLexicalBorderObservation' })) };
 }
 function fallback(panel, reason) {
-  const rows = panel.lines.map((line, ordinal) => ({ ...copy(line), ordinal, proposedFields: proposeRawLineFields(line.rawText),
+  const needsFieldEvidence = Boolean(panel.fieldEvidenceVersion) || panel.structuredLines?.some(line => line.words?.some(word => word.fieldEvidence));
+  const rows = panel.lines.map((line, ordinal) => ({ ...copy(line), ordinal, proposedFields: needsFieldEvidence ? { ...unknown(line.rawText.trim()), issues: ['fieldGeometryUnavailable'] } : proposeRawLineFields(line.rawText),
     provenance: { ...copy(line.provenance ?? {}), panelRawText: typeof panel.rawText === 'string' ? panel.rawText : panel.lines.map(line => line.rawText).join('\n'), originalRawLines: copy(panel.lines) } }));
   return { version: OCR_ITEM_ROWS_VERSION, method: 'rawLines', issues: [reason], ...separateEvidence(rows) };
 }
@@ -45,7 +49,10 @@ export function proposePanelRows(panel) {
   // Geometry must not silently discard characters present in the raw transcript.
   const transcript = typeof panel.rawText === 'string' ? panel.rawText : panel.lines.map(line => line.rawText).join('\n');
   if (JSON.stringify(tokens(transcript)) !== JSON.stringify(tokens(words.map(word => word.text).join(' ')))) return fallback(panel, 'rawWordCoverageMismatch');
-  const remaining = new Set(words.map((_, index) => index)), components = [];
+  // Tall punctuation from the panel border must not bridge separate stat rows.
+  // Retain it as evidence, including original geometry and full transcript.
+  const borderWords = words.filter(word => isBorder(word.text));
+  const remaining = new Set(words.map((_, index) => index).filter(index => !isBorder(words[index].text))), components = [];
   while (remaining.size) {
     const first = remaining.values().next().value, component = [first]; remaining.delete(first);
     for (let cursor = 0; cursor < component.length; cursor++) for (const index of remaining) {
@@ -60,13 +67,24 @@ export function proposePanelRows(panel) {
     // A tall bridging word or overlapping horizontal boxes makes association
     // ambiguous. Retain every observation but propose no numeric field.
     const coherent = sorted.every((word, index) => sorted.every(other => sameRow(word.bbox, other.bbox)) && (!index || sorted[index - 1].bbox.x1 <= word.bbox.x0));
-    const proposedFields = coherent ? proposeRawLineFields(rawText) : { ...unknown(rawText), issues: ['ambiguousRowGeometry'] };
+    const fieldText = sorted.map(word => word.observation.fieldEvidence?.status === 'separated' ? word.observation.fieldEvidence.baseText : word.text).join(' ');
+    let proposedFields = coherent ? proposeRawLineFields(fieldText) : { ...unknown(rawText), issues: ['ambiguousRowGeometry'] };
+    if (proposedFields.rawValue) {
+      const baseWord = sorted.find(word => word.text === proposedFields.rawValue || word.observation.fieldEvidence?.baseText === proposedFields.rawValue);
+      const evidence = baseWord?.observation.fieldEvidence;
+      if (evidence && !['neutralOnly','separated'].includes(evidence.status)) proposedFields = { ...unknown(proposedFields.rawLabel), issues: ['ambiguousBaseComparisonBoundary'] };
+      else if (evidence?.status === 'separated') {
+        if (proposedFields.comparisonText !== null) proposedFields = { ...unknown(proposedFields.rawLabel), issues: ['ambiguousBaseComparisonBoundary'] };
+        else { proposedFields.comparisonText = evidence.comparisonText; proposedFields.issues.push('colorBoundaryNeedsReview'); }
+      }
+    }
     const sourceLineIndices = [...new Set(component.map(word => word.lineIndex))].sort((a, b) => a - b);
     return { id: `${panel.id ?? 'panel'}:row-${ordinal}`, ordinal, rawText, proposedFields,
       provenance: { rowVersion: OCR_ITEM_ROWS_VERSION, method: 'mutualVerticalOverlap', sourceLineIndices,
         originalStructuredLines: sourceLineIndices.map(index => copy(panel.structuredLines[index])), words: copy(sorted),
         panelRawText: transcript, originalRawLines: copy(panel.lines), coordinateSystem: 'unchanged OCR crop pixels' } };
   });
+  for (const word of borderWords) rows.push({ id: `${panel.id ?? 'panel'}:border-${word.id}`, rawText: word.text, proposedFields: unknown(word.text), provenance: { words: [copy(word)], panelRawText: transcript, originalRawLines: copy(panel.lines), originalStructuredLines: [copy(panel.structuredLines[word.lineIndex])] } });
   // Blank observations are also retained; they cannot establish a zero value.
   for (const line of panel.lines.filter(line => !line.rawText.trim())) rows.push({ ...copy(line), ordinal: rows.length, proposedFields: proposeRawLineFields(line.rawText),
     provenance: { ...copy(line.provenance ?? {}), panelRawText: transcript, originalRawLines: copy(panel.lines) } });
