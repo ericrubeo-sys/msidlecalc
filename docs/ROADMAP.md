@@ -3,7 +3,8 @@
 ## Active execution revision — 2026-10-22
 
 - [x] Reproduce second-panel merged base/comparison failure; implement original-pixel glyph evidence and preserve border artifacts outside stat rows. Independent226-test checkpoint; see `SECOND_PANEL_FIX.md`.
-- [ ] Verify second-panel fix deployment/public behavior; user original-image iPhone retest and automatic localization remain open.
+- [x] Verify second-panel fix `5f3b431` production deployment and public build `1723e0d8dad4`.
+- [ ] User original-image iPhone retest; automatic localization and remaining label/punctuation recognition remain open.
 
 - [x] Address iPhone follow-up with cancellable hold controls, scoped touch handling, reviewed-first second seed and clipping advisories; independent212-test checkpoint.
 - [x] Verify follow-up production release `0b2764b`, successful CI/Vercel and public screenshot/crop flow.

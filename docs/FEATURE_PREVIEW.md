@@ -1,5 +1,7 @@
 # Source-linked calculation feature preview
 
+Second-panel field follow-up `5f3b431` is published under the user's standing live-test authorization. It separates pixel-supported base/comparison glyph runs, preserves border observations as evidence and blocks unsafe raw fallback.226 tests pass; see `SECOND_PANEL_FIX.md` and independent `SECOND_PANEL_QA.md`. Localization and full recognition accuracy remain open; numerical recommendation scope is unchanged.
+
 iPhone follow-up released as user-approved `0b2764b`: optional hold controls, scoped gesture handling, better second-area starting geometry, clipping advisories, Potential new equip wording, and inspectable build identity. Production CI/Vercel and public flow passed. Current212-test/UX/QA evidence is in `IPHONE_REVIEW_CHECK.md`; physical Safari behavior is not certified.
 
 Latest published follow-up: user-established left/right roles remove assignment questions; spatial row assembly separates proposed base values from retained game deltas. Explicit complete visible lists permit raw lost/gained-line comparisons while missing OCR remains unknown. User-approved production release is `197640b`; verification and limits: `ITEM_REVIEW_CHECK.md`.
