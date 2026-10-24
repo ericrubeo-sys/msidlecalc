@@ -12,6 +12,8 @@ This register now links recovered prior planning and the 2026-10-22 primary-sour
 
 ## Source register
 
+2026-10-24 bounded UI taxonomy recheck: rendered [official guide](https://maplestoryidle.nexon.com/en/guide), Battle §2.1 and Stat Dictionary (reported update2026-10-15). Confirmed separate Arena/World Arena, Colosseum, Party Quest, Zakum/Horntail Boss/Guild Raid and Guild Training Ground rows; dictionary confirms flat/percent families, skill-level terminology and cooldown seconds versus percentage. Used for context labels and entry syntax only. No new executable battle profile, coefficient, empirical validation or equipment winner is established by this recheck.
+
 | Topic | Source / link | Date and game version | What it supports | Evidence type | Confidence / limitations |
 | --- | --- | --- | --- | --- | --- |
 | Attack and Main Stat scaling | [Nexon guide, Battle §1.1 and Dictionary](https://maplestoryidle.nexon.com/en/guide) | Inspected 2026-10-22; page reports 2026-10-15 update; build unspecified | Aggregate ordering; attributes contribute to Attack and Stat Prop. Damage | Official published definitions | Numeric attribute conversion not established; do not invent it |

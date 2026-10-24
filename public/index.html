@@ -26,6 +26,7 @@
         <p class="availability" id="availability">Experimental screenshot reading stays on this device. Review every extracted line. Equipment recommendations are not available yet.</p>
         <p id="screenshot-status" role="status"></p>
         <section id="reading-screen" aria-label="Reading photo" hidden><span class="reading-spinner" aria-hidden="true"></span><h2 role="status">Reading your photo…</h2><p>Stays on your device.</p><button type="button" id="cancel-reading">Cancel</button></section>
+        <section id="calculation-screen" aria-label="Checking comparison" hidden><span class="reading-spinner" aria-hidden="true"></span><h2 role="status">Checking your items…</h2></section>
         <div id="image-reference" hidden>
           <img id="screenshot-preview" alt="Your selected screenshot reference" hidden>
           <details class="photo-tools"><summary>Photo tools</summary><canvas id="screenshot-canvas" aria-label="Your photo and proposed item areas"></canvas><div class="image-actions"><button type="button" id="adjust-areas">Adjust read areas</button><button type="button" id="read-image">Read again</button><button type="button" id="remove-image">Remove photo</button></div></details>
@@ -38,9 +39,9 @@
           <form id="comparison-form" novalidate>
             <button type="button" id="restore-entries" hidden>Restore previous entries</button><div class="items-grid" id="item-fields"></div>
             <div id="reading-details" hidden><div id="other-readings"></div><pre id="whole-reading"></pre></div>
-            <label class="confirmation"><input type="checkbox" id="visible-lines-complete"> I checked both items against the photo, including every visible stat line.</label>
-            <button class="primary" type="submit">Calculate</button>
-            <p class="result-limit">Compares item values. Full equipment recommendations aren’t ready yet.</p>
+            <input type="checkbox" id="visible-lines-complete" hidden>
+            <button class="primary" id="recommend" type="submit" disabled>Calculate recommendation</button>
+            <p class="result-limit">Confirm both items to continue.</p>
             <p class="form-error" id="form-error" role="alert" hidden></p>
           </form>
           <details id="advanced"><summary>Advanced calculation · supported source effects</summary>
@@ -52,7 +53,7 @@
             <p id="model-error" role="alert" hidden></p>
             <section id="model-results" aria-labelledby="model-title" tabindex="-1" hidden><h2 id="model-title">Calculation scope</h2><p id="model-stale" hidden>Entries changed. Calculate again to update this result.</p><div id="model-effect"></div><div id="context-results"></div><details><summary>Sources, assumptions and model version</summary><div id="model-trace"></div></details></section>
           </details>
-          <section id="results" tabindex="-1" aria-labelledby="result-title" hidden><h2 id="result-title">Entered line comparison</h2><p id="stale-result" hidden>Entries changed. Compare again to update this result.</p><p>Raw differences only. Repeated lines are shown separately in occurrence order; matching does not establish the same mechanical source.</p><div id="result-rows"></div><p><strong>Damage recommendation: unavailable. Confidence: Low.</strong> These differences do not establish an equipment winner. Unknown effects, stacking, baseline totals, skills and battle rules need a supported model.</p></section>
+          <section id="results" tabindex="-1" aria-labelledby="result-title" hidden><h2 id="result-title">Recommendations</h2><p id="stale-result" hidden>Items changed. Calculate again.</p><p class="result-limit">These contexts still need a verified battle model and character inputs.</p><div id="result-rows"></div><button type="button" id="review-again">Back to items</button></section>
         </details>
         <noscript><p>Enable JavaScript for local image selection and manual line comparison. No screenshot is sent to a processing service.</p></noscript>
       </div>

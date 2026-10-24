@@ -1,5 +1,7 @@
 # Roadmap
 
+2026-10-24 compact confirmation follow-up: independently confirm/collapse each item; typed stat selection; checking screen; context-only abstaining results replace raw deltas and OCR fragments. Full context recommendations remain blocked by the documented replacement/profile dependencies. User review should assess confirmation/edit behavior and mobile entry separately from recommendation accuracy.
+
 2026-10-24 update: inline crop-and-field confirmation replaces the separate OCR import/correction workflow. Partial/failed reads must also reach it; highlight missing values and keep area adjustment optional. This is an OCR/editor release, not completion of the calculator. Next recommendation work is dependency eligibility, verified Attack/bucket replacement, critical-event semantics and a supported battle profile; see ESSENTIAL_INPUT_STATUS.md. Character questions must have actual supported consumers.
 
 ## Active execution revision — 2026-10-22

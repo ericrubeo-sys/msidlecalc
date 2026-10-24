@@ -73,6 +73,12 @@ Current 2026-10-22 kickoff and recovered decisions below supersede conflicting o
 
 For new choices, record the date, decision, alternatives considered, evidence, and any conditions that would change the choice.
 
+## 2026-10-24 — Collapse confirmed items and show scoped context results
+
+User requests Confirm current equip / Confirm new equip actions that collapse their crop and fields, retain Edit item, and enable Calculate recommendation after both are valid. Editing one item invalidates that item; image/reread changes reset both. Replace the raw-change transcript with a simple checking state and a compact context list. The existing model has no full-context winner: every current context abstains with Low confidence, rather than turning incomplete arithmetic into a recommendation. This is presentation and eligibility, not release of a new calculation engine.
+
+Freshly rendered official guide Battle §2.1 and Stat Dictionary on2026-10-24 (page updated2026-10-15) verifies the named context distinctions and catalog terminology. Chapter/mobbing is a user-facing umbrella, not a verified identity transform. Stat selection separates flat points and displayed percentages for Attack/Defense/HP/MP/Main Stat; values enforce nonnegative integers, percentages or seconds as selected, with strict grouping and technical range checks. The catalog is not a stacking or applicability model. Unknown OCR labels are retained and require explicit selection or removal, never auto-copied from the opposite item. Unclassified fragments stay session evidence and never become result rows.
+
 ## 2026-10-24 — Hide OCR diagnostics
 
 User requests hiding raw OCR and other-reading dropdowns. Keep their evidence in session, but remove their visible disclosure. If an unclassified observation requires a correction before calculation, surface that editable row in its item card so a hidden field cannot block the user. This changes presentation, not recognition or recommendation scope.

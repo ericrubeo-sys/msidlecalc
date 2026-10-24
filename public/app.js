@@ -1,4 +1,4 @@
-import { compareItemLines } from './domain/item-lines.js';
+import { STAT_FIELDS, fieldForRecord, validateStatValue, recommendationContexts } from './domain/stat-fields.js';
 import { SUPPORT_DESTINATION } from './config.js';
 import { compareSupportedFactors } from './domain/damage-model.js';
 import { replaceFinalDamageSources } from './domain/reaggregation.js';
@@ -18,14 +18,12 @@ let revision = 0;
 let imageUrl = null;
 let imageRevision = 0;
 const records = { current: [], candidate: [] };
+const confirmedItems = {current:false,candidate:false};
 let sourceCanvas = null, stagedReading = null, previousEntries = null;
 let readingController = null, readingRun = 0, readingBusy = false;
 let readOnDecode = false;
 let editorImageRevision = null, editorEdited = false;
 let markedRegions = [null, null], cropEditor = null;
-const units = [['unknown', 'Unknown'], ['statPoint', 'Points'], ['displayPercent', '%'], ['level', 'Levels'], ['factor', 'Multiplier'], ['internalRate', 'Internal rate']];
-const issueMessages = { invalidDecimal: 'Use a number such as 1234, 1,234 or 12.5%.', unitMismatch: 'Use % for a percentage value.', unsupportedMagnitude: 'Value exceeds the supported numerical range.', unsupportedPrecision: 'Use at most 18 decimal places.', integerRequired: 'Skill levels must be whole numbers.' };
-const effectiveRawValue = line => line.correction?.rawValue ?? line.rawValue ?? '';
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -33,12 +31,42 @@ function element(tag, text, className) {
   if (className) node.className = className;
   return node;
 }
-function markStale({ keepCompleteness = false } = {}) {
+function refreshItemConfirmation(side) {
+  const body=$(`#${side}-body`), button=$(`#${side}-confirm`);
+  if (!body || !button) return;
+  body.hidden=confirmedItems[side];
+  button.textContent=confirmedItems[side] ? 'Edit item' : side==='current'?'Confirm current equip':'Confirm new equip';
+  button.setAttribute('aria-expanded',String(!confirmedItems[side]));
+  button.setAttribute('aria-label',`${confirmedItems[side]?'Edit':'Confirm'} ${side==='current'?'current equip':'new equip'}`);
+  $(`#${side}-confirmed`).hidden=!confirmedItems[side];
+  $('#visible-lines-complete').checked=confirmedItems.current && confirmedItems.candidate;
+  $('#recommend').disabled=!$('#visible-lines-complete').checked;
+  $('#comparison-form>.result-limit').textContent=$('#visible-lines-complete').checked?'Items confirmed. Unsupported contexts will be marked unavailable.':'Confirm both items to continue.';
+  $('#draft-description').hidden=$('#visible-lines-complete').checked;
+}
+function markStale({side=null}={}) {
   revision++;
-  if (!keepCompleteness) $('#visible-lines-complete').checked = false;
-  if (!$('#results').hidden) $('#stale-result').hidden = false;
-  if (!$('#model-results').hidden) $('#model-stale').hidden = false;
-  $('#advanced').hidden = !Object.values(records).every(lines=>lines.some(record=>String(record.correction?.rawLabel ?? record.rawLabel).trim().toLowerCase() === 'final damage'));
+  for (const key of side?[side]:['current','candidate']) { confirmedItems[key]=false; refreshItemConfirmation(key); }
+  $('#visible-lines-complete').checked=confirmedItems.current && confirmedItems.candidate;
+  $('#recommend').disabled=!$('#visible-lines-complete').checked;
+  $('#results').hidden=true;
+  $('#advanced').hidden=true;
+  if (!$('#model-results').hidden) $('#model-stale').hidden=false;
+}
+function validateItem(side) {
+  let first=null;
+  const visible=records[side].filter(record=>!record.otherReading);
+  if (!visible.length) { addLine(side); }
+  for (const record of records[side]) {
+    if(record.otherReading) continue; // retained evidence, not a selectable stat
+    const field=fieldForRecord(record), value=record.correction?.rawValue ?? record.rawValue;
+    const validation=validateStatValue(field,value);
+    const error=$(`#${record.id}-error`), input=$(`#${record.id}-${field?'rawValue':'rawLabel'}`);
+    error.hidden=validation.valid;
+    if(!validation.valid) { error.textContent=validation.message; input.setAttribute('aria-invalid','true'); input.classList.add('needs-value'); first??=input; }
+  }
+  if(first) { first.focus(); return false; }
+  return true;
 }
 function addLine(side, initial = null, target = null) {
   const record = initial ?? { id: `${side}-${nextId++}`, rawLabel: '', rawValue: '', unit: 'unknown', provenance: { kind: 'manual' }, confirmed: false };
@@ -49,100 +77,83 @@ function addLine(side, initial = null, target = null) {
   const error = element('p', '', 'field-error'); error.id = `${record.id}-error`; error.hidden = true;
   for (const [field, labelText] of [['rawLabel', 'Stat'], ['rawValue', 'Value']]) {
     const label = element('label', labelText, field === 'rawLabel' ? 'label-field' : 'value-field');
-    const input = element(field === 'rawLabel' ? 'textarea' : 'input'); input.id = `${record.id}-${field}`; label.htmlFor = input.id;
-    if (field === 'rawLabel') input.rows = 2; else input.type = 'text';
+    const input = element(field === 'rawLabel' ? 'select' : 'input'); input.id = `${record.id}-${field}`; label.htmlFor = input.id;
+    if (field === 'rawLabel') {
+      const blank=element('option',(record.correction?.rawLabel ?? record.rawLabel) ? `Choose stat: ${record.correction?.rawLabel ?? record.rawLabel}` : 'Choose stat'); blank.value=''; input.append(blank);
+      for(const definition of STAT_FIELDS) { const option=element('option',definition.title); option.value=definition.id; input.append(option); }
+    } else input.type = 'text';
     input.autocomplete = 'off'; input.maxLength = field === 'rawLabel' ? 200 : 100;
     input.setAttribute('aria-label', `${sideName}, line ${ordinal}, ${labelText.toLowerCase()}`);
     input.setAttribute('aria-describedby', error.id);
-    if (field === 'rawValue') { input.inputMode = 'decimal'; input.placeholder = 'Required'; }
-    input.dataset.field = field; input.value = record.correction?.[field] ?? record[field] ?? '';
+    if (field === 'rawValue') { input.inputMode = fieldForRecord(record)?.kind==='integer'?'numeric':'decimal'; input.placeholder = 'Required'; }
+    input.dataset.field = field; input.value = field === 'rawLabel' ? fieldForRecord(record)?.id ?? '' : record.correction?.[field] ?? record[field] ?? '';
+    if(field==='rawValue') input.placeholder=fieldForRecord(record)?.kind==='percent'?'0.0%':'Required';
     const highlight = () => {
       const missing = !input.value.trim(); input.classList.toggle('needs-value', missing);
       if (missing) input.setAttribute('aria-invalid','true'); else input.removeAttribute('aria-invalid');
     };
     highlight();
-    input.addEventListener('input', () => {
-      if (record.provenance?.kind === 'ocr') Object.assign(record, editScreenshotRecord(record, field, input.value));
-      else record[field] = input.value;
-      {
-        const value = record.correction?.rawValue ?? record.rawValue;
-        const unit = value.trim().endsWith('%') ? 'displayPercent' : 'unknown';
-        if (record.provenance?.kind === 'ocr') Object.assign(record, editScreenshotRecord(record, 'unit', unit)); else record.unit = unit;
-      }
-      editorEdited = true; highlight(); error.hidden = true; markStale();
+    const change = () => {
+      const selected=field==='rawLabel'?STAT_FIELDS.find(entry=>entry.id===input.value):fieldForRecord(record);
+      const value=field==='rawLabel'?selected?.label ?? '':input.value;
+      if (record.provenance?.kind==='ocr') Object.assign(record,editScreenshotRecord(record,field,value)); else record[field]=value;
+      const unit=selected?.unit ?? 'unknown';
+      if(record.provenance?.kind==='ocr') Object.assign(record,editScreenshotRecord(record,'unit',unit)); else record.unit=unit;
+      if(field==='rawLabel') { record.statFieldId=selected?.id ?? null; const number=row.querySelector('[data-field=rawValue]'); if(number) { number.placeholder=selected?.kind==='percent'?'0.0%':'Required'; number.inputMode=selected?.kind==='integer'?'numeric':'decimal'; } }
+      editorEdited=true; highlight(); error.hidden=true; markStale({side});
+    };
+    input.addEventListener(field==='rawLabel'?'change':'input',change);
+    if(field==='rawValue') input.addEventListener('blur',()=>{
+      const validation=validateStatValue(fieldForRecord(record),input.value);
+      if(validation.valid && validation.value!==input.value) { input.value=validation.value; change(); }
+      else if(!validation.valid && input.value.trim()) { error.textContent=validation.message; error.hidden=false; input.setAttribute('aria-invalid','true'); }
     });
     label.append(input); row.append(label);
   }
   const remove = element('button', '×', 'remove'); remove.type = 'button';
   remove.setAttribute('aria-label', `Remove ${sideName.toLowerCase()} line ${ordinal}`);
   remove.addEventListener('click', () => {
-    records[side].splice(records[side].indexOf(record), 1); row.remove(); editorEdited = true; markStale(); $(`#${side}-add`).focus();
+    records[side].splice(records[side].indexOf(record), 1); row.remove(); editorEdited = true; markStale({side}); $(`#${side}-add`).focus();
   });
-  row.append(remove,error); (target ?? $(`#${side}-lines`)).append(row); markStale(); return row;
+  row.append(remove,error); (target ?? $(`#${side}-lines`)).append(row); markStale({side}); return row;
 }
 for (const side of ['current', 'candidate']) {
-  const card = element('section', undefined, 'item-card');
+  const card = element('section', undefined, 'item-card'); card.id=`${side}-card`;
+  const body=element('div'); body.id=`${side}-body`;
   card.append(element('h2', side === 'current' ? 'Currently equipped · left' : 'Potential new equip · right'));
-  const crop = element('img', undefined, 'review-crop'); crop.id = `${side}-crop`; crop.hidden = true; card.append(crop);
+  const crop = element('img', undefined, 'review-crop'); crop.id = `${side}-crop`; crop.hidden = true; body.append(crop);
   const name = element('label', 'Item name (optional)'); name.htmlFor = `${side}-name`;
   const input = element('input', undefined, 'item-name'); input.id = `${side}-name`; input.maxLength = 100; input.autocomplete = 'off'; input.addEventListener('input', markStale);
   const lines = element('div'); lines.id = `${side}-lines`;
   const add = element('button', 'Add line'); add.type = 'button'; add.id = `${side}-add`;
-  add.addEventListener('click', () => { editorEdited = true; addLine(side).querySelector('textarea').focus(); });
-  name.hidden = true; input.hidden = true; card.append(name, input, lines, add); $('#item-fields').append(card); addLine(side);
+  add.addEventListener('click', () => { editorEdited = true; addLine(side).querySelector('select').focus(); });
+  name.hidden = true; input.hidden = true; body.append(name, input, lines, add);
+  const status=element('p','Confirmed','item-confirmed'); status.id=`${side}-confirmed`; status.hidden=true;
+  const confirm=element('button',side==='current'?'Confirm current equip':'Confirm new equip','confirm-item'); confirm.type='button'; confirm.id=`${side}-confirm`; confirm.setAttribute('aria-controls',body.id); confirm.setAttribute('aria-expanded','true');
+  confirm.addEventListener('click',()=>{
+    if(confirmedItems[side]) markStale({side});
+    else if(validateItem(side)) { confirmedItems[side]=true; refreshItemConfirmation(side); const next=['current','candidate'].find(key=>!confirmedItems[key]); if(next) { const heading=$(`#${next}-card h2`); heading.tabIndex=-1; heading.focus(); } else $('#recommend').focus(); }
+  });
+  card.append(body,status,confirm); $('#item-fields').append(card); addLine(side);
 }
 
-$('#comparison-form').addEventListener('submit', (event) => {
-  event.preventDefault(); $('#form-error').hidden = true;
-  const items = {};
-  let firstInvalid = null;
-  for (const side of ['current', 'candidate']) {
-    items[side] = parseReviewRecords(records[side], { imageRevision, confirmed: $('#visible-lines-complete').checked });
-    for (const line of items[side]) {
-      if (records[side].find(record=>record.id===line.id)?.otherReading && !String(effectiveRawValue(line)).trim()) continue;
-      const error = $(`#${line.id}-error`);
-      const input = $(`#${line.id}-rawValue`);
-      error.hidden = true; input.removeAttribute('aria-invalid');
-      if (line.state === 'invalid' || (!line.effectiveLabel.trim() && String(effectiveRawValue(line)).trim()) || (line.effectiveLabel.trim() && !String(effectiveRawValue(line)).trim()) || (records[side].length === 1 && !line.effectiveLabel.trim())) {
-        // A required correction must remain reachable even with diagnostics
-        // hidden. Surface its editable row rather than opening raw OCR tools.
-        if (input.closest('#other-readings')) {
-          records[side].find(record=>record.id===line.id).otherReading = false;
-          $(`#${side}-lines`).append(input.closest('.line'));
-        }
-        error.textContent = line.state === 'invalid' ? (issueMessages[line.issues[0]] || 'Correct this value or leave it blank if unknown.') : (!line.effectiveLabel.trim() ? 'Add the stat name.' : 'Enter this item’s value. Blank is unknown, not zero.');
-        const invalidField = !line.effectiveLabel.trim() ? $(`#${line.id}-rawLabel`) : input;
-        error.hidden = false; invalidField.setAttribute('aria-invalid', 'true'); firstInvalid ??= invalidField;
-      }
-    }
+$('.intake').append($('#results'));
+$('#comparison-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if(!confirmedItems.current || !confirmedItems.candidate) return;
+  const inputRevision=revision;
+  $('.intake').dataset.screen='calculating'; $('#calculation-screen').hidden=false;
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  if(inputRevision!==revision) { $('#calculation-screen').hidden=true; setReadingBusy(false); return; }
+  const body=$('#result-rows'); body.replaceChildren();
+  for(const result of recommendationContexts()) {
+    const row=element('article',undefined,'recommendation-row');
+    row.append(element('h3',result.context),element('strong','Unable to recommend'),element('span',`Confidence: ${result.confidence}`)); body.append(row);
   }
-  if (firstInvalid) { $('#form-error').textContent = 'Correct the highlighted entries. Your other entries are kept.'; $('#form-error').hidden = false; firstInvalid.focus(); return; }
-  if (!$('#visible-lines-complete').checked) { $('#form-error').textContent = 'Check both items, then confirm the checkbox below them.'; $('#form-error').hidden = false; $('#visible-lines-complete').focus(); return; }
-  const nonempty = (lines) => lines.some((line) => line.effectiveLabel.trim());
-  if (!nonempty(items.current) || !nonempty(items.candidate)) { $('#form-error').textContent = 'Enter at least one stat label for each item. Values may remain unknown.'; $('#form-error').hidden = false; return; }
-  // Blank unused rows remain in the editor but need no result row.
-  const complete = $('#visible-lines-complete').checked;
-  const meaningful = lines => lines.filter(l => l.effectiveLabel.trim() || String(effectiveRawValue(l)).trim());
-  const result = compareItemLines(meaningful(items.current), meaningful(items.candidate), {currentComplete:complete,candidateComplete:complete});
-  const body = $('#result-rows'); body.replaceChildren();
-  for (const row of result.rows) {
-    const entry = element('article', undefined, 'result-row');
-    const label = row.current?.effectiveLabel ?? row.candidate?.effectiveLabel;
-    entry.append(element('strong', label));
-    const show = (line) => !line ? 'No matched line' : line.effectiveValue ? `${line.effectiveValue.decimal}${line.unit === 'displayPercent' ? '%' : ` (${units.find(u => u[0] === line.unit)?.[1] || line.unit})`}` : 'Unknown';
-    const before = row.presenceChange === 'added' ? 'Absent from reviewed list' : show(row.current);
-    const after = row.presenceChange === 'removed' ? 'Absent from reviewed list' : show(row.candidate);
-    entry.append(element('p', `Currently equipped: ${before} · Potential new equip: ${after}`));
-    if (row.presenceChange) entry.append(element('p', row.presenceChange === 'removed' ? 'This visible item line is lost on replacement.' : 'This visible item line is added on replacement.'));
-    entry.append(element('p', row.differenceDecimal === null ? 'Change: unknown' : `Raw change: ${row.difference > 0 ? '+' : ''}${row.differenceDecimal}${row.unit === 'displayPercent' ? ' percentage points' : ''}`));
-    if (row.unit === 'unknown') entry.append(element('p', 'Unit and effect meaning are unconfirmed. This is only a raw numerical difference.'));
-    if (row.status === 'unmatched') entry.append(element('p','Unmatched: unknown until both visible lists are complete and their values are checked.'));
-    body.append(entry);
-  }
-  $('#results').dataset.inputRevision = String(revision);
-  $('#stale-result').hidden = true; $('#results').hidden = false; $('#results').focus();
+  $('#calculation-screen').hidden=true; $('.intake').dataset.screen='results';
+  $('#results').hidden=false; $('#stale-result').hidden=true; $('#results').focus();
 });
-$('#visible-lines-complete').addEventListener('change', () => markStale({keepCompleteness:true}));
+$('#review-again').addEventListener('click',()=>{ $('.intake').dataset.screen=sourceCanvas?'review':'choose'; $('#results').hidden=true; $('#recommend').focus(); });
 
 $('#independent-final').addEventListener('change', markStale);
 $('#calculate').addEventListener('click', () => {
@@ -277,7 +288,7 @@ function showReading(reading) {
   }
   $('#whole-reading').textContent = [reading.raw?.text ?? '',...panels.map(panel=>panel?.rawText ?? '')].join('\n\n');
   $('#draft-description').textContent = adopted.preserved ? 'Your corrections are kept. Check the new read areas.' : detected ? 'Check the photo and correct any values below.' : 'Some details couldn’t be read. Fill the highlighted fields, or adjust the photo areas.';
-  $('#screenshot-drafts').append($('#comparison-form'),$('#advanced'),$('#results'));
+  $('#screenshot-drafts').append($('#comparison-form'),$('#advanced'));
   $('#manual').hidden = true; $('#screenshot-drafts').hidden = false;
   $('#restore-entries').hidden = !previousEntries || !Object.values(previousEntries.items).some(lines=>lines.some(record=>record.rawLabel.trim() || record.correction));
   markStale();
@@ -343,7 +354,7 @@ function removeImage() {
   if (sourceCanvas) { sourceCanvas.width = 0; sourceCanvas.height = 0; sourceCanvas = null; }
   const preview = $('#screenshot-preview'); preview.onload = null; preview.onerror = null; preview.removeAttribute('src');
   $('#whole-reading').textContent = ''; $('#screenshot-drafts').hidden = true;
-  $('#manual').append($('#comparison-form'),$('#advanced'),$('#results')); $('#manual').hidden = false;
+  $('#manual').append($('#comparison-form'),$('#advanced')); $('#manual').hidden = false;
   for (const side of ['current','candidate']) $(`#${side}-crop`).hidden = true;
   $('#image-reference').hidden = true; $('#screenshot').value = ''; $('#screenshot-status').textContent = '';
   $('.intake').dataset.selected = 'false'; $('.guide-frame').hidden = false; $('.legend').hidden = false;
