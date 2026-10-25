@@ -21,4 +21,10 @@
 
 Star Force amplification data covers12–30. Below12, require displayed Main/Sub amplification values through Advanced; no missing curve is invented. Very short yellow prefixes may stay unknown. Changed Main Stat, job/skill/timing effects, full PvP and encounter mechanics remain incomplete. The simple offensive estimate remains experimental and Low confidence; unknown resistance/source stages can reverse or erase a preference.
 
-Publication identity and live smoke results are recorded after deployment verification.
+## Release state
+
+Feature implementation commit717d0b3 passed [GitHub verify CI](https://github.com/ericrubeo-sys/msidlecalc/actions/runs/40147196115/job/121030956535). Local public-source build is7d826fb56529.
+
+Vercel rejected the feature preview at2026-10-25T00:34:03Z with exactly “Deployment rate limited — retry in24 hours.” The integration status redirects to the hosting team's build-rate-limit notice. No successful preview or production release of this change is claimed. Do not retry repeatedly, upgrade billing or bypass the limit. Main remains at the preceding tested release91970b5; this change stays on the feature branch pending a successful preview and authorized publication retry. Local browser preview remains available at http://127.0.0.1:4181/ while its local server runs.
+
+Additional browser retention check: changing Star Force to13 in Advanced and rereading the same real image preserved13 and removed the automatic-evidence notice after both cards were confirmed. This is a synthetic override test, not a claim that the screenshot has13 stars.

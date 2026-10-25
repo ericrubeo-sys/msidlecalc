@@ -6,7 +6,7 @@
 - [x] Read matching filled-yellow-star headers; preserve manual overrides and unknown/conflicting evidence.
 - [x] Remove mandatory model-condition checkboxes and duplicate diagnostic result rows. Show activity choices, confidence and concrete blockers.
 - [x]345 software checks, including21 independent metadata groups; actual original-image browser adoption at12 stars verified.
-- [ ] Complete live release verification and physical-phone retest; no new combat mechanics or empirical calibration claimed.
+- [ ] Publish after hosting limit clears, then verify live and retest on a physical phone. Feature717d0b3 passed CI, but Vercel rejected the preview with “Deployment rate limited — retry in24 hours” at2026-10-25T00:34:03Z. No new production release, combat mechanics or empirical calibration claimed.
 
 ## Character-driven live-test estimate — 2026-10-24
 
