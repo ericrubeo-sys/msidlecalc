@@ -27,7 +27,7 @@ Actual local browser checks:
 - Rejected an exact out-of-range character value in the form. Entering malformed amplification immediately disabled Calculate and highlighted the pair. Completing both removed the star question; clearing both restored the already entered12 without retyping.
 - With a deliberately synthetic known resistance0%, all six modeled PvE rows favored New. After changing the current item Rate to25%, the old result disappeared, only Current reopened, Candidate stayed confirmed, and character values50/200/12/0 were preserved. Reconfirmation/recalculation favored Current. These are controlled software fixtures, not measured game predictions.
 - Clearing resistance to unknown returned No reliable preference; unknown was not converted to zero. PvP abstained throughout. No browser error logs were captured in the synthetic session.
-- Editing an automatically read star value to1 retained typing focus; typing3 produced13, verifying focus/caret retention across field movement. Restored12 afterward. This was a synthetic edit test, not a different star reading.
+- Editing an automatically read star value to1 retained typing focus; typing3 produced13. Restored12 afterward. This verifies editable-value handling in the original-photo form; every possible conditional field movement has not been browser-tested. This was a synthetic edit test, not a different star reading.
 
 Private proof: `.review/workflow-missing-skill-value.png`. No private image is committed or uploaded to a processing service.
 
