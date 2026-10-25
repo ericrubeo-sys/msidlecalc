@@ -12,7 +12,7 @@ The trio patrols together across a small grassy ledge, pauses at each edge and t
 - A pale, warm morning sky for the light skin and a quiet blue-green twilight for the dark skin. The cast, geometry and timing stay the same.
 - Two faint hills, two simple pixel clouds and a narrow grass platform frame the sprites. These are original CSS decorations, not copied game map assets.
 - Pixel edges remain crisp with `image-rendering: pixelated`. A stable sprite box prevents page movement while external images arrive.
-- An eight-second patrol includes generous endpoint pauses. Independent gait layers keep facing, movement and natural character bounce separate.
+- A6.4-second patrol has short endpoint pauses and staggered movement. Independent gait layers keep facing, travel and bounce separate; Slime hops12px, Mushroom bobs5px and Pig trots4px.
 - The whole scene is decorative (`aria-hidden=true`) and has no interactive controls or text. The normal reading status and cancellation remain operable outside it.
 
 ## Component contract
@@ -42,8 +42,16 @@ Implementation inspection is separate from browser verification. The integrating
 
 ## Local preview and verified cast — 2026-10-25
 
-`public/monster-sprites.js` supplies fixed GMS83 icons for Slime210100, Orange Mushroom1210102 and Ribbon Pig1210101. The provider's `/name` responses and actual PNGs were checked; private image review files remain ignored. See [asset source record](../../research/MAPLESTORY_ASSET_RESEARCH.md). Local viewing is available at `/loading-preview.html`, with Pause/Play and the normal theme selector; it continuously demonstrates the scene without processing a photo or prolonging real OCR.
+`public/monster-sprites.js` supplies fixed GMS83 icons for Slime210100, Orange Mushroom1210102 and Ribbon Pig1210101. The provider's `/name` responses and actual PNGs were checked; private image review files remain ignored. See [asset source record](../../research/MAPLESTORY_ASSET_RESEARCH.md). Local viewing is available at `/loading-preview.html`, with the normal theme selector; it continuously demonstrates the scene without processing a photo or prolonging real OCR. Initial Pause/Play and explanatory mockup copy were removed at the user's request.
 
 Integration-owner browser checks: all three remote images loaded, the scene was active/visible, CSS patrol motion was running, Pause switched it to paused and Play resumed it. Light and dark skins were visually inspected. Build syntax/module/asset closure passed. Real-device/reduced-motion and provider-failure emulation are not claimed as completed browser checks. No hosting deployment or public sprite binary redistribution occurred.
 
 The actual calculator upload flow was also exercised using its public example image: picture selection set the scene active while the reading screen was visible; Cancel set it inactive and hid its host, preserving the normal cancellation message. No browser error logs were captured for that check.
+
+## User refinement and UX review — 2026-10-25
+
+User requested livelier motion, a left-to-right treatment on “Reading your photo…” and no Pause button or preview copy. A distinct UX specialist reviewed the implementation and recommended one restrained ink sweep, keeping the complete phrase readable and accessible text unchanged. No typing reveal, filling progress bar, percentage, drifting clouds or extra sparkles were added.
+
+The title uses a3.2-second left-to-right accent sweep with a quiet gap; the monsters remain the primary motion. Reduced-motion preferences disable the title and sprite animation, and forced-color mode restores plain system text. Hidden scenes pause the title through the same visibility state. The real processing screen retains Cancel. The demonstration has no playback button, explanatory paragraph or extra navigation below the title.
+
+Browser verification after reload: all three sprites loaded; patrol duration6.4s and title sweep animation were active; visible scene text was exactly the reading phrase, with zero scene buttons. Updated dark-mode appearance was visually inspected. Build/module/resource closure passed; no hosting deployment occurred.

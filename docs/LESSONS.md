@@ -1,5 +1,7 @@
 # Agent and project lessons
 
+2026-10-25 loading-scene refinement: the user likes the monster direction but wants more character in its movement and fewer mockup controls. Keep monsters as the main motion, use only a quiet readable text sweep as secondary activity feedback, and separate real OCR cancellation from unnecessary animation playback controls. A local preview should resemble the final loading state once its initial explanatory scaffolding has served its purpose.
+
 2026-10-24 workflow audit: removing noise must not hide a real but unreadable skill row. Verify raw observation→grouping→typed editor→confirmation→engine together, rather than trusting isolated parser checks. Keep label proposals separate from original evidence and never repair a merged base/delta numerically. Required-field planning must react on input, and exact numeric validation must be shared across UI and calculation; floating-point form checks can disagree with an exact engine.
 
 2026-10-24 product correction: do not ask users to re-identify obvious upper/lower Attack positions or retype a shared star count visible on both tooltips. Use image/order evidence, retain a quiet correction path, and preserve manual overrides. Checkboxes that users can only accept do not repair unresolved mechanics. State the modeled scope plainly, show concrete blockers, and keep results to item choices plus confidence. Confidence is not a score and Low confidence does not justify guessing a winner.

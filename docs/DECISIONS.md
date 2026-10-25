@@ -1,5 +1,9 @@
 # Decisions and open questions
 
+## Livelier loader with one animated status — 2026-10-25
+
+User asks for a more dynamic monster patrol and removal of the Pause control and mockup explanation. UX supports a subtle left-to-right accent sweep across the complete, continuously readable status. Use a6.4-second patrol with staggered12px/5px/4px gaits, a3.2-second text sweep with a quiet gap, no additional motion layers and no fake measured progress. Both text and monsters become static for reduced motion. Keep Cancel in actual OCR; remove playback controls and preview copy from the local demonstration. This supersedes the first loader preview's Pause/Play treatment.
+
 ## Monster photo-loading animation — 2026-10-25
 
 User requests a Designer-led MapleStory.io monster animation and local viewing while Vercel is rate limited. Use Slime, Orange Mushroom and Ribbon Pig in one compact, theme-aware grass scene, with slow shared back-and-forth travel and distinct small gaits. Keep normal accessible reading status and Cancel outside the decorative scene. No fake progress or artificial OCR delay. Reduced motion is static; hidden/inactive scenes pause. Fixed provider requests contain no player data; no sprite binaries are committed. Include a dedicated local loading-preview.html with Pause/Play and the existing theme control. Publication remains separate; source/provenance is recorded in research/MAPLESTORY_ASSET_RESEARCH.md.
