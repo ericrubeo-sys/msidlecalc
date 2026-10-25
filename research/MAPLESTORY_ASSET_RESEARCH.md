@@ -51,6 +51,20 @@ For now, the repository may contain this research note and links to official cat
 2. Ask Nexon/the rights holder in writing whether the specific assets may be used on an independent, publicly accessible fan calculator and committed to a public GitHub repository; ask about attribution, monetization, modification, and hosting requirements.
 3. Record the decision and any conditions in `docs/DECISIONS.md` before adding any files.
 
+## 2026-10-25 — User-requested monster-loading prototype
+
+The user explicitly requested MapleStory.io monster artwork for a cute back-and-forth picture-processing animation and a local viewing option while deployments are rate limited. Implement a three-image external prototype, not a sprite binary mirror. No deployment is part of this checkpoint.
+
+| Cast | Verified GMS83 ID | Fixed PNG endpoint |
+|---|---|---|
+| Slime |210100| https://maplestory.io/api/GMS/83/mob/210100/icon |
+| Orange Mushroom |1210102| https://maplestory.io/api/GMS/83/mob/1210102/icon |
+| Ribbon Pig |1210101| https://maplestory.io/api/GMS/83/mob/1210101/icon |
+
+Each identity was checked against the provider's corresponding `/name` response; each actual PNG was visually inspected. The provider's [MobController source](https://github.com/crrio/maplestory.io/blob/master/maplestory.io/Controllers/API/MobController.cs) establishes the icon endpoint's static standing/flying-frame behavior. The animation uses original CSS travel, facing flips and hop/waddle motion around these static PNGs, not extracted native walk-frame sequences. Actual browser requests loaded all three images with natural sizes64×49,63×58 and68×49 respectively. One initial name lookup timed out before succeeding; provider availability remains external.
+
+Fixed URLs contain no screenshot bytes, OCR transcript, entered stats or image-derived identifiers. Images use no-referrer; only the fixed artwork requests reach the provider. The scene stops when photo processing ends, supports reduced motion, and has an image-failure fallback. Retain the existing Nexon attribution. User authorization for a reversible local prototype does not establish a new redistribution license; private review PNGs remain ignored, with no monster binaries in `public/` or Git history.
+
 ## Sources
 
 - [MapleStory Worlds Resource Search](https://maplestoryworlds-resourcesearch-new.nexon.com/?locale=en)

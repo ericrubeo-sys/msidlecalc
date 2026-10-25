@@ -9,6 +9,7 @@
   <link rel="icon" href="data:,">
   <script src="/theme.js"></script>
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/monster-loader.css">
   <script type="module" src="/app.js"></script>
 </head>
 <body>
@@ -25,7 +26,7 @@
         <label class="upload" for="screenshot">Choose screenshot</label><input class="visually-hidden" id="screenshot" type="file" accept="image/png,image/jpeg,image/webp" aria-describedby="availability screenshot-status">
         <p class="availability" id="availability">Experimental damage estimates. Review both items, then enter only the character totals needed.</p>
         <p id="screenshot-status" role="status"></p>
-        <section id="reading-screen" aria-label="Reading photo" hidden><span class="reading-spinner" aria-hidden="true"></span><h2 role="status">Reading your photo…</h2><p>Stays on your device.</p><button type="button" id="cancel-reading">Cancel</button></section>
+        <section id="reading-screen" aria-label="Reading photo" hidden><div id="picture-loading-animation"></div><h2 role="status">Reading your photo…</h2><p>Stays on your device.</p><button type="button" id="cancel-reading">Cancel</button></section>
         <section id="calculation-screen" aria-label="Checking comparison" hidden><span class="reading-spinner" aria-hidden="true"></span><h2 role="status">Checking your items…</h2></section>
         <div id="image-reference" hidden>
           <img id="screenshot-preview" alt="Your selected screenshot reference" hidden>

@@ -14,8 +14,11 @@ import { importScreenshotProposals, editScreenshotRecord } from './domain/screen
 import { planCharacterInputs, recommendCharacterActivities, characterValueIssue, PLAYER_FIELDS, CHARACTER_MODEL_VERSION } from './domain/character-recommendation.js';
 import { inferAttackRoles, resetStarForceForImage, applyStarForceReading } from './domain/automatic-equipment-metadata.js';
 import { readStarForce } from './domain/star-force-reader.js';
+import { mountMonsterLoader } from './monster-loader.js';
+import { LOADING_MONSTERS } from './monster-sprites.js';
 
 const $ = (selector) => document.querySelector(selector);
+const pictureLoader=mountMonsterLoader($('#picture-loading-animation'),{sprites:LOADING_MONSTERS});
 let nextId = 0;
 let revision = 0;
 let imageUrl = null;
@@ -334,6 +337,7 @@ function setReadingBusy(busy) {
   readingBusy = busy;
   $('.intake').dataset.screen = busy ? 'reading' : sourceCanvas ? 'review' : 'choose';
   $('#reading-screen').hidden = !busy;
+  if(busy) pictureLoader.start(); else pictureLoader.stop();
   $('#read-image').disabled = busy || !sourceCanvas;
   $('#adjust-areas').disabled = busy || !sourceCanvas;
   $('label.upload').textContent = sourceCanvas ? 'Choose another photo' : 'Choose screenshot';
@@ -521,7 +525,7 @@ const panels = {
   methodology: ['Methodology', [
     'This experimental calculator compares complete corrected item panels, asks for current character totals only where their effects change, and estimates offensive damage across supported activity models. Main and lower extra Attack are separate sources. The potential item never needs to be equipped. Confidence is Low; no controlled live-game validation has been performed.',
     'Critical probability normalization, unchanged hit behavior and pure-root raid/training transforms are explicit simple-model assumptions. Critical outcomes are transformed before averaging. Unknown opponent resistance and possible source display stages are tested across their admitted ranges; a possible tie or reversal produces No reliable preference. PvP and changed skill/Main Stat/timing effects remain unsupported. These are damage estimates, not DPS, survival or full battle-winning predictions. Combat Power is not used as a damage score.',
-    'Selected screenshots and item entries stay in this page session. Only the appearance preference is saved locally. The header loads a fixed leaf image from MapleStory.io; screenshots are not sent there. Hosting providers receive normal page requests.',
+    'Selected screenshots and item entries stay in this page session. Only the appearance preference is saved locally. The header and photo-loading animation request fixed artwork from MapleStory.io; screenshots, OCR text and item values are not sent there. Hosting providers receive normal page requests.',
     'BasilMarket and Hidden Street are visual inspiration for the light and dark skins. This project is not affiliated with either site.',
     `App build: ${RELEASE_ID}. Include this when reporting an issue.`
   ]],

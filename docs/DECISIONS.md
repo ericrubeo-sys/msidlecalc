@@ -1,5 +1,9 @@
 # Decisions and open questions
 
+## Monster photo-loading animation — 2026-10-25
+
+User requests a Designer-led MapleStory.io monster animation and local viewing while Vercel is rate limited. Use Slime, Orange Mushroom and Ribbon Pig in one compact, theme-aware grass scene, with slow shared back-and-forth travel and distinct small gaits. Keep normal accessible reading status and Cancel outside the decorative scene. No fake progress or artificial OCR delay. Reduced motion is static; hidden/inactive scenes pause. Fixed provider requests contain no player data; no sprite binaries are committed. Include a dedicated local loading-preview.html with Pause/Play and the existing theme control. Publication remains separate; source/provenance is recorded in research/MAPLESTORY_ASSET_RESEARCH.md.
+
 ## Local workflow hardening during hosting limit — 2026-10-24
 
 Keep identifiable incomplete OCR stat lines in the primary typed form with an empty highlighted value, preserving the raw evidence and refusing to repair merged base/delta numbers. Only background/unrecognized fragments remain quiet. Use one exact player-value validation contract for UI and engine. Explicit Advanced amplification values select a paired-input path; malformed values cannot silently revert to stars. Refresh consumed questions on input and submit while preserving values and typing focus. No damage equation is changed and no deployment is attempted during this audit. See WORKFLOW_AUDIT_2026-10-24.md.
