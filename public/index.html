@@ -42,18 +42,9 @@
             <input type="checkbox" id="visible-lines-complete" hidden>
             <section id="essential-inputs" aria-labelledby="essential-title" hidden>
               <h2 id="essential-title">Character stats</h2>
-              <p id="essential-scope">Experimental offensive-damage estimate. Enter current equipped totals only.</p>
+              <p id="essential-scope">Compares likely damage with the same buffs and successful hits. Extra effects and survival aren't included.</p>
               <p id="eligibility-note" role="status"></p>
-              <div id="scope-questions">
-                <label class="confirmation"><input type="checkbox" id="scope-onEquipSameSlot"> Same equipment slot and preset; these are the items’ On-Equip Effects, not character totals.</label>
-                <input type="checkbox" id="scope-completeVisibleStats" hidden>
-                <label class="confirmation"><input type="checkbox" id="scope-onlyListedEffects"> No changed set, skill, artifact-threshold or triggered effects outside these item lines.</label>
-                <input type="checkbox" id="scope-ordinaryLandedHits" hidden>
-                <label class="confirmation" id="attack-source-question" hidden><input type="checkbox" id="scope-attackMainOptions"> Both Attack values are in the upper main/base-stat section, not extra options.</label>
-                <input type="checkbox" id="scope-nonnegativeBackground" hidden>
-                <label class="confirmation" id="sub-options-question" hidden><input type="checkbox" id="scope-subOptionsSameStage"> The percentage bonuses are item sub-options in the lower section on both panels.</label>
-                <label class="confirmation"><input type="checkbox" id="scope-simpleModel"> Use the simple damage model: same successful hits and buffs, no Attack reductions. Critical and content rules are estimates, not a full battle simulation.</label>
-              </div>
+              <p id="star-force-reading" hidden></p>
               <div id="character-fields"></div>
               <details id="precision-inputs"><summary>Advanced calculation · all supported stats</summary>
                 <p>Optional. Enter precise current totals, known opponent resistance or uncertainty margins. Only changed effects consume them. Entered resistance applies to all estimated targets; blank checks its possible range.</p>
@@ -74,7 +65,7 @@
             <p id="model-error" role="alert" hidden></p>
             <section id="model-results" aria-labelledby="model-title" tabindex="-1" hidden><h2 id="model-title">Calculation scope</h2><p id="model-stale" hidden>Entries changed. Calculate again to update this result.</p><div id="model-effect"></div><div id="context-results"></div><details><summary>Sources, assumptions and model version</summary><div id="model-trace"></div></details></section>
           </details>
-          <section id="results" tabindex="-1" aria-labelledby="result-title" hidden><h2 id="result-title">Recommendations</h2><p id="stale-result" hidden>Items changed. Calculate again.</p><p class="result-limit">Experimental offensive-damage estimates. Survival, DPS and PvP outcomes are not modeled.</p><div id="result-rows"></div><details id="recommendation-details"><summary>Why &amp; limits</summary><div id="recommendation-explanation"></div></details><button type="button" id="review-again">Back to items</button></section>
+          <section id="results" tabindex="-1" aria-labelledby="result-title" hidden><h2 id="result-title">Recommendations</h2><p id="stale-result" hidden>Items changed. Calculate again.</p><p class="result-limit">Likely better for damage. Experimental; survival and PvP aren't modeled.</p><p id="result-reason" role="status" hidden></p><div id="result-rows"></div><details id="recommendation-details"><summary>Why &amp; limits</summary><div id="recommendation-explanation"></div></details><button type="button" id="review-again">Back to items</button></section>
         </details>
         <noscript><p>Enable JavaScript for local image selection and manual line comparison. No screenshot is sent to a processing service.</p></noscript>
       </div>

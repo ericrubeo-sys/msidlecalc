@@ -1,5 +1,9 @@
 # Decisions and open questions
 
+## Automatic metadata and fewer controls — 2026-10-24
+
+The user's upper/first and lower/second flat Attack convention supersedes mandatory explicit role questions in the UI. Infer roles and retain optional corrections; both sources remain calculated. Read the shared Star Force level only from credible matching yellow-star grids on both headers, with manual corrections preserved. Remove the three mandatory assumption checkboxes: model assumptions belong in a plain scope notice and optional details, not jargon-heavy consent gates. Show activity choices and confidence without scores or raw changes, and explain actual missing mechanics or inconsistent character totals. No combat formula or eligibility guard is weakened by this simplification. See AUTOMATIC_METADATA_RELEASE.md and independent QA.
+
 ## Character-driven live estimate — 2026-10-24
 
 The user explicitly approves building and publishing the two-panel confirmation→conditional minimum stats→automatic context estimate workflow. Publish the checked experimental model, distinguishing official source facts from critical normalization, nonnegative g≥1 and pure-root scenario assumptions. Never label it a validated battle/DPS predictor. The two Attack sources require explicit Main/Sub roles; current Attack supplies a consumed bounded-response input instead of raw item-delta addition. Character fields and Advanced share one calculation and preserve values; no unused job/level inputs, candidate-equipped measurement or infeasible controlled experiment. Unknown resistance spans its range; zero requires an explicit entered scenario. PvP and unsupported changed effects abstain. See CHARACTER_RECOMMENDATION_RELEASE.md for arithmetic, table support12–30 and release checks.

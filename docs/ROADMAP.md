@@ -1,5 +1,13 @@
 # Roadmap
 
+## Automatic metadata and simpler choices — 2026-10-24
+
+- [x] Infer upper/lower Attack with optional manual corrections; both sources remain calculated.
+- [x] Read matching filled-yellow-star headers; preserve manual overrides and unknown/conflicting evidence.
+- [x] Remove mandatory model-condition checkboxes and duplicate diagnostic result rows. Show activity choices, confidence and concrete blockers.
+- [x]345 software checks, including21 independent metadata groups; actual original-image browser adoption at12 stars verified.
+- [ ] Complete live release verification and physical-phone retest; no new combat mechanics or empirical calibration claimed.
+
 ## Character-driven live-test estimate — 2026-10-24
 
 - [x] Distinct mechanics and independent QA; explicit Main/Sub sources; conditional current totals and preserved Advanced inputs.

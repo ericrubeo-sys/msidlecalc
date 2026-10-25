@@ -11,8 +11,9 @@ import { groupReviewRows } from './domain/ocr-review-groups.js';
 import { parseReviewRecords, adoptReviewRecords } from './domain/inline-review.js';
 import { RELEASE_ID } from './release.js';
 import { importScreenshotProposals, editScreenshotRecord } from './domain/screenshot-review.js';
-import { RECOMMENDATION_ASSUMPTIONS } from './domain/equipment-recommendation.js';
 import { planCharacterInputs, recommendCharacterActivities, PLAYER_FIELDS, CHARACTER_MODEL_VERSION } from './domain/character-recommendation.js';
+import { inferAttackRoles, resetStarForceForImage, applyStarForceReading } from './domain/automatic-equipment-metadata.js';
+import { readStarForce } from './domain/star-force-reader.js';
 
 const $ = (selector) => document.querySelector(selector);
 let nextId = 0;
@@ -26,7 +27,7 @@ let readingController = null, readingRun = 0, readingBusy = false;
 let readOnDecode = false;
 let editorImageRevision = null, editorEdited = false;
 let markedRegions = [null, null], cropEditor = null;
-let requiredQuestions=[];
+let starForceState={value:'',origin:'unknown',imageRevision:0};
 const playerValues={}, playerFieldNodes=new Map();
 let requiredPlayerFields=[];
 
@@ -35,19 +36,17 @@ function comparisonPayload(assumptions) {
     confirmations:{...confirmedItems},assumptions,player:playerValues};
 }
 function enteredAssumptions() {
-  const values=Object.fromEntries(Object.keys(RECOMMENDATION_ASSUMPTIONS).map(name=>[name,$(`#scope-${name}`).checked]));
-  return {...values,completeVisibleStats:confirmedItems.current && confirmedItems.candidate,ordinaryLandedHits:values.simpleModel,nonnegativeBackground:values.simpleModel,subOptionsSameStage:values.simpleModel};
+  // These define the advertised model scenario, not claims of user consent.
+  return {onEquipSameSlot:true,completeVisibleStats:confirmedItems.current && confirmedItems.candidate,
+    onlyListedEffects:true,ordinaryLandedHits:true,nonnegativeBackground:true,simpleModel:true,subOptionsSameStage:true};
 }
 function refreshRecommendationInputs() {
   const complete=confirmedItems.current && confirmedItems.candidate;
   $('#essential-inputs').hidden=!complete;
-  if(!complete) { requiredQuestions=[]; $('#recommend').disabled=true; return; }
+  if(!complete) { $('#recommend').disabled=true; return; }
   const plan=planCharacterInputs(comparisonPayload(enteredAssumptions()));
-  requiredQuestions=plan.unsupported.length?[]:['onEquipSameSlot','onlyListedEffects','simpleModel'];
   requiredPlayerFields=plan.fields;
-  $('#scope-questions').hidden=plan.unsupported.length>0;
-  $('#attack-source-question').hidden=true;$('#sub-options-question').hidden=true;
-  $('#eligibility-note').textContent=plan.unsupported.length?plan.unsupported[0].detail:plan.fields.length?'Only the totals used by these item changes are needed. Leave unknown opponent resistance blank.':'No character numbers are needed for this comparison.';
+  $('#eligibility-note').textContent=plan.unsupported.length?plainIssues(plan.unsupported):plan.fields.length?'Enter these totals from Character with your current item equipped.':'No character numbers are needed for this comparison.';
   renderPlayerFields(plan.fields);
   updateRecommendationAvailability();
 }
@@ -60,10 +59,9 @@ function playerValueValid(field) {
   return field.id!=='starForce' || Number.isInteger(numeric) && numeric>=12 && numeric<=30;
 }
 function updateRecommendationAvailability() {
-  const missing=requiredQuestions.filter(name=>!$(`#scope-${name}`).checked);
   const numbers=requiredPlayerFields.filter(field=>!playerValueValid(field));
-  $('#recommend').disabled=!(confirmedItems.current && confirmedItems.candidate) || missing.length>0 || numbers.length>0;
-  $('#comparison-form>.result-limit').textContent=missing.length?'Review the model conditions.':numbers.length?'Fill the highlighted current totals before calculating.':'Ready to calculate all activity estimates.';
+  $('#recommend').disabled=!(confirmedItems.current && confirmedItems.candidate) || numbers.length>0;
+  $('#comparison-form>.result-limit').textContent=numbers.length?'Fill the highlighted current totals before calculating.':'Ready to compare for each activity.';
   for(const field of requiredPlayerFields) playerFieldNodes.get(field.id)?.querySelector('input').classList.toggle('needs-value',!playerValueValid(field));
 }
 function renderPlayerFields(required) {
@@ -74,12 +72,32 @@ function renderPlayerFields(required) {
       group=element('label',`${field.label} (${field.unit})`,'player-stat');
       const input=element('input');input.type='text';input.inputMode='decimal';input.id=`player-${field.id}`;input.value=playerValues[field.id]??'';input.autocomplete='off';
       input.setAttribute('aria-label',`${field.label}, ${field.unit}`);
-      input.addEventListener('input',()=>{playerValues[field.id]=input.value;revision++;$('#results').hidden=true;updateRecommendationAvailability();});
+      input.addEventListener('input',()=>{playerValues[field.id]=input.value;if(field.id==='starForce') starForceState={value:input.value,origin:'manual',imageRevision};revision++;$('#results').hidden=true;updateRecommendationAvailability();});
       input.addEventListener('change',refreshRecommendationInputs);
       group.append(input);playerFieldNodes.set(field.id,group);
     }
-    const target=ids.has(field.id)?$('#character-fields'):$('#precision-fields');
+    const target=ids.has(field.id) && !(field.id==='starForce' && starForceState.origin==='automatic' && playerValueValid(field))?$('#character-fields'):$('#precision-fields');
     if(group.parentElement!==target) target.append(group);
+  }
+  $('#star-force-reading').hidden=starForceState.origin!=='automatic';
+  $('#star-force-reading').textContent=starForceState.origin==='automatic'?`${starForceState.value} stars · read from both items. Edit in Advanced calculation.`:'';
+}
+
+function plainIssues(issues) {
+  const unsupported=issues.filter(entry=>entry.code==='unsupportedEffect');
+  if(unsupported.length) return `This pair changes ${[...new Set(unsupported.map(entry=>entry.detail.split(':')[0]))].join(', ')}. Those effects aren't supported yet, so this comparison can't pick a reliable winner.`;
+  const inconsistent=issues.find(entry=>entry.code==='inconsistentInputs');
+  if(inconsistent) return /attack/i.test(inconsistent.detail)?'The entered character Attack does not fit these item values. Enter your total Attack from Character with the current item equipped.':`Check your current character totals: ${inconsistent.detail}`;
+  if(issues.some(entry=>entry.code==='preferenceOverlap')) return 'Unknown stats or model uncertainty could change which item is better.';
+  return issues[0]?.detail ?? '';
+}
+function syncAutomaticAttackRoles(side) {
+  const inferred=inferAttackRoles(records[side]);
+  for(let index=0;index<inferred.length;index++) {
+    const record=records[side][index], automatic=inferred[index];
+    for(const key of ['sourceRole','sourceRoleOrigin','sourceRoleIssue']) record[key]=automatic[key];
+    const select=$(`#${record.id}-sourceRole`);
+    if(select) {select.value=record.sourceRole??'';select.parentElement.hidden=fieldForRecord(record)?.label!=='Attack' || fieldForRecord(record)?.kind!=='integer';select.classList.toggle('needs-value',!select.parentElement.hidden && !select.value);}
   }
 }
 
@@ -105,7 +123,6 @@ function refreshItemConfirmation(side) {
 }
 function markStale({side=null}={}) {
   revision++;
-  $('#scope-attackMainOptions').checked=false; $('#scope-completeVisibleStats').checked=false;
   for (const key of side?[side]:['current','candidate']) { confirmedItems[key]=false; refreshItemConfirmation(key); }
   $('#visible-lines-complete').checked=confirmedItems.current && confirmedItems.candidate;
   refreshRecommendationInputs();
@@ -114,6 +131,7 @@ function markStale({side=null}={}) {
   if (!$('#model-results').hidden) $('#model-stale').hidden=false;
 }
 function validateItem(side) {
+  syncAutomaticAttackRoles(side);
   let first=null;
   const visible=records[side].filter(record=>!record.otherReading);
   if (!visible.length) { addLine(side); }
@@ -132,7 +150,7 @@ function validateItem(side) {
     if(first?.id!==`${record.id}-rawLabel`) error.hidden=validation.valid;
     if(!validation.valid) { error.textContent=validation.message; input.setAttribute('aria-invalid','true'); input.classList.add('needs-value'); first??=input; }
     if(field?.label==='Attack' && field.kind==='integer' && !['main','sub'].includes(record.sourceRole)) {
-      const role=$(`#${record.id}-sourceRole`);role.classList.add('needs-value');error.hidden=false;error.textContent='Choose upper Main or lower extra Attack.';first??=role;
+      const role=$(`#${record.id}-sourceRole`);$(`#${side}-source-details`).open=true;role.classList.add('needs-value');error.hidden=false;error.textContent='More than two Attack lines: check their positions in Advanced item corrections.';first??=role;
     }
   }
   if(first) { first.focus(); return false; }
@@ -171,7 +189,7 @@ function addLine(side, initial = null, target = null) {
       if(record.provenance?.kind==='ocr') Object.assign(record,editScreenshotRecord(record,'unit',unit)); else record.unit=unit;
       if(field==='rawLabel') { record.statFieldId=selected?.id ?? null; const number=row.querySelector('[data-field=rawValue]'); if(number) { number.placeholder=selected?.kind==='percent'?'0.0%':'Required'; number.inputMode=selected?.kind==='integer'?'numeric':'decimal'; } }
       if(field==='rawLabel' && selected && record.otherReading) { record.otherReading=false; $(`#${side}-lines`).append(row); }
-      updateRole();
+      syncAutomaticAttackRoles(side);
       editorEdited=true; highlight(); error.hidden=true; markStale({side});
     };
     input.addEventListener(field==='rawLabel'?'change':'input',change);
@@ -182,19 +200,19 @@ function addLine(side, initial = null, target = null) {
     });
     label.append(input); row.append(label);
   }
-  const roleLabel=element('label','Attack source','source-role');
+  const roleLabel=element('label',`Attack line ${ordinal} position`,'source-role');
   const roleSelect=element('select');roleSelect.id=`${record.id}-sourceRole`;roleSelect.setAttribute('aria-label',`${sideName}, line ${ordinal}, Attack source`);
   for(const [value,title] of [['','Choose Attack source'],['main','Upper Main Attack'],['sub','Lower extra Attack']]) {const option=element('option',title);option.value=value;roleSelect.append(option);}
   roleSelect.value=record.sourceRole??'';
   function updateRole() {roleLabel.hidden=fieldForRecord(record)?.label!=='Attack' || fieldForRecord(record)?.kind!=='integer';roleSelect.classList.toggle('needs-value',!roleLabel.hidden && !roleSelect.value);}
-  roleSelect.addEventListener('change',()=>{record.sourceRole=roleSelect.value;updateRole();error.hidden=true;editorEdited=true;markStale({side});});
+  roleSelect.addEventListener('change',()=>{record.sourceRole=roleSelect.value;record.sourceRoleOrigin='manual';updateRole();error.hidden=true;editorEdited=true;markStale({side});});
   roleLabel.append(roleSelect);updateRole();
   const remove = element('button', '×', 'remove'); remove.type = 'button';
   remove.setAttribute('aria-label', `Remove ${sideName.toLowerCase()} line ${ordinal}`);
   remove.addEventListener('click', () => {
-    records[side].splice(records[side].indexOf(record), 1); row.remove(); editorEdited = true; markStale({side}); $(`#${side}-add`).focus();
+    records[side].splice(records[side].indexOf(record), 1); row.remove();roleLabel.remove();syncAutomaticAttackRoles(side);editorEdited = true; markStale({side}); $(`#${side}-add`).focus();
   });
-  row.append(remove,roleLabel,error); (target ?? $(`#${side}-lines`)).append(row); markStale({side}); return row;
+  row.append(remove,error);$(`#${side}-source-overrides`).append(roleLabel); (target ?? $(`#${side}-lines`)).append(row);syncAutomaticAttackRoles(side); markStale({side}); return row;
 }
 for (const side of ['current', 'candidate']) {
   const card = element('section', undefined, 'item-card'); card.id=`${side}-card`;
@@ -207,6 +225,9 @@ for (const side of ['current', 'candidate']) {
   const add = element('button', 'Add line'); add.type = 'button'; add.id = `${side}-add`;
   add.addEventListener('click', () => { editorEdited = true; addLine(side).querySelector('select').focus(); });
   name.hidden = true; input.hidden = true; body.append(name, input, lines, add);
+  const sourceDetails=element('details');sourceDetails.id=`${side}-source-details`;
+  const overrides=element('div');overrides.id=`${side}-source-overrides`;
+  sourceDetails.append(element('summary','Advanced item corrections'),element('p','Upper Attack is Main; lower Attack is extra. Change only if the photo was read in the wrong order.'),overrides);body.append(sourceDetails);
   const status=element('p','Confirmed','item-confirmed'); status.id=`${side}-confirmed`; status.hidden=true;
   const confirm=element('button',side==='current'?'Confirm current equip':'Confirm new equip','confirm-item'); confirm.type='button'; confirm.id=`${side}-confirm`; confirm.setAttribute('aria-controls',body.id); confirm.setAttribute('aria-expanded','true');
   confirm.addEventListener('click',()=>{
@@ -217,14 +238,9 @@ for (const side of ['current', 'candidate']) {
 }
 
 $('.intake').append($('#results'));
-for(const name of Object.keys(RECOMMENDATION_ASSUMPTIONS)) $(`#scope-${name}`).addEventListener('change',()=>{
-  revision++; $('#results').hidden=true; refreshRecommendationInputs();
-});
 $('#comparison-form').addEventListener('submit', async event => {
   event.preventDefault();
   if(!confirmedItems.current || !confirmedItems.candidate) return;
-  const firstMissing=requiredQuestions.find(name=>!$(`#scope-${name}`).checked);
-  if(firstMissing) { $(`#scope-${firstMissing}`).focus(); return; }
   const numberMissing=requiredPlayerFields.find(field=>!playerValueValid(field));
   if(numberMissing) { $(`#player-${numberMissing.id}`).focus(); return; }
   const inputRevision=revision;
@@ -234,10 +250,15 @@ $('#comparison-form').addEventListener('submit', async event => {
   const body=$('#result-rows'); body.replaceChildren();
   const payload=comparisonPayload(enteredAssumptions());
   const activities=recommendCharacterActivities(payload);
-  for(const result of activities) {
+  const results=activities.filter(result=>result.contextId.startsWith('activity-'));
+  const commonReason=activities.every(result=>!result.recommendation)?plainIssues(activities[0].issues):'';
+  $('#result-reason').textContent=commonReason;$('#result-reason').hidden=!commonReason;
+  for(const result of results) {
     const row=element('article',undefined,'recommendation-row');
     const choice=result.recommendation==='current'?'Current equip (left)':result.recommendation==='candidate'?'New equip (right)':'No reliable preference';
-    row.append(element('h3',result.label),element('strong',choice),element('span',`Confidence: ${result.confidence}`)); body.append(row);
+    row.append(element('h3',result.label),element('strong',choice),element('span',`Confidence: ${result.confidence}`));
+    if(!result.recommendation && (!commonReason || ['activity-6','activity-7'].includes(result.contextId))) row.append(element('p',plainIssues(result.issues)));
+    body.append(row);
   }
   const explanation=$('#recommendation-explanation'); explanation.replaceChildren();
   explanation.append(element('p',activities[0].scope));
@@ -379,6 +400,10 @@ function showReading(reading) {
   } else replaceEditor(adopted.items);
   editorImageRevision = imageRevision;
   markedRegions = panels.map(panel=>panel?.region ?? null); drawImageReference();
+  const raster=sourceCanvas.getContext('2d').getImageData(0,0,sourceCanvas.width,sourceCanvas.height);
+  starForceState=applyStarForceReading(starForceState,readStarForce(raster,panels),imageRevision);
+  playerValues.starForce=starForceState.value;
+  const starInput=$('#player-starForce');if(starInput) starInput.value=starForceState.value;
   for (const [index,side] of ['current','candidate'].entries()) {
     const image = $(`#${side}-crop`), panel = panels[index]; image.hidden = !panel;
     if (panel) {
@@ -417,7 +442,7 @@ async function startReading(regions = null) {
 function replaceEditor(items, names) {
   $('#other-readings').replaceChildren();
   for (const side of ['current', 'candidate']) {
-    $(`#${side}-lines`).replaceChildren(); records[side] = [];
+    $(`#${side}-lines`).replaceChildren();$(`#${side}-source-overrides`).replaceChildren(); records[side] = [];
     for (const record of items[side]) {
       let target = null;
       if (record.otherReading) {
@@ -450,8 +475,9 @@ $('#adjust-areas').addEventListener('click', () => {
     } });
 });
 function removeImage() {
-  for(const name of Object.keys(RECOMMENDATION_ASSUMPTIONS)) $(`#scope-${name}`).checked=false;
   imageRevision++; cancelReading(); cropEditor?.close(); markedRegions = [null, null]; stagedReading = null;
+  starForceState=resetStarForceForImage(starForceState,imageRevision);playerValues.starForce=starForceState.value;
+  const starInput=$('#player-starForce');if(starInput) starInput.value=starForceState.value;
   if (imageUrl) URL.revokeObjectURL(imageUrl); imageUrl = null;
   if (sourceCanvas) { sourceCanvas.width = 0; sourceCanvas.height = 0; sourceCanvas = null; }
   const preview = $('#screenshot-preview'); preview.onload = null; preview.onerror = null; preview.removeAttribute('src');
