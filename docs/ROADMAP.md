@@ -1,5 +1,13 @@
 # Roadmap
 
+## Local workflow audit during deployment limit — 2026-10-24
+
+- [x] Reproduce and fix the hidden incomplete skill-line defect using the original ring image.
+- [x] Reject invalid/partial Advanced amplification without silent star-table fallback; replan required fields while typing.
+- [x] Share exact numerical field validation; retain corrections, character values and caret across review changes.
+- [x] Verify missing-value confirmation, edit/result invalidation, preserved Advanced data and unknown-resistance abstention locally. See WORKFLOW_AUDIT_2026-10-24.md.
+- [ ] Successful hosted preview and physical-phone retest after the hosting limit clears. Main Stat/skill/PvP mechanics and live-game evidence remain open.
+
 ## Automatic metadata and simpler choices — 2026-10-24
 
 - [x] Infer upper/lower Attack with optional manual corrections; both sources remain calculated.

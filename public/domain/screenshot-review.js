@@ -1,7 +1,7 @@
 // Pure OCR proposals -> shared manual editor boundary. No number is confirmed
 // by recognition, parsing, source confidence, or an import action.
 import { proposeRawLineFields, proposePanelRows } from './ocr-item-rows.js';
-export const SCREENSHOT_REVIEW_VERSION = 'screenshot-review-2';
+export const SCREENSHOT_REVIEW_VERSION = 'screenshot-review-3';
 const copy = value => structuredClone(value);
 export function proposeLineFields(rawText) {
   return proposeRawLineFields(rawText);
@@ -23,7 +23,7 @@ export function importScreenshotProposals({ proposedPanels, assignment, assignme
       if (!line || typeof line.rawText !== 'string') throw new TypeError('Lossless line observations required.');
       const fields = line.proposedFields;
       return { id: `ocr-${imageRevision}-${runId}-${side}-${ordinal}`, ordinal, rawText: line.rawText,
-        rawLabel: fields.rawLabel, rawValue: fields.rawValue, unit: fields.unit, confirmed: false, correction: null,
+        rawLabel: fields.statLabelProposal ?? fields.rawLabel, rawValue: fields.rawValue, unit: fields.unit, confirmed: false, correction: null,
         comparisonText: fields.comparisonText, extractionIssues: fields.issues,
         provenance: { kind: 'ocr', imageRevision, runId, panelId: panel.id, lineId: line.id ?? null, ordinal, region: copy(panel.region ?? null), observation: copy(line.provenance ?? {}), evidenceRows: copy(assembly.evidenceRows), assemblyVersion: assembly.version, assemblyMethod: assembly.method, assemblyIssues: copy(assembly.issues), reviewVersion: SCREENSHOT_REVIEW_VERSION },
         reviewedImageRevision: null };

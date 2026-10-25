@@ -1,5 +1,9 @@
 # Decisions and open questions
 
+## Local workflow hardening during hosting limit — 2026-10-24
+
+Keep identifiable incomplete OCR stat lines in the primary typed form with an empty highlighted value, preserving the raw evidence and refusing to repair merged base/delta numbers. Only background/unrecognized fragments remain quiet. Use one exact player-value validation contract for UI and engine. Explicit Advanced amplification values select a paired-input path; malformed values cannot silently revert to stars. Refresh consumed questions on input and submit while preserving values and typing focus. No damage equation is changed and no deployment is attempted during this audit. See WORKFLOW_AUDIT_2026-10-24.md.
+
 ## Automatic metadata and fewer controls — 2026-10-24
 
 The user's upper/first and lower/second flat Attack convention supersedes mandatory explicit role questions in the UI. Infer roles and retain optional corrections; both sources remain calculated. Read the shared Star Force level only from credible matching yellow-star grids on both headers, with manual corrections preserved. Remove the three mandatory assumption checkboxes: model assumptions belong in a plain scope notice and optional details, not jargon-heavy consent gates. Show activity choices and confidence without scores or raw changes, and explain actual missing mechanics or inconsistent character totals. No combat formula or eligibility guard is weakened by this simplification. See AUTOMATIC_METADATA_RELEASE.md and independent QA.

@@ -11,7 +11,7 @@ import { groupReviewRows } from './domain/ocr-review-groups.js';
 import { parseReviewRecords, adoptReviewRecords } from './domain/inline-review.js';
 import { RELEASE_ID } from './release.js';
 import { importScreenshotProposals, editScreenshotRecord } from './domain/screenshot-review.js';
-import { planCharacterInputs, recommendCharacterActivities, PLAYER_FIELDS, CHARACTER_MODEL_VERSION } from './domain/character-recommendation.js';
+import { planCharacterInputs, recommendCharacterActivities, characterValueIssue, PLAYER_FIELDS, CHARACTER_MODEL_VERSION } from './domain/character-recommendation.js';
 import { inferAttackRoles, resetStarForceForImage, applyStarForceReading } from './domain/automatic-equipment-metadata.js';
 import { readStarForce } from './domain/star-force-reader.js';
 
@@ -46,41 +46,45 @@ function refreshRecommendationInputs() {
   if(!complete) { $('#recommend').disabled=true; return; }
   const plan=planCharacterInputs(comparisonPayload(enteredAssumptions()));
   requiredPlayerFields=plan.fields;
-  $('#eligibility-note').textContent=plan.unsupported.length?plainIssues(plan.unsupported):plan.fields.length?'Enter these totals from Character with your current item equipped.':'No character numbers are needed for this comparison.';
+  $('#eligibility-note').textContent=plan.unsupported.length?plainIssues(plan.unsupported):plan.fields.some(field=>['mainAmplification','subAmplification'].includes(field.id))?'Finish both amplification percentages in Advanced, or clear both to use the star count.':plan.fields.length?'Enter these totals from Character with your current item equipped.':'No character numbers are needed for this comparison.';
   renderPlayerFields(plan.fields);
   updateRecommendationAvailability();
 }
 
 function playerValueValid(field) {
-  const value=String(playerValues[field.id]??'').trim(),numeric=Number(value.replaceAll(',','').replace(/%$/,''));
-  if(!value || !/^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?%?$/.test(value) || !Number.isFinite(numeric) || numeric<0 || numeric>Number.MAX_SAFE_INTEGER) return false;
-  if((field.unit==='points' || field.unit==='stars') && value.includes('%')) return false;
-  if(['attack','criticalDamage'].includes(field.id) && numeric<=0) return false;
-  return field.id!=='starForce' || Number.isInteger(numeric) && numeric>=12 && numeric<=30;
+  return characterValueIssue(field,playerValues[field.id])===null;
 }
 function updateRecommendationAvailability() {
   const numbers=requiredPlayerFields.filter(field=>!playerValueValid(field));
   $('#recommend').disabled=!(confirmedItems.current && confirmedItems.candidate) || numbers.length>0;
   $('#comparison-form>.result-limit').textContent=numbers.length?'Fill the highlighted current totals before calculating.':'Ready to compare for each activity.';
-  for(const field of requiredPlayerFields) playerFieldNodes.get(field.id)?.querySelector('input').classList.toggle('needs-value',!playerValueValid(field));
+  for(const field of PLAYER_FIELDS) {
+    const group=playerFieldNodes.get(field.id);if(!group) continue;
+    const required=requiredPlayerFields.some(entry=>entry.id===field.id),issue=required?characterValueIssue(field,playerValues[field.id]):null;
+    const input=group.querySelector('input'),error=group.querySelector('.field-error');
+    input.classList.toggle('needs-value',Boolean(issue));input.setAttribute('aria-invalid',String(Boolean(issue)));
+    error.textContent=issue??'';error.hidden=!issue || !String(playerValues[field.id]??'').trim();
+  }
 }
 function renderPlayerFields(required) {
   const ids=new Set(required.map(field=>field.id));
+  const focused=document.activeElement,selection=focused?.tagName==='INPUT'?[focused.selectionStart,focused.selectionEnd]:null;
   for(const field of PLAYER_FIELDS) {
     let group=playerFieldNodes.get(field.id);
     if(!group) {
       group=element('label',`${field.label} (${field.unit})`,'player-stat');
       const input=element('input');input.type='text';input.inputMode='decimal';input.id=`player-${field.id}`;input.value=playerValues[field.id]??'';input.autocomplete='off';
       input.setAttribute('aria-label',`${field.label}, ${field.unit}`);
-      input.addEventListener('input',()=>{playerValues[field.id]=input.value;if(field.id==='starForce') starForceState={value:input.value,origin:'manual',imageRevision};revision++;$('#results').hidden=true;updateRecommendationAvailability();});
-      input.addEventListener('change',refreshRecommendationInputs);
-      group.append(input);playerFieldNodes.set(field.id,group);
+      input.addEventListener('input',()=>{playerValues[field.id]=input.value;if(field.id==='starForce') starForceState={value:input.value,origin:'manual',imageRevision};revision++;$('#results').hidden=true;refreshRecommendationInputs();});
+      const error=element('span','','field-error');error.id=`player-${field.id}-error`;error.hidden=true;input.setAttribute('aria-describedby',error.id);
+      group.append(input,error);playerFieldNodes.set(field.id,group);
     }
-    const target=ids.has(field.id) && !(field.id==='starForce' && starForceState.origin==='automatic' && playerValueValid(field))?$('#character-fields'):$('#precision-fields');
+    const target=ids.has(field.id) && !['mainAmplification','subAmplification'].includes(field.id) && !(field.id==='starForce' && starForceState.origin==='automatic' && playerValueValid(field))?$('#character-fields'):$('#precision-fields');
     if(group.parentElement!==target) target.append(group);
   }
   $('#star-force-reading').hidden=starForceState.origin!=='automatic';
   $('#star-force-reading').textContent=starForceState.origin==='automatic'?`${starForceState.value} stars · read from both items. Edit in Advanced calculation.`:'';
+  if(focused?.isConnected && document.activeElement!==focused) {focused.focus({preventScroll:true});if(selection && selection[0]!==null) focused.setSelectionRange(...selection);}
 }
 
 function plainIssues(issues) {
@@ -241,8 +245,9 @@ $('.intake').append($('#results'));
 $('#comparison-form').addEventListener('submit', async event => {
   event.preventDefault();
   if(!confirmedItems.current || !confirmedItems.candidate) return;
+  refreshRecommendationInputs();
   const numberMissing=requiredPlayerFields.find(field=>!playerValueValid(field));
-  if(numberMissing) { $(`#player-${numberMissing.id}`).focus(); return; }
+  if(numberMissing) {const input=$(`#player-${numberMissing.id}`);if(input.closest('#precision-inputs')) $('#precision-inputs').open=true;input.focus();return;}
   const inputRevision=revision;
   $('.intake').dataset.screen='calculating'; $('#calculation-screen').hidden=false;
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));

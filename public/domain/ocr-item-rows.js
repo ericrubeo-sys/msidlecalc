@@ -1,10 +1,20 @@
 // Pure, conservative draft assembly. Coordinates suggest rows, never truth.
-export const OCR_ITEM_ROWS_VERSION = 'item-base-rows-2';
+import { STAT_FIELDS } from './stat-fields.js';
+export const OCR_ITEM_ROWS_VERSION = 'item-base-rows-3';
 const copy = value => structuredClone(value);
 const numericSource = '[+-]?(?:\\d{1,3}(?:,\\d{3})+|\\d+)(?:\\.\\d+)?%?';
 const numeric = new RegExp(`^${numericSource}$`);
 const simpleLine = new RegExp(`^(.+?)\\s+(${numericSource})(?:\\s+(${numericSource}))?$`);
-const unknown = text => ({ rawLabel: text, rawValue: '', unit: 'unknown', comparisonText: null, issues: ['unparsedObservation'] });
+const labels=[...new Set(STAT_FIELDS.map(field=>field.label))].sort((a,b)=>b.length-a.length);
+function unknown(text) {
+  // Recover only an exact stat-name prefix, never a number or a fuzzy label.
+  // A joined base/delta such as "16-1" must remain an empty editable value.
+  const normalized=text.trim().replace(/\s+/g,' ');
+  const prefix=labels.find(label=>normalized.toLowerCase().startsWith(label.toLowerCase()) && /^(?:\s|$)/.test(normalized.slice(label.length)));
+  const label=prefix && /^(?:\s+(?:[+−-]?\d|[?OoIl|]+(?:\s|$))|\s*$)/.test(normalized.slice(prefix.length))?prefix:null;
+  return { rawLabel: text, rawValue: '', unit: 'unknown', comparisonText: null,
+    ...(prefix?{requiresStatReview:true}:{}),...(label?{statLabelProposal:label}:{}),issues:['unparsedObservation',...(label?['unreadableStatValue']:[])] };
+}
 function fields(label, value, comparisonText = null) {
   return { rawLabel: label, rawValue: value, unit: value.endsWith('%') ? 'displayPercent' : 'unknown', comparisonText,
     issues: ['unconfirmedProposal', ...(value.includes(',') ? ['separatorNeedsReview'] : [])] };
