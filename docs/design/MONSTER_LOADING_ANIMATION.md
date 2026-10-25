@@ -55,3 +55,5 @@ User requested livelier motion, a left-to-right treatment on “Reading your pho
 The title uses a3.2-second left-to-right accent sweep with a quiet gap; the monsters remain the primary motion. Reduced-motion preferences disable the title and sprite animation, and forced-color mode restores plain system text. Hidden scenes pause the title through the same visibility state. The real processing screen retains Cancel. The demonstration has no playback button, explanatory paragraph or extra navigation below the title.
 
 Browser verification after reload: all three sprites loaded; patrol duration6.4s and title sweep animation were active; visible scene text was exactly the reading phrase, with zero scene buttons. Updated dark-mode appearance was visually inspected. Build/module/resource closure passed; no hosting deployment occurred.
+
+User approved this refined appearance on2026-10-25. The checked release candidate and publication sequence are recorded in [approved loading release](../APPROVED_LOADING_RELEASE_2026-10-25.md). Hosting publication remains pending; visual approval does not imply new damage-model validation.

@@ -1,5 +1,14 @@
 # Roadmap
 
+## Approved loading release and next capability milestone — 2026-10-25
+
+- [x] User approves refined monster patrol and animated reading status; preview copy and Pause removed.
+- [x] Prepare implementationee920b2/build e6e0fcdf841f:353 tests, build/resource closure and color checks pass. See APPROVED_LOADING_RELEASE_2026-10-25.md.
+- [ ] Verify hosted preview and publish the checked candidate when Vercel is available; no deployment claimed yet.
+- [ ] Implement the full ring comparison's Main Stat, job-skill and Max Damage Multiplier relationships after reconciling existing research and verifying gaps. Keep inputs conditional and evaluate all supported activities automatically.
+- [ ] Extend existing private OCR evaluation with complete row coverage and targeted uncertain-row recovery, beyond digit accuracy alone.
+- [ ] Improve source-stage/critical/context validation and practical prediction evidence without resurrecting infeasible player experiments.
+
 ## Local workflow audit during deployment limit — 2026-10-24
 
 - [x] Reproduce and fix the hidden incomplete skill-line defect using the original ring image.

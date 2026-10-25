@@ -1,5 +1,9 @@
 # Decisions and open questions
 
+## Loading animation approved; prepare publication — 2026-10-25
+
+User approves the refined monster patrol/status sweep and requests preparation for publication when hosting is available. Record the exact checked candidate rather than retry deployments during this preparation. All353 software tests, build/resource closure and color checks pass. The next ability milestone targets the complete real ring tradeoff—Main Stat, changed skill levels and Max Damage Multiplier—alongside row-completeness improvements using the existing private OCR scoring harness. Reconcile existing research before encoding gaps; no claim that successful OCR or a single supported new effect completes the recommendation. See APPROVED_LOADING_RELEASE_2026-10-25.md.
+
 ## Livelier loader with one animated status — 2026-10-25
 
 User asks for a more dynamic monster patrol and removal of the Pause control and mockup explanation. UX supports a subtle left-to-right accent sweep across the complete, continuously readable status. Use a6.4-second patrol with staggered12px/5px/4px gaits, a3.2-second text sweep with a quiet gap, no additional motion layers and no fake measured progress. Both text and monsters become static for reduced motion. Keep Cancel in actual OCR; remove playback controls and preview copy from the local demonstration. This supersedes the first loader preview's Pause/Play treatment.
