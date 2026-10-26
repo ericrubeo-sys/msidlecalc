@@ -1,5 +1,11 @@
 # Decisions and open questions
 
+## Complete-ring blocker and conservative OCR recovery — 2026-10-25
+
+Deliver a reviewable local candidate with exact ring dependencies rather than publishing guessed Main Stat/skill/range mathematics. Current player totals cannot resolve those three missing relationships, so ask no new fields for that pair and preserve previously entered values. Existing shoulder inputs/model remain conditional and provisional. Keep one shared blocker and choices/confidence per activity, with explanations behind Why & limits. No numerical scope expansion or deployment is approved by this checkpoint.
+
+Add advisory bracketed neutral-row coverage and at most two row retries per panel/four per run. Accept a retry only with one observed typed row and base-number evidence; a rejected retry remains a required correction. Never certify semantic completeness. Actual reused ring/shoulder development results are23/24 exact values after recovery versus22/24 before,24/24 identities/units, no missing/extra/duplicate rows; held-out0. Private images/transcripts remain ignored. See RING_OCR_MILESTONE_2026-10-25.md and OCR_COMPLETENESS_2026-10-25.md. Software checks do not establish game accuracy.
+
 ## Loading animation approved; prepare publication — 2026-10-25
 
 User approves the refined monster patrol/status sweep and requests preparation for publication when hosting is available. Record the exact checked candidate rather than retry deployments during this preparation. All353 software tests, build/resource closure and color checks pass. The next ability milestone targets the complete real ring tradeoff—Main Stat, changed skill levels and Max Damage Multiplier—alongside row-completeness improvements using the existing private OCR scoring harness. Reconcile existing research before encoding gaps; no claim that successful OCR or a single supported new effect completes the recommendation. See APPROVED_LOADING_RELEASE_2026-10-25.md.

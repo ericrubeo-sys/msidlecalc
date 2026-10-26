@@ -1,7 +1,8 @@
 import { fieldForRecord, validateStatValue, RECOMMENDATION_CONTEXTS } from './stat-fields.js';
 import { recommendAllActivities as minimumActivities } from './minimum-input.js';
+import { unsupportedEffectDependency } from './recommendation-eligibility.js';
 
-export const CHARACTER_MODEL_VERSION='character-offense-estimate-2026-10-24-v2';
+export const CHARACTER_MODEL_VERSION='character-offense-estimate-2026-10-25-v3';
 export const STAR_FORCE_AMPLIFICATION=Object.freeze(Object.fromEntries([[200,25],[225,25],[250,25],[300,50],[350,60],[400,70],[450,80],[500,90],[600,100],[700,110],[900,130],[1050,145],[1200,160],[1350,180],[1500,200],[1750,225],[2000,250],[2250,275],[2500,300]].map((pair,i)=>[i+12,Object.freeze(pair)])));
 export const PLAYER_FIELDS=Object.freeze([
   {id:'attack',label:'Current character Attack',unit:'points'},
@@ -79,7 +80,7 @@ function inspect(input) {
     if(outside.has(family)) continue;
     if(a.length>1 || b.length>1) {issues.push(issue('repeatedSource',`${a[0]?.label??b[0]?.label}: repeated sources need distinct supported identities.`));continue;}
     if(a.length && b.length && qc(a[0].q,b[0].q)===0 && a[0].unit===b[0].unit) continue;
-    if(!supported.has(family)) {issues.push(issue('unsupportedEffect',`${a[0]?.label??b[0]?.label}: changed conversion, skill, timing or other mechanic is not modeled.`));continue;}
+    if(!supported.has(family)) {issues.push(unsupportedEffectDependency(a[0]?.label??b[0]?.label));continue;}
     if(family!=='attack' && [...a,...b].some(row=>row.unit!=='displayPercent')) {issues.push(issue('unitMismatch','Offensive bonuses must use percentage units.'));continue;}
     changed.push(label);
   }

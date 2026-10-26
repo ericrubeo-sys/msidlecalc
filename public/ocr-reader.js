@@ -3,7 +3,9 @@ import { assessCropCoverage, CROP_COVERAGE_VERSION } from './domain/crop-coverag
 import { annotateFieldEvidence, OCR_FIELD_EVIDENCE_VERSION } from './domain/ocr-field-evidence.js';
 import { assignComparisonLayout } from './domain/comparison-layout.js';
 import { createLocalPanelHypotheses, assessLocalPanelRecovery, LOCAL_PANEL_RECOVERY_VERSION } from './domain/local-panel-recovery.js';
-export const OCR_READER_VERSION = 'browser-reader-5';
+import { assessStatRowCoverage, OCR_ROW_COVERAGE_VERSION } from './domain/ocr-row-coverage.js';
+import { proposeRecoveredRow, OCR_ROW_RECOVERY_VERSION } from './domain/ocr-row-recovery.js';
+export const OCR_READER_VERSION = 'browser-reader-6';
 let libraryPromise = null;
 function loadLocalLibrary() {
   if (!libraryPromise) libraryPromise = new Promise((resolve, reject) => {
@@ -25,7 +27,7 @@ export function createComparisonReader({ loadTesseract = loadLocalLibrary, creat
     const width = image?.width, height = image?.height;
     if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0 || width * height > 7000000 || !Number.isSafeInteger(inputRevision) || inputRevision < 0) throw new TypeError('Bounded decoded image and revision required.');
     const reviewed = regions === null ? null : validateRegions(regions, width, height);
-    let worker = null, canceled = false;
+    let worker = null, canceled = false, rowRetryBudget = 4;
     const canvases = [];
     const check = () => { if (canceled || signal?.aborted || !isCurrent()) throw abortError(); };
     let rejectCanceled;
@@ -48,7 +50,8 @@ export function createComparisonReader({ loadTesseract = loadLocalLibrary, creat
         const result = await pending(worker.recognize(canvas, {}, { text: true, blocks: true }));
         if (inspectFields) {
           const context = canvas.getContext('2d');
-          result.fieldBlocks = context?.getImageData ? annotateFieldEvidence(result.data.blocks ?? null, context.getImageData(0,0,canvas.width,canvas.height)) : null;
+          result.rowRaster=context?.getImageData ? context.getImageData(0,0,canvas.width,canvas.height) : null;
+          result.fieldBlocks = result.rowRaster ? annotateFieldEvidence(result.data.blocks ?? null,result.rowRaster) : null;
         }
         return result;
       }
@@ -96,7 +99,34 @@ export function createComparisonReader({ loadTesseract = loadLocalLibrary, creat
         const lines = text.split(/\r\n|\r|\n/).map((rawText, ordinal) => ({ id: `${proposal.id}:line-${ordinal}`, ordinal, rawText, label: null, value: null, unit: null, statId: null, confirmed: false,
           provenance: { kind: 'ocr', inputRevision, panelId: proposal.id, region: structuredClone(region), scale, areaSource: source, segmentationIdentity: JSON.stringify({ region, scale, psm: 6, detectionPsm: source === 'whole-image-headings' ? detectionPsm : null, detectionVersion: PANEL_DETECTION_VERSION, localRecoveryVersion: source === 'local-layout-hypothesis' ? LOCAL_PANEL_RECOVERY_VERSION : null, fieldEvidenceVersion: OCR_FIELD_EVIDENCE_VERSION, version: OCR_READER_VERSION }) } }));
         const coverageIssues = assessCropCoverage({ blocks: raw.blocks, width, height, scale, region });
-        proposedPanels.push({ ...structuredClone(proposal), role: null, requiresReview: true, fieldEvidenceVersion: OCR_FIELD_EVIDENCE_VERSION, coverageIssues, coverageProvenance: { version: CROP_COVERAGE_VERSION, observation: 'initialWholeImage', psm: raw.psm, scale, region: structuredClone(region), advisoryOnly: true }, rawText: text, blocks, structuredLines, lines, confidence: Number.isFinite(result.data.confidence) ? result.data.confidence : null });
+        const panel={ ...structuredClone(proposal), role: null, requiresReview: true, fieldEvidenceVersion: OCR_FIELD_EVIDENCE_VERSION, coverageIssues, coverageProvenance: { version: CROP_COVERAGE_VERSION, observation: 'initialWholeImage', psm: raw.psm, scale, region: structuredClone(region), advisoryOnly: true }, rawText: text, blocks, structuredLines, lines, confidence: Number.isFinite(result.data.confidence) ? result.data.confidence : null };
+        panel.rowCoverage=assessStatRowCoverage({raster:result.rowRaster,panel,scale});
+        delete result.rowRaster;
+        panel.rowRecovery={version:OCR_ROW_RECOVERY_VERSION,imageRevision:inputRevision,scale,attempts:[],limit:{perPanel:2,perRun:4}};
+        for(const target of panel.rowCoverage.retryRegions) {
+          check();
+          if(rowRetryBudget<=0) {panel.rowRecovery.attempts.push({target,status:'unresolved',proposal:null,issues:['rowRetryBudgetExhausted']});continue;}
+          rowRetryBudget--;
+          onProgress({stage:'readingUncertainRow',panelId:proposal.id});
+          try {
+          await pending(worker.setParameters({tessedit_pageseg_mode:'7'}));check();
+          const retryRegion={x:region.x+target.region.x,y:region.y+target.region.y,width:Math.min(target.region.width,region.width-target.region.x),height:Math.min(target.region.height,region.height-target.region.y)};
+          const retryScale=3;
+          const retry=await recognizeRegion(retryRegion,retryScale,true);check();
+          const retryText=typeof retry.data.text==='string'?retry.data.text:'';
+          const retryBlocks=structuredClone(retry.data.blocks??null);
+          const retryLines=(retry.fieldBlocks??retryBlocks??[]).flatMap(block=>(block.paragraphs??[]).flatMap(paragraph=>paragraph.lines??[]));
+          const retryPanel={id:`${proposal.id}-${target.id}`,rawText:retryText,fieldEvidenceVersion:OCR_FIELD_EVIDENCE_VERSION,structuredLines:retryLines,lines:retryText.split(/\r\n|\r|\n/).map(rawText=>({rawText}))};
+          const recovered=proposeRecoveredRow(retryPanel,target);
+          delete retry.rowRaster;
+          panel.rowRecovery.attempts.push({target,...recovered,observation:{rawText:retryText,blocks:retryBlocks,structuredLines:retryLines,region:retryRegion,scale:retryScale,psm:7,fieldEvidenceVersion:OCR_FIELD_EVIDENCE_VERSION}});
+          } catch(error) {
+            check();
+            panel.rowRecovery.attempts.push({target,status:'unresolved',proposal:null,issues:['rowRetryFailed']});
+          }
+          await pending(worker.setParameters({tessedit_pageseg_mode:'6'}));check();
+        }
+        proposedPanels.push(panel);
       }
       return proposedPanels;
       }
@@ -115,7 +145,7 @@ export function createComparisonReader({ loadTesseract = loadLocalLibrary, creat
       }
       check();
       return { version: OCR_READER_VERSION, inputRevision, raw, detectionObservations, proposedPanels, recoveryAttempt, route:assignComparisonLayout(proposedPanels).status === 'assigned' ? 'itemReview' : 'needsAreas', issues: recoveryAttempt?.status === 'accepted' ? ['localAreasAndValuesRequireReview'] : reviewed ? ['reviewedRegionsStillRequireRoleAndLineConfirmation'] : detection.issues,
-        settings: { tesseract: '7.0.0', core: '7.0.0', languagePackage: '1.0.0', languageVariant: '4.0.0_best_int', language: 'eng', scale, smoothing: false, detectionSource, detectionPsm: detectionSource === 'whole-image-headings' ? detectionPsm : null, detectionVersion: PANEL_DETECTION_VERSION, localRecoveryVersion: LOCAL_PANEL_RECOVERY_VERSION, cacheMethod: 'none', workerBlobURL: false, resourceOrigin: origin } };
+        settings: { tesseract: '7.0.0', core: '7.0.0', languagePackage: '1.0.0', languageVariant: '4.0.0_best_int', language: 'eng', scale, smoothing: false, detectionSource, detectionPsm: detectionSource === 'whole-image-headings' ? detectionPsm : null, detectionVersion: PANEL_DETECTION_VERSION, localRecoveryVersion: LOCAL_PANEL_RECOVERY_VERSION,rowCoverageVersion:OCR_ROW_COVERAGE_VERSION,rowRecoveryVersion:OCR_ROW_RECOVERY_VERSION, cacheMethod: 'none', workerBlobURL: false, resourceOrigin: origin } };
     } catch (error) {
       if (error?.name === 'AbortError' || canceled || signal?.aborted || !isCurrent()) throw abortError();
       // Dependency errors can contain player data; expose only a fixed code.

@@ -4,6 +4,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { comparisonEvaluationHtml, comparisonEvaluationBrowser } from './lib/comparison-evaluation-page.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const assets = new Map([
   ['/vendor/tesseract.min.js', 'node_modules/tesseract.js/dist/tesseract.min.js'],
@@ -14,6 +15,8 @@ const assets = new Map([
   ['/domain/ocr-preprocessing.js', 'public/domain/ocr-preprocessing.js'],
   ['/domain/ocr-raster.js', 'public/domain/ocr-raster.js'],
 ]);
+assets.set('/ocr-reader.js','public/ocr-reader.js');
+for(const name of await readdir(path.join(root,'public/domain'))) if(/^[a-z0-9-]+\.js$/.test(name)) assets.set(`/domain/${name}`,`public/domain/${name}`);
 for (const name of await readdir(path.join(root, 'node_modules/tesseract.js-core'))) {
   if (/^tesseract-core(?:-(?:relaxedsimd|simd))?(?:-lstm)?\.wasm(?:\.js)?$/.test(name)) assets.set(`/vendor/core/${name}`, `node_modules/tesseract.js-core/${name}`);
 }
@@ -306,6 +309,8 @@ createServer(async (request, response) => {
       response.writeHead(204, headers); response.end(); return;
     }
     if (pathname === '/') { content = auditedHtml; type = 'text/html; charset=utf-8'; }
+    else if(pathname==='/comparison') {content=comparisonEvaluationHtml;type='text/html; charset=utf-8';}
+    else if(pathname==='/comparison-harness.js') {content=`(${comparisonEvaluationBrowser.toString()})();`;type='text/javascript; charset=utf-8';}
     else if (pathname === '/audit') { content = JSON.stringify({ ...serverAudit, fixedAssets: assetMetadata }); type = 'application/json'; }
     else if (pathname === '/audit.js') { content = `(${browserAudit.toString()})();`; type = 'text/javascript; charset=utf-8'; }
     else if (pathname === '/harness.js') { content = `(${browserHarness.toString()})();`; type = 'text/javascript; charset=utf-8'; }

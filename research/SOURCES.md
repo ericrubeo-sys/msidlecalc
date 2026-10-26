@@ -1,5 +1,9 @@
 # Game mechanics research register
 
+## Complete-ring primary-source reconciliation — 2026-10-25
+
+The mechanics specialist rechecked the rendered [official guide](https://maplestoryidle.nexon.com/en/guide), still displaying October15,2026, and historical/current skill evidence. [January29 Paladin/Bishop](https://forum.nexon.com/maplestoryidle/board_view?board=6675&thread=3360937), [April30 Buccaneer/Corsair](https://forum.nexon.com/maplestoryidle/board_view?board=6675&thread=3435578) and [August13 balance/Ring of Cycles](https://forum.nexon.com/maplestoryidle/board_view?thread=3522342) are concrete evidence, not a complete current level-function dataset. August13 redistributes power across level ranges and makes some effects level-independent; generic per-level damage weights are invalid. The guide establishes Main Stat's two offensive consumers and range endpoints, but the bounded search did not verify numeric attribute conversion or the ordinary range/critical joint law. The scoped PvP defender midpoint does not establish a PvE expectation. Publication date/build applicability and empirical accuracy remain separate. Full fact/deduction/assumption ledger, exact source sections and blockers: [complete-ring report](../docs/RING_COMPLETE_MECHANICS_2026-10-25.md). No new numerical relationship is encoded and no live-game measurement was collected.
+
 This register now links recovered prior planning and the 2026-10-22 primary-source audit. Published mechanics are not the same as an implemented or empirically validated numerical model. No numerical damage result should be described as definitive without its inputs, supported scope, and verification.
 
 ## Evidence standards

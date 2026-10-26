@@ -1,5 +1,16 @@
 # Roadmap
 
+## Ring evidence and OCR completeness candidate — 2026-10-25
+
+- [x] Reconcile existing source/replacement/outcome research with a fresh primary-source mechanics review; document exact three-family ring blocker and conditional Basic/Advanced specification.
+- [x] Integrate dependency categories and zero useless ring questions; preserve compact automatic activity results and approved loading animation.
+- [x] Implement advisory bracketed row coverage, bounded selective retries and retained-correction gap warnings; extend existing private scorer.
+- [x] Evaluate two original development images:23/24 exact values after recovery,24/24 identity/unit fields; no row omissions/extras/duplicates. Ring12/12; shoulder11/12 plus visible required correction. Held-out0, no generalization claim.
+- [ ] Obtain verified Main Stat conversion into Attack **and** Stat Prop., complete current affected tier-skill functions/mastery dependencies, and range/critical law or a valid conservative bound; integrate all before claiming the actual ring unlocked.
+- [ ] Reserve genuinely unseen permitted images before tuning and measure complete-row recall, retry behavior and phone latency. Previously used screenshots do not become held-out by renaming.
+- [ ] Validate predictions against controlled game evidence with identifiable equations; no repeated infeasible empty-slot/matched-pair request.
+- [ ] User review of local candidate, then one hosted preview/phone verification when hosting is available. No push/deployment in this milestone. See RING_OCR_MILESTONE_2026-10-25.md.
+
 ## Approved loading release and next capability milestone — 2026-10-25
 
 - [x] User approves refined monster patrol and animated reading status; preview copy and Pause removed.

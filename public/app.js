@@ -16,6 +16,8 @@ import { inferAttackRoles, resetStarForceForImage, applyStarForceReading } from 
 import { readStarForce } from './domain/star-force-reader.js';
 import { mountMonsterLoader } from './monster-loader.js';
 import { LOADING_MONSTERS } from './monster-sprites.js';
+import { unsupportedEffectSummary } from './domain/recommendation-eligibility.js';
+import { applyPanelRowRecovery } from './domain/ocr-row-recovery.js';
 
 const $ = (selector) => document.querySelector(selector);
 const pictureLoader=mountMonsterLoader($('#picture-loading-animation'),{sprites:LOADING_MONSTERS});
@@ -60,7 +62,7 @@ function playerValueValid(field) {
 function updateRecommendationAvailability() {
   const numbers=requiredPlayerFields.filter(field=>!playerValueValid(field));
   $('#recommend').disabled=!(confirmedItems.current && confirmedItems.candidate) || numbers.length>0;
-  $('#comparison-form>.result-limit').textContent=numbers.length?'Fill the highlighted current totals before calculating.':'Ready to compare for each activity.';
+  $('#comparison-form>.result-limit').textContent=numbers.length?'Fill the highlighted current totals before calculating.':'Ready to check recommendations.';
   for(const field of PLAYER_FIELDS) {
     const group=playerFieldNodes.get(field.id);if(!group) continue;
     const required=requiredPlayerFields.some(entry=>entry.id===field.id),issue=required?characterValueIssue(field,playerValues[field.id]):null;
@@ -92,7 +94,7 @@ function renderPlayerFields(required) {
 
 function plainIssues(issues) {
   const unsupported=issues.filter(entry=>entry.code==='unsupportedEffect');
-  if(unsupported.length) return `This pair changes ${[...new Set(unsupported.map(entry=>entry.detail.split(':')[0]))].join(', ')}. Those effects aren't supported yet, so this comparison can't pick a reliable winner.`;
+  if(unsupported.length) return unsupportedEffectSummary(unsupported);
   const inconsistent=issues.find(entry=>entry.code==='inconsistentInputs');
   if(inconsistent) return /attack/i.test(inconsistent.detail)?'The entered character Attack does not fit these item values. Enter your total Attack from Character with the current item equipped.':`Check your current character totals: ${inconsistent.detail}`;
   if(issues.some(entry=>entry.code==='preferenceOverlap')) return 'Unknown stats or model uncertainty could change which item is better.';
@@ -226,6 +228,7 @@ for (const side of ['current', 'candidate']) {
   const body=element('div'); body.id=`${side}-body`;
   card.append(element('h2', side === 'current' ? 'Currently equipped · left' : 'Potential new equip · right'));
   const crop = element('img', undefined, 'review-crop'); crop.id = `${side}-crop`; crop.hidden = true; body.append(crop);
+  const readNote=element('p','','field-error');readNote.id=`${side}-read-note`;readNote.hidden=true;body.append(readNote);
   const name = element('label', 'Item name (optional)'); name.htmlFor = `${side}-name`;
   const input = element('input', undefined, 'item-name'); input.id = `${side}-name`; input.maxLength = 100; input.autocomplete = 'off'; input.addEventListener('input', markStale);
   const lines = element('div'); lines.id = `${side}-lines`;
@@ -265,7 +268,6 @@ $('#comparison-form').addEventListener('submit', async event => {
     const row=element('article',undefined,'recommendation-row');
     const choice=result.recommendation==='current'?'Current equip (left)':result.recommendation==='candidate'?'New equip (right)':'No reliable preference';
     row.append(element('h3',result.label),element('strong',choice),element('span',`Confidence: ${result.confidence}`));
-    if(!result.recommendation && (!commonReason || ['activity-6','activity-7'].includes(result.contextId))) row.append(element('p',plainIssues(result.issues)));
     body.append(row);
   }
   const explanation=$('#recommendation-explanation'); explanation.replaceChildren();
@@ -274,7 +276,12 @@ $('#comparison-form').addEventListener('submit', async event => {
   for(const result of activities) {
     if(!result.issues.length) continue;
     explanation.append(element('h3',result.label));
-    const list=element('ul');for(const entry of new Map(result.issues.map(entry=>[entry.detail,entry])).values()) list.append(element('li',entry.detail));explanation.append(list);
+    const list=element('ul');for(const entry of new Map(result.issues.map(entry=>[entry.detail,entry])).values()) {
+      const item=element('li',entry.detail);list.append(item);
+      if(entry.dependencies?.length) {
+        const dependencies=element('ul');for(const detail of entry.dependencies) dependencies.append(element('li',detail));item.append(dependencies);
+      }
+    }explanation.append(list);
   }
   const source=element('a','Official mechanics guide');source.href='https://maplestoryidle.nexon.com/en/guide';source.target='_blank';source.rel='noopener noreferrer';
   const equipment=element('a','Official Equipment / Star Force update');equipment.href='https://forum.nexon.com/maplestoryidle/board_view?board=6675&thread=3537355';equipment.target='_blank';equipment.rel='noopener noreferrer';
@@ -398,7 +405,8 @@ function showReading(reading) {
     if (panel) {
       const groups = groupReviewRows(proposePanelRows(panel).rows);
       const unresolved = new Set(groups.unresolved.map(row=>row.rawText));
-      for (const record of incoming[side]) record.otherReading = unresolved.has(record.rawText);
+      for (const record of incoming[side]) record.otherReading = !record.rawText.trim() || unresolved.has(record.rawText);
+      incoming[side]=applyPanelRowRecovery(incoming[side],panel,{idPrefix:`recovered-${imageRevision}-${reading.runId}-${side}`});
     }
     if (!incoming[side].some(record=>!record.otherReading)) incoming[side].unshift({id:`blank-${imageRevision}-${reading.runId}-${side}`,rawLabel:'',rawValue:'',unit:'unknown',confirmed:false,provenance:{kind:'manual'}});
   }
@@ -415,6 +423,10 @@ function showReading(reading) {
   const starInput=$('#player-starForce');if(starInput) starInput.value=starForceState.value;
   for (const [index,side] of ['current','candidate'].entries()) {
     const image = $(`#${side}-crop`), panel = panels[index]; image.hidden = !panel;
+    const note=$(`#${side}-read-note`);
+    const possibleMissing=panel?.rowCoverage?.issues?.includes('additionalUncertainRowsNotRetried') || records[side].some(record=>record.coveragePlaceholder);
+    const uncertain=panel?.rowRecovery?.attempts?.some(attempt=>attempt.status!=='proposed') || possibleMissing;
+    note.hidden=!uncertain;note.textContent=!uncertain?'':possibleMissing?'A line may be missing. Check this crop and the highlighted rows.':'Check the highlighted value against this crop.';
     if (panel) {
       const crop = document.createElement('canvas'); crop.width=panel.region.width; crop.height=panel.region.height;
       crop.getContext('2d').drawImage(sourceCanvas,panel.region.x,panel.region.y,panel.region.width,panel.region.height,0,0,crop.width,crop.height);
@@ -492,7 +504,7 @@ function removeImage() {
   const preview = $('#screenshot-preview'); preview.onload = null; preview.onerror = null; preview.removeAttribute('src');
   $('#whole-reading').textContent = ''; $('#screenshot-drafts').hidden = true;
   $('#manual').append($('#comparison-form'),$('#advanced')); $('#manual').hidden = false;
-  for (const side of ['current','candidate']) $(`#${side}-crop`).hidden = true;
+  for (const side of ['current','candidate']) {$(`#${side}-crop`).hidden = true;$(`#${side}-read-note`).hidden=true;}
   $('#image-reference').hidden = true; $('#screenshot').value = ''; $('#screenshot-status').textContent = '';
   $('.intake').dataset.selected = 'false'; $('.guide-frame').hidden = false; $('.legend').hidden = false;
   drawImageReference(); refreshReviewState(); markStale(); setReadingBusy(false);
