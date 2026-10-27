@@ -1,5 +1,7 @@
 # msIdleCalc Hobby release policy
 
+2026-10-27 follow-up: the owner asked to keep these release-plan notes for later and explicitly requested publication of a better ready application version. Release-plan/dashboard setup remains deferred; no retention, deletion, billing or other-project change is authorized. Treat this as a one-time request to publish the locally checked ready batch, without extra Preview/CLI deployment experiments or changing the production-only dashboard rule. The rolling8/25 guard still applies. Readiness and any access blocker are recorded in [RELEASE_READINESS_2026-10-27.md](RELEASE_READINESS_2026-10-27.md). The standing future release workflow below remains a note to revisit, not evidence that a Preview or Production deployment has occurred.
+
 Repository changes approved 2026-10-25. Deployment, dashboard/retention changes and deletions are **not approved**. Work only in msidlecalc; do not change billing, account settings or the second project. This policy supersedes routine hosted-preview checks in older release documents.
 
 ## Verified facts and current blocker
