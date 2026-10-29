@@ -1,11 +1,47 @@
 # Roadmap
 
+## Ring evidence and OCR completeness candidate — 2026-10-25
+
+- [x] Reconcile existing source/replacement/outcome research with a fresh primary-source mechanics review; document exact three-family ring blocker and conditional Basic/Advanced specification.
+- [x] Integrate dependency categories and zero useless ring questions; preserve compact automatic activity results and approved loading animation.
+- [x] Implement advisory bracketed row coverage, bounded selective retries and retained-correction gap warnings; extend existing private scorer.
+- [x] Evaluate two original development images:23/24 exact values after recovery,24/24 identity/unit fields; no row omissions/extras/duplicates. Ring12/12; shoulder11/12 plus visible required correction. Held-out0, no generalization claim.
+- [ ] Obtain verified Main Stat conversion into Attack **and** Stat Prop., complete current affected tier-skill functions/mastery dependencies, and range/critical law or a valid conservative bound; integrate all before claiming the actual ring unlocked.
+- [ ] Reserve genuinely unseen permitted images before tuning and measure complete-row recall, retry behavior and phone latency. Previously used screenshots do not become held-out by renaming.
+- [ ] Validate predictions against controlled game evidence with identifiable equations; no repeated infeasible empty-slot/matched-pair request.
+- [ ] User review of local candidate, then one hosted preview/phone verification when hosting is available. No push/deployment in this milestone. See RING_OCR_MILESTONE_2026-10-25.md.
+
+## Approved loading release and next capability milestone — 2026-10-25
+
+- [x] User approves refined monster patrol and animated reading status; preview copy and Pause removed.
+- [x] Prepare implementationee920b2/build e6e0fcdf841f:353 tests, build/resource closure and color checks pass. See APPROVED_LOADING_RELEASE_2026-10-25.md.
+- [ ] Verify hosted preview and publish the checked candidate when Vercel is available; no deployment claimed yet.
+- [ ] Implement the full ring comparison's Main Stat, job-skill and Max Damage Multiplier relationships after reconciling existing research and verifying gaps. Keep inputs conditional and evaluate all supported activities automatically.
+- [ ] Extend existing private OCR evaluation with complete row coverage and targeted uncertain-row recovery, beyond digit accuracy alone.
+- [ ] Improve source-stage/critical/context validation and practical prediction evidence without resurrecting infeasible player experiments.
+
+## Local workflow audit during deployment limit — 2026-10-24
+
+- [x] Reproduce and fix the hidden incomplete skill-line defect using the original ring image.
+- [x] Reject invalid/partial Advanced amplification without silent star-table fallback; replan required fields while typing.
+- [x] Share exact numerical field validation; retain corrections, character values and caret across review changes.
+- [x] Verify missing-value confirmation, edit/result invalidation, preserved Advanced data and unknown-resistance abstention locally. See WORKFLOW_AUDIT_2026-10-24.md.
+- [ ] Successful hosted preview and physical-phone retest after the hosting limit clears. Main Stat/skill/PvP mechanics and live-game evidence remain open.
+
+## Automatic metadata and simpler choices — 2026-10-24
+
+- [x] Infer upper/lower Attack with optional manual corrections; both sources remain calculated.
+- [x] Read matching filled-yellow-star headers; preserve manual overrides and unknown/conflicting evidence.
+- [x] Remove mandatory model-condition checkboxes and duplicate diagnostic result rows. Show activity choices, confidence and concrete blockers.
+- [x]345 software checks, including21 independent metadata groups; actual original-image browser adoption at12 stars verified.
+- [ ] Publish after hosting limit clears, then verify live and retest on a physical phone. Feature717d0b3 passed CI, but Vercel rejected the preview with “Deployment rate limited — retry in24 hours” at2026-10-25T00:34:03Z. No new production release, combat mechanics or empirical calibration claimed.
+
 ## Character-driven live-test estimate — 2026-10-24
 
 - [x] Distinct mechanics and independent QA; explicit Main/Sub sources; conditional current totals and preserved Advanced inputs.
 - [x] Model Attack/Crit/bucket replacement across coherent source stages and unknown resistance; outcome-first root-context estimates; PvP abstention.
 - [x]324 software checks including21 independent new groups; repaired numeric wrong-winner regression; actual screenshot correction, synthetic shoulder form/results and mobile/retention checks.
-- [ ] Publish user-authorized release after feature CI; verify production commit/build and real hosted flow.
+- [x] Publish user-authorized91970b5 after successful CI; remote main exact commit, public build1a33cd9270cd and full production synthetic shoulder workflow verified. See CHARACTER_RECOMMENDATION_RELEASE.md.
 - [ ] Real-phone/player-total testing; controlled/held-out game evidence remains absent. No infeasible empty-slot or matched-pair task is pending.
 - [ ] Replace provisional critical/context assumptions with stronger evidence; implement attribute/skill/timing effects and full PvP/encounter profiles before claiming all battle predictions.
 

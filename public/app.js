@@ -11,10 +11,16 @@ import { groupReviewRows } from './domain/ocr-review-groups.js';
 import { parseReviewRecords, adoptReviewRecords } from './domain/inline-review.js';
 import { RELEASE_ID } from './release.js';
 import { importScreenshotProposals, editScreenshotRecord } from './domain/screenshot-review.js';
-import { RECOMMENDATION_ASSUMPTIONS } from './domain/equipment-recommendation.js';
-import { planCharacterInputs, recommendCharacterActivities, PLAYER_FIELDS, CHARACTER_MODEL_VERSION } from './domain/character-recommendation.js';
+import { planCharacterInputs, recommendCharacterActivities, characterValueIssue, PLAYER_FIELDS, CHARACTER_MODEL_VERSION } from './domain/character-recommendation.js';
+import { inferAttackRoles, resetStarForceForImage, applyStarForceReading } from './domain/automatic-equipment-metadata.js';
+import { readStarForce } from './domain/star-force-reader.js';
+import { mountMonsterLoader } from './monster-loader.js';
+import { LOADING_MONSTERS } from './monster-sprites.js';
+import { unsupportedEffectSummary } from './domain/recommendation-eligibility.js';
+import { applyPanelRowRecovery } from './domain/ocr-row-recovery.js';
 
 const $ = (selector) => document.querySelector(selector);
+const pictureLoader=mountMonsterLoader($('#picture-loading-animation'),{sprites:LOADING_MONSTERS});
 let nextId = 0;
 let revision = 0;
 let imageUrl = null;
@@ -26,7 +32,7 @@ let readingController = null, readingRun = 0, readingBusy = false;
 let readOnDecode = false;
 let editorImageRevision = null, editorEdited = false;
 let markedRegions = [null, null], cropEditor = null;
-let requiredQuestions=[];
+let starForceState={value:'',origin:'unknown',imageRevision:0};
 const playerValues={}, playerFieldNodes=new Map();
 let requiredPlayerFields=[];
 
@@ -35,51 +41,72 @@ function comparisonPayload(assumptions) {
     confirmations:{...confirmedItems},assumptions,player:playerValues};
 }
 function enteredAssumptions() {
-  const values=Object.fromEntries(Object.keys(RECOMMENDATION_ASSUMPTIONS).map(name=>[name,$(`#scope-${name}`).checked]));
-  return {...values,completeVisibleStats:confirmedItems.current && confirmedItems.candidate,ordinaryLandedHits:values.simpleModel,nonnegativeBackground:values.simpleModel,subOptionsSameStage:values.simpleModel};
+  // These define the advertised model scenario, not claims of user consent.
+  return {onEquipSameSlot:true,completeVisibleStats:confirmedItems.current && confirmedItems.candidate,
+    onlyListedEffects:true,ordinaryLandedHits:true,nonnegativeBackground:true,simpleModel:true,subOptionsSameStage:true};
 }
 function refreshRecommendationInputs() {
   const complete=confirmedItems.current && confirmedItems.candidate;
   $('#essential-inputs').hidden=!complete;
-  if(!complete) { requiredQuestions=[]; $('#recommend').disabled=true; return; }
+  if(!complete) { $('#recommend').disabled=true; return; }
   const plan=planCharacterInputs(comparisonPayload(enteredAssumptions()));
-  requiredQuestions=plan.unsupported.length?[]:['onEquipSameSlot','onlyListedEffects','simpleModel'];
   requiredPlayerFields=plan.fields;
-  $('#scope-questions').hidden=plan.unsupported.length>0;
-  $('#attack-source-question').hidden=true;$('#sub-options-question').hidden=true;
-  $('#eligibility-note').textContent=plan.unsupported.length?plan.unsupported[0].detail:plan.fields.length?'Only the totals used by these item changes are needed. Leave unknown opponent resistance blank.':'No character numbers are needed for this comparison.';
+  $('#eligibility-note').textContent=plan.unsupported.length?plainIssues(plan.unsupported):plan.fields.some(field=>['mainAmplification','subAmplification'].includes(field.id))?'Finish both amplification percentages in Advanced, or clear both to use the star count.':plan.fields.length?'Enter these totals from Character with your current item equipped.':'No character numbers are needed for this comparison.';
   renderPlayerFields(plan.fields);
   updateRecommendationAvailability();
 }
 
 function playerValueValid(field) {
-  const value=String(playerValues[field.id]??'').trim(),numeric=Number(value.replaceAll(',','').replace(/%$/,''));
-  if(!value || !/^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?%?$/.test(value) || !Number.isFinite(numeric) || numeric<0 || numeric>Number.MAX_SAFE_INTEGER) return false;
-  if((field.unit==='points' || field.unit==='stars') && value.includes('%')) return false;
-  if(['attack','criticalDamage'].includes(field.id) && numeric<=0) return false;
-  return field.id!=='starForce' || Number.isInteger(numeric) && numeric>=12 && numeric<=30;
+  return characterValueIssue(field,playerValues[field.id])===null;
 }
 function updateRecommendationAvailability() {
-  const missing=requiredQuestions.filter(name=>!$(`#scope-${name}`).checked);
   const numbers=requiredPlayerFields.filter(field=>!playerValueValid(field));
-  $('#recommend').disabled=!(confirmedItems.current && confirmedItems.candidate) || missing.length>0 || numbers.length>0;
-  $('#comparison-form>.result-limit').textContent=missing.length?'Review the model conditions.':numbers.length?'Fill the highlighted current totals before calculating.':'Ready to calculate all activity estimates.';
-  for(const field of requiredPlayerFields) playerFieldNodes.get(field.id)?.querySelector('input').classList.toggle('needs-value',!playerValueValid(field));
+  $('#recommend').disabled=!(confirmedItems.current && confirmedItems.candidate) || numbers.length>0;
+  $('#comparison-form>.result-limit').textContent=numbers.length?'Fill the highlighted current totals before calculating.':'Ready to check recommendations.';
+  for(const field of PLAYER_FIELDS) {
+    const group=playerFieldNodes.get(field.id);if(!group) continue;
+    const required=requiredPlayerFields.some(entry=>entry.id===field.id),issue=required?characterValueIssue(field,playerValues[field.id]):null;
+    const input=group.querySelector('input'),error=group.querySelector('.field-error');
+    input.classList.toggle('needs-value',Boolean(issue));input.setAttribute('aria-invalid',String(Boolean(issue)));
+    error.textContent=issue??'';error.hidden=!issue || !String(playerValues[field.id]??'').trim();
+  }
 }
 function renderPlayerFields(required) {
   const ids=new Set(required.map(field=>field.id));
+  const focused=document.activeElement,selection=focused?.tagName==='INPUT'?[focused.selectionStart,focused.selectionEnd]:null;
   for(const field of PLAYER_FIELDS) {
     let group=playerFieldNodes.get(field.id);
     if(!group) {
       group=element('label',`${field.label} (${field.unit})`,'player-stat');
       const input=element('input');input.type='text';input.inputMode='decimal';input.id=`player-${field.id}`;input.value=playerValues[field.id]??'';input.autocomplete='off';
       input.setAttribute('aria-label',`${field.label}, ${field.unit}`);
-      input.addEventListener('input',()=>{playerValues[field.id]=input.value;revision++;$('#results').hidden=true;updateRecommendationAvailability();});
-      input.addEventListener('change',refreshRecommendationInputs);
-      group.append(input);playerFieldNodes.set(field.id,group);
+      input.addEventListener('input',()=>{playerValues[field.id]=input.value;if(field.id==='starForce') starForceState={value:input.value,origin:'manual',imageRevision};revision++;$('#results').hidden=true;refreshRecommendationInputs();});
+      const error=element('span','','field-error');error.id=`player-${field.id}-error`;error.hidden=true;input.setAttribute('aria-describedby',error.id);
+      group.append(input,error);playerFieldNodes.set(field.id,group);
     }
-    const target=ids.has(field.id)?$('#character-fields'):$('#precision-fields');
+    const target=ids.has(field.id) && !['mainAmplification','subAmplification'].includes(field.id) && !(field.id==='starForce' && starForceState.origin==='automatic' && playerValueValid(field))?$('#character-fields'):$('#precision-fields');
     if(group.parentElement!==target) target.append(group);
+  }
+  $('#star-force-reading').hidden=starForceState.origin!=='automatic';
+  $('#star-force-reading').textContent=starForceState.origin==='automatic'?`${starForceState.value} stars · read from both items. Edit in Advanced calculation.`:'';
+  if(focused?.isConnected && document.activeElement!==focused) {focused.focus({preventScroll:true});if(selection && selection[0]!==null) focused.setSelectionRange(...selection);}
+}
+
+function plainIssues(issues) {
+  const unsupported=issues.filter(entry=>entry.code==='unsupportedEffect');
+  if(unsupported.length) return unsupportedEffectSummary(unsupported);
+  const inconsistent=issues.find(entry=>entry.code==='inconsistentInputs');
+  if(inconsistent) return /attack/i.test(inconsistent.detail)?'The entered character Attack does not fit these item values. Enter your total Attack from Character with the current item equipped.':`Check your current character totals: ${inconsistent.detail}`;
+  if(issues.some(entry=>entry.code==='preferenceOverlap')) return 'Unknown stats or model uncertainty could change which item is better.';
+  return issues[0]?.detail ?? '';
+}
+function syncAutomaticAttackRoles(side) {
+  const inferred=inferAttackRoles(records[side]);
+  for(let index=0;index<inferred.length;index++) {
+    const record=records[side][index], automatic=inferred[index];
+    for(const key of ['sourceRole','sourceRoleOrigin','sourceRoleIssue']) record[key]=automatic[key];
+    const select=$(`#${record.id}-sourceRole`);
+    if(select) {select.value=record.sourceRole??'';select.parentElement.hidden=fieldForRecord(record)?.label!=='Attack' || fieldForRecord(record)?.kind!=='integer';select.classList.toggle('needs-value',!select.parentElement.hidden && !select.value);}
   }
 }
 
@@ -105,7 +132,6 @@ function refreshItemConfirmation(side) {
 }
 function markStale({side=null}={}) {
   revision++;
-  $('#scope-attackMainOptions').checked=false; $('#scope-completeVisibleStats').checked=false;
   for (const key of side?[side]:['current','candidate']) { confirmedItems[key]=false; refreshItemConfirmation(key); }
   $('#visible-lines-complete').checked=confirmedItems.current && confirmedItems.candidate;
   refreshRecommendationInputs();
@@ -114,6 +140,7 @@ function markStale({side=null}={}) {
   if (!$('#model-results').hidden) $('#model-stale').hidden=false;
 }
 function validateItem(side) {
+  syncAutomaticAttackRoles(side);
   let first=null;
   const visible=records[side].filter(record=>!record.otherReading);
   if (!visible.length) { addLine(side); }
@@ -132,7 +159,7 @@ function validateItem(side) {
     if(first?.id!==`${record.id}-rawLabel`) error.hidden=validation.valid;
     if(!validation.valid) { error.textContent=validation.message; input.setAttribute('aria-invalid','true'); input.classList.add('needs-value'); first??=input; }
     if(field?.label==='Attack' && field.kind==='integer' && !['main','sub'].includes(record.sourceRole)) {
-      const role=$(`#${record.id}-sourceRole`);role.classList.add('needs-value');error.hidden=false;error.textContent='Choose upper Main or lower extra Attack.';first??=role;
+      const role=$(`#${record.id}-sourceRole`);$(`#${side}-source-details`).open=true;role.classList.add('needs-value');error.hidden=false;error.textContent='More than two Attack lines: check their positions in Advanced item corrections.';first??=role;
     }
   }
   if(first) { first.focus(); return false; }
@@ -171,7 +198,7 @@ function addLine(side, initial = null, target = null) {
       if(record.provenance?.kind==='ocr') Object.assign(record,editScreenshotRecord(record,'unit',unit)); else record.unit=unit;
       if(field==='rawLabel') { record.statFieldId=selected?.id ?? null; const number=row.querySelector('[data-field=rawValue]'); if(number) { number.placeholder=selected?.kind==='percent'?'0.0%':'Required'; number.inputMode=selected?.kind==='integer'?'numeric':'decimal'; } }
       if(field==='rawLabel' && selected && record.otherReading) { record.otherReading=false; $(`#${side}-lines`).append(row); }
-      updateRole();
+      syncAutomaticAttackRoles(side);
       editorEdited=true; highlight(); error.hidden=true; markStale({side});
     };
     input.addEventListener(field==='rawLabel'?'change':'input',change);
@@ -182,31 +209,35 @@ function addLine(side, initial = null, target = null) {
     });
     label.append(input); row.append(label);
   }
-  const roleLabel=element('label','Attack source','source-role');
+  const roleLabel=element('label',`Attack line ${ordinal} position`,'source-role');
   const roleSelect=element('select');roleSelect.id=`${record.id}-sourceRole`;roleSelect.setAttribute('aria-label',`${sideName}, line ${ordinal}, Attack source`);
   for(const [value,title] of [['','Choose Attack source'],['main','Upper Main Attack'],['sub','Lower extra Attack']]) {const option=element('option',title);option.value=value;roleSelect.append(option);}
   roleSelect.value=record.sourceRole??'';
   function updateRole() {roleLabel.hidden=fieldForRecord(record)?.label!=='Attack' || fieldForRecord(record)?.kind!=='integer';roleSelect.classList.toggle('needs-value',!roleLabel.hidden && !roleSelect.value);}
-  roleSelect.addEventListener('change',()=>{record.sourceRole=roleSelect.value;updateRole();error.hidden=true;editorEdited=true;markStale({side});});
+  roleSelect.addEventListener('change',()=>{record.sourceRole=roleSelect.value;record.sourceRoleOrigin='manual';updateRole();error.hidden=true;editorEdited=true;markStale({side});});
   roleLabel.append(roleSelect);updateRole();
   const remove = element('button', '×', 'remove'); remove.type = 'button';
   remove.setAttribute('aria-label', `Remove ${sideName.toLowerCase()} line ${ordinal}`);
   remove.addEventListener('click', () => {
-    records[side].splice(records[side].indexOf(record), 1); row.remove(); editorEdited = true; markStale({side}); $(`#${side}-add`).focus();
+    records[side].splice(records[side].indexOf(record), 1); row.remove();roleLabel.remove();syncAutomaticAttackRoles(side);editorEdited = true; markStale({side}); $(`#${side}-add`).focus();
   });
-  row.append(remove,roleLabel,error); (target ?? $(`#${side}-lines`)).append(row); markStale({side}); return row;
+  row.append(remove,error);$(`#${side}-source-overrides`).append(roleLabel); (target ?? $(`#${side}-lines`)).append(row);syncAutomaticAttackRoles(side); markStale({side}); return row;
 }
 for (const side of ['current', 'candidate']) {
   const card = element('section', undefined, 'item-card'); card.id=`${side}-card`;
   const body=element('div'); body.id=`${side}-body`;
   card.append(element('h2', side === 'current' ? 'Currently equipped · left' : 'Potential new equip · right'));
   const crop = element('img', undefined, 'review-crop'); crop.id = `${side}-crop`; crop.hidden = true; body.append(crop);
+  const readNote=element('p','','field-error');readNote.id=`${side}-read-note`;readNote.hidden=true;body.append(readNote);
   const name = element('label', 'Item name (optional)'); name.htmlFor = `${side}-name`;
   const input = element('input', undefined, 'item-name'); input.id = `${side}-name`; input.maxLength = 100; input.autocomplete = 'off'; input.addEventListener('input', markStale);
   const lines = element('div'); lines.id = `${side}-lines`;
   const add = element('button', 'Add line'); add.type = 'button'; add.id = `${side}-add`;
   add.addEventListener('click', () => { editorEdited = true; addLine(side).querySelector('select').focus(); });
   name.hidden = true; input.hidden = true; body.append(name, input, lines, add);
+  const sourceDetails=element('details');sourceDetails.id=`${side}-source-details`;
+  const overrides=element('div');overrides.id=`${side}-source-overrides`;
+  sourceDetails.append(element('summary','Advanced item corrections'),element('p','Upper Attack is Main; lower Attack is extra. Change only if the photo was read in the wrong order.'),overrides);body.append(sourceDetails);
   const status=element('p','Confirmed','item-confirmed'); status.id=`${side}-confirmed`; status.hidden=true;
   const confirm=element('button',side==='current'?'Confirm current equip':'Confirm new equip','confirm-item'); confirm.type='button'; confirm.id=`${side}-confirm`; confirm.setAttribute('aria-controls',body.id); confirm.setAttribute('aria-expanded','true');
   confirm.addEventListener('click',()=>{
@@ -217,16 +248,12 @@ for (const side of ['current', 'candidate']) {
 }
 
 $('.intake').append($('#results'));
-for(const name of Object.keys(RECOMMENDATION_ASSUMPTIONS)) $(`#scope-${name}`).addEventListener('change',()=>{
-  revision++; $('#results').hidden=true; refreshRecommendationInputs();
-});
 $('#comparison-form').addEventListener('submit', async event => {
   event.preventDefault();
   if(!confirmedItems.current || !confirmedItems.candidate) return;
-  const firstMissing=requiredQuestions.find(name=>!$(`#scope-${name}`).checked);
-  if(firstMissing) { $(`#scope-${firstMissing}`).focus(); return; }
+  refreshRecommendationInputs();
   const numberMissing=requiredPlayerFields.find(field=>!playerValueValid(field));
-  if(numberMissing) { $(`#player-${numberMissing.id}`).focus(); return; }
+  if(numberMissing) {const input=$(`#player-${numberMissing.id}`);if(input.closest('#precision-inputs')) $('#precision-inputs').open=true;input.focus();return;}
   const inputRevision=revision;
   $('.intake').dataset.screen='calculating'; $('#calculation-screen').hidden=false;
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
@@ -234,10 +261,14 @@ $('#comparison-form').addEventListener('submit', async event => {
   const body=$('#result-rows'); body.replaceChildren();
   const payload=comparisonPayload(enteredAssumptions());
   const activities=recommendCharacterActivities(payload);
-  for(const result of activities) {
+  const results=activities.filter(result=>result.contextId.startsWith('activity-'));
+  const commonReason=activities.every(result=>!result.recommendation)?plainIssues(activities[0].issues):'';
+  $('#result-reason').textContent=commonReason;$('#result-reason').hidden=!commonReason;
+  for(const result of results) {
     const row=element('article',undefined,'recommendation-row');
     const choice=result.recommendation==='current'?'Current equip (left)':result.recommendation==='candidate'?'New equip (right)':'No reliable preference';
-    row.append(element('h3',result.label),element('strong',choice),element('span',`Confidence: ${result.confidence}`)); body.append(row);
+    row.append(element('h3',result.label),element('strong',choice),element('span',`Confidence: ${result.confidence}`));
+    body.append(row);
   }
   const explanation=$('#recommendation-explanation'); explanation.replaceChildren();
   explanation.append(element('p',activities[0].scope));
@@ -245,7 +276,12 @@ $('#comparison-form').addEventListener('submit', async event => {
   for(const result of activities) {
     if(!result.issues.length) continue;
     explanation.append(element('h3',result.label));
-    const list=element('ul');for(const entry of new Map(result.issues.map(entry=>[entry.detail,entry])).values()) list.append(element('li',entry.detail));explanation.append(list);
+    const list=element('ul');for(const entry of new Map(result.issues.map(entry=>[entry.detail,entry])).values()) {
+      const item=element('li',entry.detail);list.append(item);
+      if(entry.dependencies?.length) {
+        const dependencies=element('ul');for(const detail of entry.dependencies) dependencies.append(element('li',detail));item.append(dependencies);
+      }
+    }explanation.append(list);
   }
   const source=element('a','Official mechanics guide');source.href='https://maplestoryidle.nexon.com/en/guide';source.target='_blank';source.rel='noopener noreferrer';
   const equipment=element('a','Official Equipment / Star Force update');equipment.href='https://forum.nexon.com/maplestoryidle/board_view?board=6675&thread=3537355';equipment.target='_blank';equipment.rel='noopener noreferrer';
@@ -308,6 +344,7 @@ function setReadingBusy(busy) {
   readingBusy = busy;
   $('.intake').dataset.screen = busy ? 'reading' : sourceCanvas ? 'review' : 'choose';
   $('#reading-screen').hidden = !busy;
+  if(busy) pictureLoader.start(); else pictureLoader.stop();
   $('#read-image').disabled = busy || !sourceCanvas;
   $('#adjust-areas').disabled = busy || !sourceCanvas;
   $('label.upload').textContent = sourceCanvas ? 'Choose another photo' : 'Choose screenshot';
@@ -368,7 +405,8 @@ function showReading(reading) {
     if (panel) {
       const groups = groupReviewRows(proposePanelRows(panel).rows);
       const unresolved = new Set(groups.unresolved.map(row=>row.rawText));
-      for (const record of incoming[side]) record.otherReading = unresolved.has(record.rawText);
+      for (const record of incoming[side]) record.otherReading = !record.rawText.trim() || unresolved.has(record.rawText);
+      incoming[side]=applyPanelRowRecovery(incoming[side],panel,{idPrefix:`recovered-${imageRevision}-${reading.runId}-${side}`});
     }
     if (!incoming[side].some(record=>!record.otherReading)) incoming[side].unshift({id:`blank-${imageRevision}-${reading.runId}-${side}`,rawLabel:'',rawValue:'',unit:'unknown',confirmed:false,provenance:{kind:'manual'}});
   }
@@ -379,8 +417,16 @@ function showReading(reading) {
   } else replaceEditor(adopted.items);
   editorImageRevision = imageRevision;
   markedRegions = panels.map(panel=>panel?.region ?? null); drawImageReference();
+  const raster=sourceCanvas.getContext('2d').getImageData(0,0,sourceCanvas.width,sourceCanvas.height);
+  starForceState=applyStarForceReading(starForceState,readStarForce(raster,panels),imageRevision);
+  playerValues.starForce=starForceState.value;
+  const starInput=$('#player-starForce');if(starInput) starInput.value=starForceState.value;
   for (const [index,side] of ['current','candidate'].entries()) {
     const image = $(`#${side}-crop`), panel = panels[index]; image.hidden = !panel;
+    const note=$(`#${side}-read-note`);
+    const possibleMissing=panel?.rowCoverage?.issues?.includes('additionalUncertainRowsNotRetried') || records[side].some(record=>record.coveragePlaceholder);
+    const uncertain=panel?.rowRecovery?.attempts?.some(attempt=>attempt.status!=='proposed') || possibleMissing;
+    note.hidden=!uncertain;note.textContent=!uncertain?'':possibleMissing?'A line may be missing. Check this crop and the highlighted rows.':'Check the highlighted value against this crop.';
     if (panel) {
       const crop = document.createElement('canvas'); crop.width=panel.region.width; crop.height=panel.region.height;
       crop.getContext('2d').drawImage(sourceCanvas,panel.region.x,panel.region.y,panel.region.width,panel.region.height,0,0,crop.width,crop.height);
@@ -417,7 +463,7 @@ async function startReading(regions = null) {
 function replaceEditor(items, names) {
   $('#other-readings').replaceChildren();
   for (const side of ['current', 'candidate']) {
-    $(`#${side}-lines`).replaceChildren(); records[side] = [];
+    $(`#${side}-lines`).replaceChildren();$(`#${side}-source-overrides`).replaceChildren(); records[side] = [];
     for (const record of items[side]) {
       let target = null;
       if (record.otherReading) {
@@ -450,14 +496,15 @@ $('#adjust-areas').addEventListener('click', () => {
     } });
 });
 function removeImage() {
-  for(const name of Object.keys(RECOMMENDATION_ASSUMPTIONS)) $(`#scope-${name}`).checked=false;
   imageRevision++; cancelReading(); cropEditor?.close(); markedRegions = [null, null]; stagedReading = null;
+  starForceState=resetStarForceForImage(starForceState,imageRevision);playerValues.starForce=starForceState.value;
+  const starInput=$('#player-starForce');if(starInput) starInput.value=starForceState.value;
   if (imageUrl) URL.revokeObjectURL(imageUrl); imageUrl = null;
   if (sourceCanvas) { sourceCanvas.width = 0; sourceCanvas.height = 0; sourceCanvas = null; }
   const preview = $('#screenshot-preview'); preview.onload = null; preview.onerror = null; preview.removeAttribute('src');
   $('#whole-reading').textContent = ''; $('#screenshot-drafts').hidden = true;
   $('#manual').append($('#comparison-form'),$('#advanced')); $('#manual').hidden = false;
-  for (const side of ['current','candidate']) $(`#${side}-crop`).hidden = true;
+  for (const side of ['current','candidate']) {$(`#${side}-crop`).hidden = true;$(`#${side}-read-note`).hidden=true;}
   $('#image-reference').hidden = true; $('#screenshot').value = ''; $('#screenshot-status').textContent = '';
   $('.intake').dataset.selected = 'false'; $('.guide-frame').hidden = false; $('.legend').hidden = false;
   drawImageReference(); refreshReviewState(); markStale(); setReadingBusy(false);
@@ -490,7 +537,7 @@ const panels = {
   methodology: ['Methodology', [
     'This experimental calculator compares complete corrected item panels, asks for current character totals only where their effects change, and estimates offensive damage across supported activity models. Main and lower extra Attack are separate sources. The potential item never needs to be equipped. Confidence is Low; no controlled live-game validation has been performed.',
     'Critical probability normalization, unchanged hit behavior and pure-root raid/training transforms are explicit simple-model assumptions. Critical outcomes are transformed before averaging. Unknown opponent resistance and possible source display stages are tested across their admitted ranges; a possible tie or reversal produces No reliable preference. PvP and changed skill/Main Stat/timing effects remain unsupported. These are damage estimates, not DPS, survival or full battle-winning predictions. Combat Power is not used as a damage score.',
-    'Selected screenshots and item entries stay in this page session. Only the appearance preference is saved locally. The header loads a fixed leaf image from MapleStory.io; screenshots are not sent there. Hosting providers receive normal page requests.',
+    'Selected screenshots and item entries stay in this page session. Only the appearance preference is saved locally. The header and photo-loading animation request fixed artwork from MapleStory.io; screenshots, OCR text and item values are not sent there. Hosting providers receive normal page requests.',
     'BasilMarket and Hidden Street are visual inspiration for the light and dark skins. This project is not affiliated with either site.',
     `App build: ${RELEASE_ID}. Include this when reporting an issue.`
   ]],

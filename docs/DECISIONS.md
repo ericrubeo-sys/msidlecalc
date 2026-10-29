@@ -1,5 +1,31 @@
 # Decisions and open questions
 
+## Complete-ring blocker and conservative OCR recovery — 2026-10-25
+
+Deliver a reviewable local candidate with exact ring dependencies rather than publishing guessed Main Stat/skill/range mathematics. Current player totals cannot resolve those three missing relationships, so ask no new fields for that pair and preserve previously entered values. Existing shoulder inputs/model remain conditional and provisional. Keep one shared blocker and choices/confidence per activity, with explanations behind Why & limits. No numerical scope expansion or deployment is approved by this checkpoint.
+
+Add advisory bracketed neutral-row coverage and at most two row retries per panel/four per run. Accept a retry only with one observed typed row and base-number evidence; a rejected retry remains a required correction. Never certify semantic completeness. Actual reused ring/shoulder development results are23/24 exact values after recovery versus22/24 before,24/24 identities/units, no missing/extra/duplicate rows; held-out0. Private images/transcripts remain ignored. See RING_OCR_MILESTONE_2026-10-25.md and OCR_COMPLETENESS_2026-10-25.md. Software checks do not establish game accuracy.
+
+## Loading animation approved; prepare publication — 2026-10-25
+
+User approves the refined monster patrol/status sweep and requests preparation for publication when hosting is available. Record the exact checked candidate rather than retry deployments during this preparation. All353 software tests, build/resource closure and color checks pass. The next ability milestone targets the complete real ring tradeoff—Main Stat, changed skill levels and Max Damage Multiplier—alongside row-completeness improvements using the existing private OCR scoring harness. Reconcile existing research before encoding gaps; no claim that successful OCR or a single supported new effect completes the recommendation. See APPROVED_LOADING_RELEASE_2026-10-25.md.
+
+## Livelier loader with one animated status — 2026-10-25
+
+User asks for a more dynamic monster patrol and removal of the Pause control and mockup explanation. UX supports a subtle left-to-right accent sweep across the complete, continuously readable status. Use a6.4-second patrol with staggered12px/5px/4px gaits, a3.2-second text sweep with a quiet gap, no additional motion layers and no fake measured progress. Both text and monsters become static for reduced motion. Keep Cancel in actual OCR; remove playback controls and preview copy from the local demonstration. This supersedes the first loader preview's Pause/Play treatment.
+
+## Monster photo-loading animation — 2026-10-25
+
+User requests a Designer-led MapleStory.io monster animation and local viewing while Vercel is rate limited. Use Slime, Orange Mushroom and Ribbon Pig in one compact, theme-aware grass scene, with slow shared back-and-forth travel and distinct small gaits. Keep normal accessible reading status and Cancel outside the decorative scene. No fake progress or artificial OCR delay. Reduced motion is static; hidden/inactive scenes pause. Fixed provider requests contain no player data; no sprite binaries are committed. Include a dedicated local loading-preview.html with Pause/Play and the existing theme control. Publication remains separate; source/provenance is recorded in research/MAPLESTORY_ASSET_RESEARCH.md.
+
+## Local workflow hardening during hosting limit — 2026-10-24
+
+Keep identifiable incomplete OCR stat lines in the primary typed form with an empty highlighted value, preserving the raw evidence and refusing to repair merged base/delta numbers. Only background/unrecognized fragments remain quiet. Use one exact player-value validation contract for UI and engine. Explicit Advanced amplification values select a paired-input path; malformed values cannot silently revert to stars. Refresh consumed questions on input and submit while preserving values and typing focus. No damage equation is changed and no deployment is attempted during this audit. See WORKFLOW_AUDIT_2026-10-24.md.
+
+## Automatic metadata and fewer controls — 2026-10-24
+
+The user's upper/first and lower/second flat Attack convention supersedes mandatory explicit role questions in the UI. Infer roles and retain optional corrections; both sources remain calculated. Read the shared Star Force level only from credible matching yellow-star grids on both headers, with manual corrections preserved. Remove the three mandatory assumption checkboxes: model assumptions belong in a plain scope notice and optional details, not jargon-heavy consent gates. Show activity choices and confidence without scores or raw changes, and explain actual missing mechanics or inconsistent character totals. No combat formula or eligibility guard is weakened by this simplification. See AUTOMATIC_METADATA_RELEASE.md and independent QA.
+
 ## Character-driven live estimate — 2026-10-24
 
 The user explicitly approves building and publishing the two-panel confirmation→conditional minimum stats→automatic context estimate workflow. Publish the checked experimental model, distinguishing official source facts from critical normalization, nonnegative g≥1 and pure-root scenario assumptions. Never label it a validated battle/DPS predictor. The two Attack sources require explicit Main/Sub roles; current Attack supplies a consumed bounded-response input instead of raw item-delta addition. Character fields and Advanced share one calculation and preserve values; no unused job/level inputs, candidate-equipped measurement or infeasible controlled experiment. Unknown resistance spans its range; zero requires an explicit entered scenario. PvP and unsupported changed effects abstain. See CHARACTER_RECOMMENDATION_RELEASE.md for arithmetic, table support12–30 and release checks.

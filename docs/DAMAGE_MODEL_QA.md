@@ -1,5 +1,7 @@
 # Damage model independent QA
 
+2026-10-25 ring/OCR checkpoint: independently authored whole-ring, OCR recovery and scorer adversarial tests are retained separately from integration-owner tests and browser measurements. See [RING_MILESTONE_QA_2026-10-25.md](RING_MILESTONE_QA_2026-10-25.md). The complete ring remains blocked even with a full synthetic character sheet. No live-game validation, held-out OCR result or new numerical mechanic is established by those tests. Earlier counts below refer to their historical checkpoints.
+
 2026-10-24 character-driven release checkpoint:324 total software groups pass, including21 independently authored character-model groups. CHARACTER_RECOMMENDATION_QA.md records source-role, shoulder, branch/root, unknown-resistance and exact-decimal regression evidence, including discovery and repair of a real near-limit wrong-winner. Provisional-model assumptions remain distinct from official facts and empirical game accuracy. Release/browser evidence: CHARACTER_RECOMMENDATION_RELEASE.md.
 
 2026-10-24 minimum-input checkpoint: MINIMUM_INPUT_QA.md records25 separately authored tests of the new symbolic and effective-source scenario paths; full integrated suite303 passed. This adds conditional admitted ordinary choices without enabling full named content, critical normalization or live-game validity. Historical partial-stage audit below is retained.

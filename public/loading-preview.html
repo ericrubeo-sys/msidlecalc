@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <title>Monster loading animation · msIdleCalc preview</title>
+  <link rel="icon" href="data:,">
+  <script src="/theme.js"></script>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/monster-loader.css">
+  <script type="module" src="/loading-preview.js"></script>
+  <style>
+    .preview-stage{width:100%;max-width:420px;text-align:center;padding:36px 0}
+    .preview-stage h2{margin-top:24px}
+  </style>
+</head>
+<body>
+  <div class="site">
+    <header class="masthead">
+      <h1 class="brand"><img class="brand-mark" src="https://maplestory.io/api/GMS/83/item/4001126/icon" width="32" height="32" alt=""><span>MapleStory Idle<br>Equipment Comparison</span></h1>
+      <label class="appearance" for="theme">Appearance<select id="theme"><option value="system">System</option><option value="light">BasilMarket</option><option value="dark">Hidden Street</option></select><span id="theme-status" class="visually-hidden">System</span></label>
+    </header>
+    <main class="workarea">
+      <section class="preview-stage" aria-labelledby="preview-title">
+        <div id="monster-preview"></div>
+        <h2 id="preview-title" class="photo-reading-title">Reading your photo…</h2>
+      </section>
+    </main>
+    <footer class="footer"><p class="legal">MapleStory and its assets belong to Nexon. This fan project is not affiliated with Nexon.</p></footer>
+  </div>
+</body>
+</html>

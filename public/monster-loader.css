@@ -1,0 +1,57 @@
+/* A tiny, quiet MapleWorld patrol. Sprite artwork remains external; the
+   landscape and motion are original CSS. All dimensions are shared by skins. */
+.monster-loader{--monster-sky:#d6e9de;--monster-haze:#f9eed2;--monster-hill-far:#a6c7a7;--monster-hill-near:#82ac8d;--monster-grass:#7b9e55;--monster-grass-tip:#b7cb77;--monster-soil:#9b835f;--monster-soil-dark:#806b51;--monster-cloud:#fffaf0;--monster-shadow:#385c3538;--monster-party-width:186px;--monster-lap:6.4s;position:relative;isolation:isolate;width:min(100%,360px);height:140px;overflow:hidden;margin:0 auto;border:1px solid #6d89765c;border-radius:14px;background:var(--monster-sky);box-shadow:inset 0 1px #ffffff83,0 4px 16px #2437460a;contain:layout paint;pointer-events:none;user-select:none}
+.monster-loader *{box-sizing:border-box}
+.monster-loader__haze{position:absolute;inset:0;background:radial-gradient(ellipse at 52% 20%,var(--monster-haze),transparent 75%);opacity:.7}
+.monster-loader__cloud{position:absolute;width:34px;height:7px;top:27px;background:var(--monster-cloud);opacity:.55;box-shadow:6px -4px var(--monster-cloud),12px -7px var(--monster-cloud),20px -3px var(--monster-cloud)}
+.monster-loader__cloud--one{left:38px}
+.monster-loader__cloud--two{right:38px;top:39px;width:25px;opacity:.35;transform:scale(.8)}
+.monster-loader__hill{position:absolute;width:210px;height:94px;border-radius:70% 70% 0 0;bottom:22px;opacity:.8}
+.monster-loader__hill--far{left:-24px;background:var(--monster-hill-far);transform:rotate(8deg)}
+.monster-loader__hill--near{right:-65px;bottom:12px;background:var(--monster-hill-near);transform:rotate(-10deg)}
+.monster-loader__route{position:absolute;inset:0 14px 21px;z-index:2}
+.monster-loader__carriage{position:absolute;bottom:0;width:calc(100% - var(--monster-party-width));height:68px;animation:monster-patrol var(--monster-lap) ease-in-out infinite}
+.monster-loader__party{position:absolute;left:0;bottom:0;display:flex;align-items:flex-end;justify-content:center;gap:8px;width:var(--monster-party-width);height:68px}
+.monster-loader__actor{position:relative;display:flex;align-items:flex-end;justify-content:center;flex:0 0 54px;height:68px;opacity:0;transition:opacity .18s ease;animation:monster-scamper var(--monster-lap) ease-in-out infinite}
+.monster-loader__actor--2{animation-delay:-.2s}.monster-loader__actor--3{animation-delay:-.4s}
+.monster-loader__actor[data-loaded=true]{opacity:1}
+.monster-loader__actor[data-failed=true]{visibility:hidden}
+.monster-loader__shadow{position:absolute;bottom:-2px;left:50%;width:32px;height:6px;transform:translateX(-50%);border-radius:50%;background:var(--monster-shadow)}
+.monster-loader__facing{position:relative;display:flex;align-items:flex-end;justify-content:center;transform-origin:center bottom;animation:monster-face var(--monster-lap) steps(1,end) infinite}
+.monster-loader__facing[data-native-facing=right]{animation-name:monster-face-right}
+.monster-loader__gait{transform-origin:center bottom;animation:monster-waddle .7s ease-in-out infinite}
+.monster-loader__actor--2 .monster-loader__gait{animation-delay:-.25s}
+.monster-loader__actor--3 .monster-loader__gait{animation-delay:-.4s}
+.monster-loader__actor[data-gait=hop] .monster-loader__gait{animation-name:monster-hop;animation-duration:.8s}
+.monster-loader__actor[data-gait=hop] .monster-loader__shadow{animation:monster-hop-shadow .8s ease-in-out infinite}
+.monster-loader__actor[data-gait=trot] .monster-loader__gait{animation-name:monster-trot;animation-duration:.5s}
+.monster-loader__gait img{display:block;width:52px;height:56px;object-fit:contain;object-position:center bottom;image-rendering:pixelated;max-width:none;filter:drop-shadow(0 1px 0 #263b3328)}
+.monster-loader__ground{position:absolute;inset:auto 0 0;height:21px;background:linear-gradient(var(--monster-grass-tip) 0 3px,var(--monster-grass) 3px 7px,var(--monster-soil) 7px 17px,var(--monster-soil-dark) 17px);z-index:3;box-shadow:0 -1px #3d5d3321}
+.monster-loader__ground::after{content:'';position:absolute;inset:9px 0 0;opacity:.4;background:repeating-linear-gradient(90deg,transparent 0 17px,var(--monster-soil-dark) 17px 20px,transparent 20px 43px);height:3px}
+.monster-loader__grass{position:absolute;bottom:21px;width:3px;height:6px;background:var(--monster-grass);z-index:4;box-shadow:-3px 2px var(--monster-grass),3px -2px var(--monster-grass),6px 1px var(--monster-grass)}
+.monster-loader__grass--one{left:16px}
+.monster-loader__grass--two{right:18px;height:4px}
+.monster-loader__glint{position:absolute;left:50%;bottom:43px;width:5px;height:5px;background:var(--monster-grass);box-shadow:0 -5px var(--monster-grass),0 5px var(--monster-grass),-5px 0 var(--monster-grass),5px 0 var(--monster-grass);opacity:0}
+.monster-loader[data-assets=failed] .monster-loader__glint{opacity:.65;animation:monster-glint 1.6s ease-in-out infinite}
+.monster-loader[data-assets=failed] .monster-loader__route{visibility:hidden}
+.monster-loader[data-active=false] *,.monster-loader[data-visible=false] *{animation-play-state:paused!important}
+[data-theme=dark] .monster-loader{--monster-sky:#142e3a;--monster-haze:#31515b;--monster-hill-far:#24484b;--monster-hill-near:#2c5651;--monster-grass:#527858;--monster-grass-tip:#7c9563;--monster-soil:#485047;--monster-soil-dark:#343f3b;--monster-cloud:#8eb3b7;--monster-shadow:#07141d66;border-color:#7392a842;box-shadow:inset 0 1px #94c4c10f,0 4px 16px #00000012}
+@keyframes monster-patrol{0%,5%{transform:translateX(0)}45%,55%{transform:translateX(100%)}95%,100%{transform:translateX(0)}}
+@keyframes monster-scamper{0%,50%,100%{transform:translateX(0)}23%{transform:translateX(3px)}73%{transform:translateX(-3px)}}
+@keyframes monster-face{0%,49.99%{transform:scaleX(-1)}50%,100%{transform:scaleX(1)}}
+@keyframes monster-face-right{0%,49.99%{transform:scaleX(1)}50%,100%{transform:scaleX(-1)}}
+@keyframes monster-hop{0%,82%,100%{transform:translateY(0) scale(1,1)}12%{transform:translateY(2px) scale(1.1,.87)}42%{transform:translateY(-12px) scale(.96,1.06)}70%{transform:translateY(1px) scale(1.08,.91)}}
+@keyframes monster-hop-shadow{0%,12%,70%,100%{transform:translateX(-50%) scaleX(1);opacity:1}42%{transform:translateX(-50%) scaleX(.68);opacity:.45}}
+@keyframes monster-waddle{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-5px) rotate(3deg)}}
+@keyframes monster-trot{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-4px) rotate(2deg)}}
+@keyframes monster-glint{0%,100%{transform:scale(.75);opacity:.3}50%{transform:scale(1);opacity:.65}}
+@media(max-width:374px){.monster-loader{--monster-party-width:156px;height:132px}.monster-loader__actor{flex-basis:48px}.monster-loader__party{gap:3px}.monster-loader__gait img{width:48px;height:52px}}
+@media(prefers-reduced-motion:reduce){.monster-loader *, .monster-loader *::before,.monster-loader *::after{animation:none!important;transition:none!important}.monster-loader__carriage{transform:translateX(50%)}.monster-loader__actor--3 .monster-loader__facing{transform:scaleX(-1)}.monster-loader[data-assets=failed] .monster-loader__glint{opacity:.65}}
+
+/* One quiet sweep; the complete status stays readable and never fills a bar. */
+.photo-reading-title{display:inline-block;color:var(--ink)}
+@supports (background-clip:text){.photo-reading-title{background-image:linear-gradient(100deg,var(--ink) 35%,var(--link) 48%,var(--ink) 61%);background-size:250% 100%;background-position:100% 0;background-clip:text;-webkit-background-clip:text;color:transparent;animation:photo-reading-sheen 3.2s ease-in-out infinite}}
+@keyframes photo-reading-sheen{0%{background-position:100% 0}60%,100%{background-position:0% 0}}
+#reading-screen:has(.monster-loader[data-visible=false]) .photo-reading-title,.preview-stage:has(.monster-loader[data-visible=false]) .photo-reading-title{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.photo-reading-title{animation:none!important;background:none!important;color:var(--ink)!important}}
+@media(forced-colors:active){.photo-reading-title{animation:none;background:none;color:CanvasText}}

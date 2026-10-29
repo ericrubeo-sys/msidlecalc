@@ -1,7 +1,8 @@
 import { fieldForRecord, validateStatValue, RECOMMENDATION_CONTEXTS } from './stat-fields.js';
 import { recommendAllActivities as minimumActivities } from './minimum-input.js';
+import { unsupportedEffectDependency } from './recommendation-eligibility.js';
 
-export const CHARACTER_MODEL_VERSION='character-offense-estimate-2026-10-24-v1';
+export const CHARACTER_MODEL_VERSION='character-offense-estimate-2026-10-25-v3';
 export const STAR_FORCE_AMPLIFICATION=Object.freeze(Object.fromEntries([[200,25],[225,25],[250,25],[300,50],[350,60],[400,70],[450,80],[500,90],[600,100],[700,110],[900,130],[1050,145],[1200,160],[1350,180],[1500,200],[1750,225],[2000,250],[2250,275],[2500,300]].map((pair,i)=>[i+12,Object.freeze(pair)])));
 export const PLAYER_FIELDS=Object.freeze([
   {id:'attack',label:'Current character Attack',unit:'points'},
@@ -44,6 +45,14 @@ const value=(raw,percent=true)=>{
   if(!Number.isFinite(n) || n<0 || (text.replace(/%$/,'').split('.')[1]?.length??0)>18) return null;
   return qc(exact(text),q(BigInt(Number.MAX_SAFE_INTEGER)))<=0?n:null;
 };
+export function characterValueIssue(field,raw) {
+  if(!String(raw??'').trim()) return 'Enter a value.';
+  const numeric=value(raw,!['points','stars'].includes(field.unit));
+  if(numeric===null) return 'Use a nonnegative number, valid comma grouping and at most 18 decimal places, within the supported numeric range.';
+  if(['attack','criticalDamage'].includes(field.id) && numeric<=0) return 'Enter a value greater than zero.';
+  if(field.id==='starForce' && (!Number.isInteger(numeric) || !STAR_FORCE_AMPLIFICATION[numeric])) return 'Supported Star Force is 12–30. For other levels, enter both amplification percentages in Advanced.';
+  return null;
+}
 const scalar=(record)=>Number(String(record.rawValue).replaceAll(',','').replace(/%$/,''));
 function inspect(input) {
   const issues=[],maps={current:new Map(),candidate:new Map()};
@@ -71,7 +80,7 @@ function inspect(input) {
     if(outside.has(family)) continue;
     if(a.length>1 || b.length>1) {issues.push(issue('repeatedSource',`${a[0]?.label??b[0]?.label}: repeated sources need distinct supported identities.`));continue;}
     if(a.length && b.length && qc(a[0].q,b[0].q)===0 && a[0].unit===b[0].unit) continue;
-    if(!supported.has(family)) {issues.push(issue('unsupportedEffect',`${a[0]?.label??b[0]?.label}: changed conversion, skill, timing or other mechanic is not modeled.`));continue;}
+    if(!supported.has(family)) {issues.push(unsupportedEffectDependency(a[0]?.label??b[0]?.label));continue;}
     if(family!=='attack' && [...a,...b].some(row=>row.unit!=='displayPercent')) {issues.push(issue('unitMismatch','Offensive bonuses must use percentage units.'));continue;}
     changed.push(label);
   }
@@ -106,14 +115,20 @@ export function planCharacterInputs(input={}) {
   if(a.changed.some(label=>label.startsWith('attack:'))) ids.add('attack');
   if(a.changed.some(label=>label.startsWith('critical'))) {ids.add('criticalRate');ids.add('criticalDamage');}
   for(const label of a.changed) if(buckets[label]) ids.add(buckets[label]);
-  if(a.changed.length && !((value(input.player?.mainAmplification)!==null) && (value(input.player?.subAmplification)!==null))) ids.add('starForce');
+  if(a.changed.length) {
+    const manualAmplification=['mainAmplification','subAmplification'].some(id=>String(input.player?.[id]??'').trim());
+    if(manualAmplification) {
+      if(value(input.player?.mainAmplification)===null || value(input.player?.subAmplification)===null) {ids.add('mainAmplification');ids.add('subAmplification');}
+    }
+    else ids.add('starForce');
+  }
   for(const id of ids) fields.push({...PLAYER_FIELDS.find(field=>field.id===id),reason:id==='attack'?'Bounds the predicted change without requiring the new item equipped.':id==='starForce'?'Separates Main and Sub source scaling; Advanced accepts known amplification percentages.':'Consumed only because this effect changes between the items.'});
   return {fields,unsupported:[]};
 }
 function stages(player,issues) {
   const main=value(player.mainAmplification),sub=value(player.subAmplification);
   let pair;
-  if(main!==null || sub!==null) {
+  if(['mainAmplification','subAmplification'].some(id=>String(player[id]??'').trim())) {
     if(main===null || sub===null) {issues.push(issue('missingAmplification','Enter both Main and Sub amplification percentages.'));return [];}
     pair=[main,sub];
   } else {
@@ -153,7 +168,7 @@ export function recommendCharacterActivities(input={}) {
   for(const side of ['current','candidate']) if(input.confirmations?.[side]!==true) issues.push(issue('confirmation','Confirm both item panels first.'));
   for(const name of names) if(input.assumptions?.[name]!==true) issues.push(issue('modelCondition',`Review model condition: ${name}.`));
   const proof=quickProof(input,a);
-  for(const field of plan.fields.filter(field=>field.id!=='starForce')) if(value(player[field.id],field.unit!=='points')===null) issues.push(issue('missingPlayerValue',`Enter ${field.label} (${field.unit}).`));
+  for(const field of plan.fields.filter(field=>field.id!=='starForce')) if(characterValueIssue(field,player[field.id])) issues.push(issue('missingPlayerValue',`Enter ${field.label} (${field.unit}).`));
   const attackError=value(player.attackError,false)??0,percentError=value(player.percentError)??0;
   if(!proof && ((a.changed.some(label=>label.startsWith('attack:')) && String(player.attackError??'').trim() && value(player.attackError,false)===null) || (a.changed.some(label=>!label.startsWith('attack:')) && String(player.percentError??'').trim() && value(player.percentError)===null))) issues.push(issue('invalidUncertainty','Uncertainty margins must be nonnegative finite numbers.'));
   if(!proof && a.changed.some(label=>label.startsWith('critical')) && String(player.criticalResistance??'').trim() && value(player.criticalResistance)===null) issues.push(issue('invalidResistance','Opponent resistance must be a nonnegative percentage or blank for unknown.'));
